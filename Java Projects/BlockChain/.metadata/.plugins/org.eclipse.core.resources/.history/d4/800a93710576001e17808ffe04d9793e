@@ -1,0 +1,23 @@
+/**
+ * An enumeration representing different types of binary tree traversal orders.
+ */
+public enum Order {
+    /**
+     * Represents the pre-order traversal order in a binary tree, where the root
+     * is visited before its left and right subtrees.
+     */
+    PREORDER,
+
+    /**
+     * Represents the in-order traversal order in a binary tree, where the left
+     * subtree is visited, followed by the root, and then the right subtree.
+     */
+    INORDER,
+
+    /**
+     * Represents the post-order traversal order in a binary tree, where the left
+     * and right subtrees are visited before the root.
+     */
+    POSTORDER;
+}
+

@@ -1,0 +1,430 @@
+import java.util.Iterator;
+
+/**
+ * Represents the Merkle Tree of a single Block.
+*/
+
+public class MerkleTree
+{
+	
+	/**
+	 * The variable that holds the root Node of the MerkleTree.
+	 */
+	private Node root;
+	
+	/**
+	 * The variable that holds the height of the MerkleTree.
+	 */
+	private int height;
+	
+	/**
+	 * The variable that holds the number of inner Nodes in the MerkleTree.
+	 */
+	private int innerNodes;
+	
+	/**
+	 * A list of transactions in the MerkleTree.
+	 */
+	private SinglyLinkedList<Transaction> myTransactions;
+	
+	/**
+	 * A list of Strings used as the return in the depth first traversal methods.
+	 */
+	private SinglyLinkedList<String> returnlstDFT;
+	
+	/**
+	 * An indexer used to store numbers.
+	 */
+	private int indexer;
+	
+	/**
+	 * A list of Strings used as the return in the extractProof method.
+	 */
+	private SinglyLinkedList<String> extractProofreturn;
+
+	/**
+     * Constructor for block object.
+     * After the tree is constructed, the constructor sends the hash of the root to the block object by invoking the block.setRootHash() method.
+     * @param block the block being turned into a MerkleTree.
+     */
+	public MerkleTree(Block block)
+    {
+    	indexer = 0;
+    	
+    	root = new Node();
+    	myTransactions = new SinglyLinkedList<Transaction>();
+    	
+    	//height finder
+    	height = 0;
+    	float x = block.numOfTransactions();
+    	while(x > 1)
+    	{
+    		x = x/2;
+    		height++;
+    	}
+    	
+    	//stores all transactions locally
+    	Iterator<Transaction> it = block.iterator();
+    	
+    	while(it.hasNext())
+    	{
+    		myTransactions.add(it.next());
+    	}
+    	
+    	
+    	if(block.numOfTransactions() == 0)
+    	{
+    		//error
+    	}
+    	else if(block.numOfTransactions() == 1)
+    	{
+    		root.setdata(Utilities.cryptographicHashFunction(myTransactions.get(0).toString()));
+    	}
+    	else
+    	{
+    		merkleTreeRecusive(block, 0);
+    	}
+    	
+    	block.setRootHash(root.data);
+    	
+    }
+    
+	/**
+     * The Recusive helper method for the constructor.
+     * @param block a reference to the block object being used.
+     * @param myheight Keeps track of your current height in the tree.
+     * @return Node
+     */
+	private Node merkleTreeRecusive(Block block, int myheight)
+    {
+    	if(myheight == 0)
+    	{
+    		innerNodes++;
+    		root.setleft(merkleTreeRecusive(block, myheight+1));
+    		root.setright(merkleTreeRecusive(block, myheight+1));
+    		
+    		root.setdata(Utilities.cryptographicHashFunction(root.right.data, root.left.data));
+    		
+    		return root;
+    	}
+    	else if(myheight == height)
+    	{
+    		Node leaf = new Node();
+    		
+    		if(indexer > block.numOfTransactions()-1)
+    		{
+    			leaf.setdata(Utilities.cryptographicHashFunction("DUMMY"));
+    		}
+    		else
+    		{
+    			leaf.setdata(Utilities.cryptographicHashFunction(myTransactions.get(indexer).toString()));
+    			indexer++;
+    		}
+    		
+    		return leaf;
+    	}
+    	else 
+    	{
+    		innerNodes++;
+    		Node current = new Node();
+    		
+    		current.setleft(merkleTreeRecusive(block, myheight+1));
+    		current.setright(merkleTreeRecusive(block, myheight+1));
+    		
+    		current.setdata(Utilities.cryptographicHashFunction(current.right.data, current.left.data));
+    		
+    		return current;
+    	}
+    }
+
+    /**
+     * method for finding the height of the tree.
+     * @return the height of the tree.
+     */
+    public int height()
+    {
+    	return height;
+    }
+    
+    /**
+     * method for finding the number of inner nodes in the tree.
+     * @return the number of inner nodes in the tree.
+     */
+    public int innerNodes()
+    {
+    	return innerNodes;
+    }
+    
+    /**
+     * Creates a list of the hash codes contained in the tree by walking the tree in a level-order.
+     * @return SinglyLinkedList.
+     */
+    public SinglyLinkedList<String> breadthFirstTraversal()
+    {
+    	SinglyLinkedList<String> returnval = new SinglyLinkedList<>();
+    	
+    	SinglyLinkedList<Node> nodes = new SinglyLinkedList<>();
+    	
+    	Iterator<Node> it = nodes.iterator();
+    	
+    	nodes.add(root);
+    	
+    	returnval.add(root.data);
+    	
+    	while(it.hasNext())
+    	{
+    		Node nxt = it.next();
+    		
+    		if(nxt.left != null)
+    		{
+    			returnval.add(nxt.left.data);
+    			nodes.add(nxt.left);
+    		}
+    		if(nxt.right != null)
+    		{
+    			returnval.add(nxt.right.data);
+    			nodes.add(nxt.right);
+    		}
+    	}
+    	
+    	return returnval;
+    }
+    
+    /**
+     * depthFirstTraversal of the tree that can do INORDER, POSTORDER, or PREORDER traversals.
+     * @param order is an enumeration representing the three possible depth-first traversals
+     * @return a list of the hash codes contained in the tree by walking the tree in a certain order
+     */
+    public SinglyLinkedList<String> depthFirstTraversal(Order order)
+    {
+    	returnlstDFT = new SinglyLinkedList<>();
+    	
+    	if (order == Order.INORDER)
+    	{
+    		inOrderDFT(root);
+    	}
+    	else if (order == Order.POSTORDER)
+    	{
+    		postOrderDFT(root);
+    	}
+    	else if (order == Order.PREORDER)
+    	{
+    		preOrderDFT(root);
+    	}
+    	
+    	return returnlstDFT;
+    }
+    
+    /**
+     * helper method for INORDER traversals.
+     * @param myNode reference for what node is being used.
+     */
+    private void inOrderDFT(Node myNode)
+    {
+    	if (myNode != null)
+    	{
+    		inOrderDFT(myNode.left);
+    		
+    		returnlstDFT.add(myNode.data);
+            
+            inOrderDFT(myNode.right);
+    	}
+    }
+    
+    /**
+     * helper method for POSTORDER traversals.
+     * @param myNode reference for what node is being used.
+     */
+    private void postOrderDFT(Node myNode)
+    {
+    	if (myNode != null)
+    	{
+    		postOrderDFT(myNode.left);
+    		
+    		postOrderDFT(myNode.right);
+            
+    		returnlstDFT.add(myNode.data);
+    	}
+    }
+    
+    /**
+     * helper method for PREORDER traversals.
+     * @param myNode reference for what node is being used.
+     */
+    private void preOrderDFT(Node myNode)
+    {
+    	if (myNode != null)
+    	{
+    		returnlstDFT.add(myNode.data);
+    		
+    		postOrderDFT(myNode.left);
+            
+    		postOrderDFT(myNode.right);
+    	}
+    }
+    
+	/**
+	 * Returns a SinglyLinkedList of hashes needed to to make the root hash when combined with the provided Transaction.
+     * @param t The Transaction being proved.
+     * @return a list of the hash codes that are required to prove that a transaction is contained in the block that this Merkle Tree encodes.
+     */
+	public SinglyLinkedList<String> extractProof(Transaction t)
+    {
+		
+		extractProofreturn = new SinglyLinkedList<String>();
+		
+    	boolean matchfound = false;
+    	
+    	for(Transaction x : myTransactions)
+    	{
+    		if(Utilities.cryptographicHashFunction(x.toString()).equals(Utilities.cryptographicHashFunction(t.toString())))
+    		{
+    			matchfound = true;
+    		}
+    	}
+    	if(matchfound = false)
+    	{
+    		return extractProofreturn;
+    	}
+    	else
+    	{
+    		
+    		extractProofRecursive(root, Utilities.cryptographicHashFunction(t.toString()));
+    		
+    		return extractProofreturn;
+    	}
+    }
+    
+	/**
+     * Recursive helper method for extractProof.
+     * @param current reference for what node is being used.
+     * @param hashToFind The hashcode needing to be found.
+     */
+	private boolean extractProofRecursive(Node current, String hashToFind)
+    {
+		if (current.getleft() == null && current.getright() == null)
+    	{
+    		return false;
+    	}
+		if(current.getleft().data.equals(hashToFind))
+    	{
+    		extractProofreturn.add(current.getright().data);
+    		return true;
+    	}
+    	else if(current.getright().data.equals(hashToFind))
+    	{
+    		extractProofreturn.add(current.getleft().data);
+    		return true;
+    	}
+    	else
+    	{
+    		if(extractProofRecursive(current.getleft(), hashToFind))
+    		{
+    			extractProofreturn.add(current.getright().data);
+    			return true;
+    		}
+    		else if (extractProofRecursive(current.getright(), hashToFind))
+    		{
+    			extractProofreturn.add(current.getleft().data);
+        		return true;
+    		}
+    		
+    		return false;
+    	}
+    }
+    
+	/**
+	 * Private node class.
+	 */
+	private class Node implements Comparable<Node>
+	{
+		/**
+    	 * The data field of the node.
+    	 */
+		String data;
+		
+		/**
+    	 * The left reference of the node.
+    	 */
+		Node left;
+	    
+		/**
+    	 * The right reference of the node.
+    	 */
+		Node right;
+	    
+		/**
+    	 * The constructor of the node.
+    	 */
+		Node() {
+	    	data = null;
+	        left = null;
+	        right = null;
+	    }
+	    
+		/**
+    	 * The setter for the left of the node.
+    	 * @param x the node being set as the left reference.
+    	 */
+		void setleft(Node x)
+	    {
+	    	left = x;
+	    }
+	    
+		/**
+    	 * The setter for the right of the node.
+    	 * @param x the node being set as the right reference.
+    	 */
+		void setright(Node x)
+	    {
+	    	right = x;
+	    }
+	    
+		/**
+    	 * The setter for the data of the node.
+    	 * @param x String The data being added
+    	 */
+		void setdata(String x)
+	    {
+	    	data = x;
+	    }
+	    
+	    /**
+    	 * The getter for the left of the node.
+    	 * @return left node
+    	 */
+	    Node getleft()
+	    {
+	    	return left;
+	    }
+	    
+	    /**
+    	 * The getter for the right of the node.
+    	 * @return right node
+    	 */
+	    Node getright()
+	    {
+	    	return right;
+	    }
+	    
+	    /**
+    	 * The getter for the data of the node.
+    	 * @return node's data.
+    	 */
+	    String getdata()
+	    {
+	    	return data;
+	    }
+	    
+	    /**
+    	 * Compares two nodes by their data.
+    	 * @param o Another node
+    	 */
+	    @Override
+		public int compareTo(Node o) {
+			// TODO Auto-generated method stub
+			return data.compareTo(o.data);
+		}
+	}
+
+}

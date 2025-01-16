@@ -1,0 +1,92 @@
+import java.util.Iterator;
+
+/**
+ * Represents a single block in the blockchain
+*/
+
+public class Block implements Comparable<Block>, Iterable<Transaction>
+{
+	
+	/**
+	 * The variable that holds the Transactions in a block.
+	 */
+	private SinglyLinkedList<Transaction> lst;
+	
+	/**
+	 * The variable that holds the rootHash of the block.
+	 */
+	private String rootHash;
+	
+	/**
+	 * The variable that keeps track of the number of Transactions.
+	 */
+	private int size;
+	
+	/**
+     * Constructor for block object.
+     */
+	public Block()
+    {
+    	lst = new SinglyLinkedList<Transaction>();
+    	rootHash = null;
+    	size = 0;
+    }
+
+    /**
+     * Adds a Transaction to the tail of lst.
+     * @param t the Transaction being added.
+     */
+    public void addTransaction(Transaction t)
+    {
+    	size++;
+    	lst.add(t);
+    }
+
+    /**
+     * checks the number of transactions in the lst.
+     * @return int.
+     */
+    public int numOfTransactions()
+    {
+    	return size;
+    }
+
+    /**
+     * Gets the root hash of the block.
+     * @return String.
+     */
+    public String getRootHash()
+    {
+    	return rootHash;
+    }
+    
+	/**
+     * Sets the RootHash for the block.
+     * @param hashCode the hashCode being set as the root.
+     */
+	public void setRootHash(String hashCode)
+    {
+    	rootHash = hashCode;
+    }
+    
+	/**
+     * Creates an iterator object for the block.
+     * @return Iterator.
+     */
+	@Override
+	public Iterator<Transaction> iterator() {
+		// TODO Auto-generated method stub
+		return lst.iterator();
+	}
+	
+	/**
+     * Compares two blocks by number of transactions.
+     * @param o Another block object.
+     * @return int.
+     */
+	@Override
+	public int compareTo(Block o) 
+	{	
+		return this.numOfTransactions() - o.numOfTransactions();
+	}
+}

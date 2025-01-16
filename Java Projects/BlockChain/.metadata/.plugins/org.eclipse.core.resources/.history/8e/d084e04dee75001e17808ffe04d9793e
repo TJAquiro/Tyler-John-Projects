@@ -1,0 +1,57 @@
+import java.util.Iterator;
+
+/**
+    - The class represents the entire blockchain
+    - You must implement all the public methods in this template plus the method(s) required by the Iterable interface
+    - Anything else you add must be private
+    - Do not modify the provided signatures
+*/
+
+public class Blockchain implements Iterable<Block>
+{
+    /**
+        The concstructor takes a priority queue and creates the linked list of blocks
+
+        @param threshold is the minimum amount of cumulative fees that is required to create a new block.
+        The block must contain the minimum number of transactions that satisfy the threshold criterion
+
+        TIME COMPLEXITY REQUIREMENT: O(N)
+    */
+	
+	SinglyLinkedList<Block> chain;
+	
+	
+	//potential problem, there may be Transactions that never get added to the block chain.
+    public Blockchain(PriorityLine<Transaction> queue, int threshold)
+    {
+    	chain = new SinglyLinkedList<Block>();
+    	
+    	int totalfee = 0;
+    	Block newblock = new Block();
+    	
+    	for(int x = 0;x < queue.size(); ++x)
+    	{
+    		if(totalfee > threshold)
+    		{
+    			
+    			chain.add(newblock);
+    			
+    			System.out.println(chain.size());
+    			
+    			newblock = new Block();
+    		}
+    		
+    		totalfee = totalfee + queue.peek().getFee();
+    		newblock.addTransaction(queue.dequeue());
+    		
+    	}
+    	
+    }
+
+	@Override
+	public Iterator<Block> iterator() 
+	{
+		return chain.iterator();
+	}
+
+}

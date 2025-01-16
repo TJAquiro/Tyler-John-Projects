@@ -1,0 +1,81 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+
+/**
+ * A class for Utilities used by other classes.
+ */
+public final class Utilities
+{
+	/**
+     * Reads the transactions from a text file and adds them to a priority queue.
+     * @param pgmFile is the filename of the text file.
+     * @return a PriorityLine transactions loaded into it.
+     */
+	public static PriorityLine<Transaction> loadTransactions(String pgmFile)    
+	{
+    	File file = new File(pgmFile);
+    	
+    	PriorityLine<Transaction> returnval = new PriorityLine<>();
+    	
+        try 
+        {
+			Scanner scnr = new Scanner(file);
+			
+			while(scnr.hasNextLine())
+			{				
+				
+				String sender = scnr.next();
+				String receiver = scnr.next();
+				int amount = Integer.parseInt(scnr.next());
+				int fee = Integer.parseInt(scnr.next());
+				
+				Transaction tran = new Transaction(sender, receiver, amount, fee);
+				
+				returnval.enqueue(tran);
+				
+				scnr.nextLine();
+			}
+        }
+        catch (FileNotFoundException e) 
+        {
+        	System.err.println(e.getMessage());
+		}
+        
+    	return returnval;
+    }
+	
+	/**
+     * verifies that Transaction exists in a block.
+     * TIME COMPLEXITY REQUIREMENT: O(logN).
+     * @param t is the transaction that we want to verify it's contained in a certain block.
+     * @param blockRootHash is the root hash code stored in the respective block.
+     * @param proof is the list of hashes extracted with the method extractProof.
+     * @return true if the transaction is verified, false otherwise.
+     */
+	public static boolean verifyTransaction(Transaction t, SinglyLinkedList<String> proof, String blockRootHash)
+    {
+		String hashString = cryptographicHashFunction(t.toString());
+		int indexer = 0;
+		
+    	for(String x : proof)
+    	{
+    		hashString = cryptographicHashFunction(hashString, proof.get(indexer));
+    		indexer++;
+    	}
+    	
+    	if(hashString.equals(blockRootHash))
+    	{
+    		return true;
+    	}
+    	else
+    	{
+    		return false;
+    	}
+    }
+
+
+
+}

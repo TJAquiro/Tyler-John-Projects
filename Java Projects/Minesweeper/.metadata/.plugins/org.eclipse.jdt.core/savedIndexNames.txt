@@ -1,0 +1,12 @@
+INDEX VERSION 1.131+C:\Users\tjaqu\Desktop\CollegeFall2023\CS\project 1\.metadata\.plugins\org.eclipse.jdt.core
+3842100930.index
+1865797976.index
+3858934605.index
+2764209456.index
+1235602826.index
+1156151971.index
+3769353959.index
+3577468562.index
+3248886115.index
+450425633.index
+1350556924.index

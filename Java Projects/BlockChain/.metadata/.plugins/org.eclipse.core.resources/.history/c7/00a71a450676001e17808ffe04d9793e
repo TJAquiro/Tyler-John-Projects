@@ -1,0 +1,69 @@
+/**
+ * This class represents a single transaction.
+*/
+public class Transaction implements Comparable<Transaction>
+{
+	/**
+	 * A variable representing the sender of this Transaction.
+	 */
+    private String sender;
+
+    /**
+	 * A variable representing the receiver of this Transaction.
+	 */
+    private String receiver;
+    
+    /**
+	 * A variable representing the amount of this Transaction.
+	 */
+    private int amount;
+    
+    /**
+	 * A variable representing the fee of this Transaction.
+	 */
+    private int fee;
+    
+    /**
+     * Constructor for Transaction object.
+     * @param sender the sender of the Transaction.
+     * @param receiver the receiver of the Transaction.
+     * @param amount the amount of the Transaction.
+     * @param fee the fee of the Transaction.
+     */
+    public Transaction(String sender, String receiver, int amount, int fee)
+    {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.amount = amount;
+        this.fee = fee;
+    }
+    
+    /**
+     * Turns the Transaction into a string.
+     * @return String showing the sender, receiver, amount, and fee.
+     */
+    public String toString()
+    {
+        return String.format("%s %s %d %d", sender, receiver, amount, fee);
+    }
+    
+    /**
+     * Getter for the fee of this Transaction.
+     * @return int.
+     */
+    public int getFee()
+    {
+        return fee;
+    }
+    
+    /**
+     * Compares two Transaction objects by their fee.
+     * @param o Another Transaction object.
+     * @return int.
+     */
+	@Override
+	public int compareTo(Transaction o) {
+		// TODO Auto-generated method stub
+		return fee - o.getFee();
+	}
+}

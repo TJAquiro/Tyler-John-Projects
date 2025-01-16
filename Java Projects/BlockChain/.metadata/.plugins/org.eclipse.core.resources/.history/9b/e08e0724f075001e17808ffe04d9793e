@@ -1,0 +1,49 @@
+import java.util.Iterator;
+
+/**
+ * The class represents the entire blockchain.
+*/
+
+public class Blockchain implements Iterable<Block>
+{
+	/**
+	 * The variable that holds the Blocks in the Blockchain.
+	 */
+	SinglyLinkedList<Block> chain;
+	
+	/**
+     * Constructor for the Blockchain object.
+     */
+	public Blockchain(PriorityLine<Transaction> queue, int threshold)
+    {
+    	chain = new SinglyLinkedList<Block>();
+    	
+    	int totalfee = 0;
+    	Block newblock = new Block();
+    	
+    	for(int x = 0;x < queue.size(); ++x)
+    	{
+    		if(totalfee > threshold)
+    		{
+    			
+    			chain.add(newblock);
+    			
+    			System.out.println(chain.size());
+    			
+    			newblock = new Block();
+    		}
+    		
+    		totalfee = totalfee + queue.peek().getFee();
+    		newblock.addTransaction(queue.dequeue());
+    		
+    	}
+    	
+    }
+
+	@Override
+	public Iterator<Block> iterator() 
+	{
+		return chain.iterator();
+	}
+
+}

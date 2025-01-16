@@ -1,0 +1,73 @@
+import java.util.Iterator;
+
+/**
+    - Implements a priority queue
+    - You must implement all the public methods in this template plus the method(s) required by the Iterable interface
+    - Anything else you add must be private
+    - Do not modify the provided signatures
+*/
+public class PriorityLine<T extends Comparable<T>> implements Iterable<T>
+{
+	private SinglyLinkedList<T> line = null;
+	int size = 0;
+	
+    public PriorityLine()
+    {
+    	line = new SinglyLinkedList<T>();
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(N)
+    */
+    public void enqueue(T element)
+    {
+    	System.out.println("i ran");
+    	
+    	line.insert(element);
+    	size++;
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public T dequeue()
+    {
+    	T returnval = line.get(0);
+    	
+    	line.remove(0);
+    	size--;
+    	
+		return returnval;
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public int size()
+    {
+		return size;
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public boolean isEmpty()
+    {
+		return line.isEmpty();
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public T peek()
+    {
+		return line.get(0);
+    }
+
+	@Override
+	public Iterator<T> iterator() {
+		
+		return line.iterator();
+	}
+
+}

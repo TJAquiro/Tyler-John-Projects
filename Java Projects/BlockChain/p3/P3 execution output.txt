@@ -1,0 +1,73 @@
+> java P3 transactions_example____sender_receiver_amount_fee 20
+
+Contents of the priority queue:
+sender4 receiver4 45123 9
+sender7 receiver7 12045 7
+sender5 receiver5 51234 6
+sender3 receiver3 34512 5
+sender8 receiver8 12305 4
+sender6 receiver6 10234 2
+sender2 receiver2 23451 1
+
+Block 1:
+sender4 receiver4 45123 9
+sender7 receiver7 12045 7
+sender5 receiver5 51234 6
+
+Merkle Tree:
+
+Height: 2
+InnerNodes: 3
+Root Hash Code: eb276ce35603b9fc9ac73aa405169369348a5cc1d3113f992bed58e00c7ea790
+
+In-order traversal of Merkle tree
+f32aa17233073f91737ea3ce7c8bc5903c52628f3268fc5699fbeb2e32b9b294
+d1cf8cb2d5197a16bad4dab1fad4f2c9a0ef34876e8bf830404607d1a50810a0
+8ec2c6d6dd377ad68bf8bd46d21ce42d84a5ba08ce9ac3185a18befa55252909
+eb276ce35603b9fc9ac73aa405169369348a5cc1d3113f992bed58e00c7ea790
+f4c98575aef93de25f26de1e21edec66fa14e78e8bb6e4da9518c62a103760f9
+561bdaf94ffb2a2bd1af5a4019365e8f4ab70cb4280b12187ce8bb12e767e4b7
+ceec12762e66397b56dad64fd270bb3d694c78fb9cd665354383c0626dbab013
+
+Existing transaction for lookup: sender8 receiver8 12305 4              # it exists but not in this block
+
+Non-existing transaction for lookup: sender8 receiver8 12305 5          # it doesn't exist in any block
+
+Extracted proof of the existing transaction:
+
+Verification of the existing transaction: false
+
+Verification of the non-existing transaction: false
+
+Block 2:
+sender3 receiver3 34512 5
+sender8 receiver8 12305 4
+sender6 receiver6 10234 2
+sender2 receiver2 23451 1
+
+Merkle Tree:
+
+Height: 2
+InnerNodes: 3
+Root Hash Code: 91695e5b6d159bf734a9de38387b4699257e9483cc9f039d423927ccdc20286d
+
+In-order traversal of Merkle tree
+b2ba60f9de30bf01a6deb1ce7bba9a590bc2da335bed48ba0db801e18cb05849
+b465322f7cd90fc26adc89d6dc6c09acc86854ae4d1ce427f9c0a28592ba7ff1
+bcbc31cfe1f82e74bd20b3911c27095741999d46819a6e1bc81d95062bc0e3a8
+91695e5b6d159bf734a9de38387b4699257e9483cc9f039d423927ccdc20286d
+4789736b0f6ceb8417cff435b09b3513266ef7bd4fa9af12f2b906f3b8694b2b
+fdf7533c791d91ed0bb2b64be9ae7b7d532b6b04d9a169527a8453862697d2ee
+8eb6dbd40c7095447aa20f82ddf602dd389c4c4f4eff7939ec0315a2394c55b2
+
+Existing transaction for lookup: sender8 receiver8 12305 4              # it exists in this block
+
+Non-existing transaction for lookup: sender8 receiver8 12305 5          # it doesn't exist in any block
+
+Extracted proof of the existing transaction:
+b2ba60f9de30bf01a6deb1ce7bba9a590bc2da335bed48ba0db801e18cb05849
+fdf7533c791d91ed0bb2b64be9ae7b7d532b6b04d9a169527a8453862697d2ee
+
+Verification of the existing transaction: true
+
+Verification of the non-existing transaction: false

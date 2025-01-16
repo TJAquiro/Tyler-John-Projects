@@ -1,0 +1,234 @@
+import java.util.Iterator;
+
+/**
+ * Implements a singly linked list.
+*/
+public class SinglyLinkedList<T extends Comparable<T>> implements Iterable<T>
+{
+	/**
+	 * The first node in the linked list.
+	 */
+	private Node<T> head;
+	
+	/**
+	 * The last node in the linked list.
+	 */
+	private Node<T> tail;
+	
+	/**
+	 * A variable for keeping track of the number of items in the list.
+	 */
+	private int size;
+	
+	private class Node<T> {
+        T data;
+        Node<T> next;
+
+        Node(T data) {
+            this.data = data;
+            this.next = null;
+        }
+        
+        void setNext(Node<T> x)
+        {
+        	next = x;
+        }
+        
+        Node<T> getNext()
+        {
+        	return next;
+        }
+    }
+	
+    public SinglyLinkedList()
+    {
+    	this.head = null;
+    	this.tail = null;
+    	size = 0;
+    }
+
+    /**
+        adds a value to the end of the list
+
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public void add(T value)
+    {
+    	size++;
+    	
+    	Node<T> node = new Node<>(value);
+    	
+    	if(head == null)
+    	{
+    		head = node;
+    	}
+    	if(tail == null)
+    	{
+    		tail = node;
+    	}
+    	else
+    	{
+    		tail.setNext(node);
+    		tail = node;
+    	}
+    }
+
+    /**
+        Inserts a value to the proper location in the list so that the list order is preserved (in descending order)
+
+        TIME COMPLEXITY REQUIREMENT: O(N)
+    */
+    public void insert(T newValue)
+    {
+    	
+    	if(size == 0)
+    	{
+    		System.out.println(newValue + " test");
+    		
+    		add(newValue);
+    	}
+    	
+    	else
+    	{	
+    		size++;
+    		
+    		Node<T> node = new Node<>(newValue);
+        	
+        	if(newValue.compareTo(head.data) >= 0)
+        	{	
+        		System.out.println(newValue + " test3");
+        		node.next = head;
+                head = node;
+            }
+        	else if(newValue.compareTo(tail.data) <= 0)
+        	{	
+        		System.out.println(newValue + " test4");
+        		tail.next = node;
+                tail = node;
+            }
+        	else
+        	{
+        		Node<T> current = head;
+            	
+                while (current.next != null) 
+                {
+                	if(newValue.compareTo(current.next.data) > 0)
+                	{
+                		node.setNext(current.getNext());
+                        current.setNext(node);
+                	}
+                	else
+                	{
+                		current = current.next;
+                	}
+                }
+        	}
+    	}
+    }
+
+    /**
+        Removes a single item from the list based on its index
+
+        TIME COMPLEXITY REQUIREMENT: O(N)
+    */
+    public T remove(int index)
+    {
+    	if(size == 0 || index > size-1)
+    	{
+    		throw new IndexOutOfBoundsException();
+    	}
+    	
+    	size--;
+    	
+    	T returnval = null;
+    	
+    	if(index == 0)
+    	{
+    		returnval = head.data;
+    		
+    		if(head.getNext() == null)
+    		{
+    			head = null;
+    		}
+    		else
+    		{
+    			head = head.getNext();
+    		}
+    		return returnval;
+    	}
+    	
+    	Node<T> current = head;
+    	
+    	for(int x = 0;x < index-1; ++x)
+    	{
+    		current = current.getNext();
+    	}
+    	
+    	returnval = current.getNext().data;
+    	
+    	current.setNext(current.getNext().getNext());
+    	
+    	return returnval;
+    }
+
+    /**
+        Returns (without removing) a single item from the list based on its index
+
+        TIME COMPLEXITY REQUIREMENT: O(N)
+    */
+    public T get(int index)
+    {
+    	if(index > size-1)
+    	{
+    		throw new IndexOutOfBoundsException();
+    	}
+    	
+    	Node<T> current = head;
+    	
+    	for(int x = 0;x < index; ++x)
+    	{
+    		current = current.getNext();
+    	}
+    	
+    	return current.data;
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public int size()
+    {
+		return size;
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public boolean isEmpty()
+    {
+		return (size == 0);
+    }
+
+	@Override
+	public Iterator<T> iterator() 
+	{
+		return new Iterator<T>()
+		{
+			private Node<T> mycurrent = head;
+			
+			public boolean hasNext() 
+			{
+				return mycurrent != null;
+			}
+
+			public T next()
+			{
+				Node<T> returnVal = mycurrent;
+				
+				mycurrent = mycurrent.getNext();
+				
+				return returnVal.data;
+			}
+        };
+	}
+}

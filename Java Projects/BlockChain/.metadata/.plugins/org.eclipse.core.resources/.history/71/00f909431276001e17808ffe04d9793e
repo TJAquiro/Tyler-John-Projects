@@ -1,0 +1,83 @@
+import java.util.Iterator;
+
+/**
+ * Implements a priority queue
+ * @param <T> The type of elements stored in the PriorityLine, which must be Comparable.
+*/
+public class PriorityLine<T extends Comparable<T>> implements Iterable<T>
+{
+	/**
+	 * A linked list of T.
+	 */
+	private SinglyLinkedList<T> line = null;
+	
+	/**
+	 * A variable for keeping track of the number of items in the list.
+	 */
+	private int size = 0;
+	
+	/**
+     * Constructor for PriorityLine object.
+     */
+    public PriorityLine()
+    {
+    	line = new SinglyLinkedList<T>();
+    }
+
+    /**
+     * Adds an element to the queue.
+     * @param element the element added to the queue.
+     */
+    public void enqueue(T element)
+    {	
+    	line.insert(element);
+    	size++;
+    }
+
+    /**
+     * removes the first element of the queue.
+     * @return the element removed.
+     */
+    public T dequeue()
+    {
+    	T returnval = line.get(0);
+    	
+    	line.remove(0);
+    	size--;
+    	
+		return returnval;
+    }
+
+    /**
+     * gives the length of the queue.
+     * @return int size of the queue.
+     */
+    public int size()
+    {	
+		return size;
+    }
+
+    /**
+     * returns whether the queue is empty.
+     * @return boolean true if the queue is empty else false.
+     */
+    public boolean isEmpty()
+    {
+		return line.isEmpty();
+    }
+
+    /**
+        TIME COMPLEXITY REQUIREMENT: O(1)
+    */
+    public T peek()
+    {
+		return line.get(0);
+    }
+
+	@Override
+	public Iterator<T> iterator() {
+		
+		return line.iterator();
+	}
+
+}
