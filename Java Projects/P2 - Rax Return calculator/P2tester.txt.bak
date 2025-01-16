@@ -1,0 +1,6 @@
+public class P2tester
+{
+	Person a = new Person();
+	
+	a.setName("Jonny");
+}

@@ -1,0 +1,158 @@
+/**
+*
+* The Adult class, sub-object of Person
+*
+* @author  Tyler John Aquiro
+* @version 1.0
+*
+*/
+
+public class Adult extends Person
+{
+	/**
+	* @param employer - employer of Adult
+	* @param name - the name of the person object
+	* @param birthday - birthday of the object, in YYYY/MM/DD format
+	* @param ssn - nine-digit SSN in xxx-xx-xxxx format
+	* @param grossIncome - The gross income of a person
+	* @param taxation - A Taxation object used to get data from the taxation class
+	*/
+	
+	private String employer;
+	private String name;
+	private String birthday;
+	private String ssn;
+	private float grossIncome;
+	private Taxation taxation = new Taxation();
+	
+	/**
+	* This is the constructor for the Adult object
+	* Used to set  id, name, birthday, ssn, grossIncome, employer
+	*/
+	
+	public Adult(String name, String birthday, String ssn, float grossIncome, String employer)
+	{
+		super();
+		this.name = name;
+		this.birthday = birthday;
+		this.ssn = ssn;
+		this.grossIncome = grossIncome;
+		this.employer = employer;
+	}
+	
+	//@getGrossIncome getter for grossIncome field 
+	
+	public float getGrossIncome()
+	{
+		return grossIncome;
+	}
+	
+	//@toString turns the object and it's fields into a readable string
+	
+	public String toString()
+	{
+		return (name + " " + "xxx-xx-" + ssn.substring(7,11) + " " + birthday.substring(0,4) + "/**/**" + " $" + this.grossIncome);
+	}
+	
+	/**
+	* @adjustedIncome calculates adjustedIncome by subtracting half of MedicareRate and SocialSecurity taxes
+	* from grossIncome (other half is paid by employer)
+	*/
+	
+	public float adjustedIncome()
+	{
+		
+		float mcTax = grossIncome * (taxation.getMedicareRate() / (float)(100));
+			
+		
+		float ssTax;
+		
+		if (taxation.getSocialSecurityIncomeLimit() < grossIncome)
+		{
+			
+			ssTax = taxation.getSocialSecurityIncomeLimit() * (taxation.getSocialSecurityRate() / (float)(100));
+		}
+		else
+		{
+			ssTax = grossIncome * (taxation.getSocialSecurityRate() / (float)(100));
+		}
+		
+		
+		float k = (grossIncome - (ssTax / 2f + mcTax / 2f));
+		
+		return((float)Math.round(k*100.0f)/100.0f);
+	}
+	
+	/**
+	* @taxWithheld calculates tax withheld  by taking 
+	* 10% for the first $50K
+	* 15% on the next $100K
+	* 20% of anything above $150K
+	*/
+	
+	public float anything()
+	{
+		float withHeld = 0;
+		
+		if (grossIncome <= (float)50000.00)
+		{
+			withHeld = (grossIncome * (float)0.10);
+		}
+		else if (grossIncome <= (float)150000.00)
+		{
+			withHeld = (5000f) + ((grossIncome - (float)50000.00) * (float)0.15);
+		}
+		else if (grossIncome > (float)150000.00)
+		{
+			withHeld = (5000f) + (15000f) + ((grossIncome - (float)150000.00) * (float)0.2);
+		}
+		
+		
+		return((float)(Math.round(withHeld*100.0f)/100.0f));
+	}
+	
+	/**
+	* @override parent method
+	* @taxWithheld Returns the amount of the adjusted income that is exempted from taxation
+	*/
+	
+	public float deduction(Family family)
+	{
+		float deductionAmount = 0;
+		if (family.getNumAdults() == 1)
+		{
+			deductionAmount = deductionAmount + 2 * taxation.getAdultBaseExemption();
+		}
+		else
+		{
+			deductionAmount = deductionAmount + taxation.getAdultBaseExemption();
+		}
+		if (adjustedIncome() > (float)100000.00)
+		{
+			float deductionDiscont = ((float)(((int)((adjustedIncome() - 100000) / 1000)) * (float)(0.005)));
+			
+			if (deductionDiscont <= 0.3)
+			{
+				deductionAmount = deductionAmount - (deductionAmount * deductionDiscont);
+			}
+			else
+			{
+				deductionAmount = deductionAmount - (deductionAmount * (float)0.3);
+			}
+		}
+		
+		if (deductionAmount > adjustedIncome())
+		{
+			deductionAmount = adjustedIncome();
+		}
+		
+		return (Math.round(deductionAmount*100.0f)/100.0f);
+	}
+	
+	//@getEmployer returns Adult's employer
+	
+	public String getEmployer()
+	{
+		return employer;
+	}
+}

@@ -1,0 +1,12 @@
+
+public class AvailableCourse <K, V extends Comparable<V>> implements Comparable<AvailableCourse <K,V>>
+{
+
+	@Override
+	public int compareTo(AvailableCourse<K, V> o) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+
+}

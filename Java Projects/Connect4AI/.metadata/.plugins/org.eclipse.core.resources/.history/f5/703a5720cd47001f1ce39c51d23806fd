@@ -1,0 +1,56 @@
+import java.util.Scanner;
+
+public class main {
+
+	public static void main(String[] args) 
+	{
+		ConnectFourBoard myboard = new ConnectFourBoard();
+		
+		Scanner scanner = new Scanner(System.in);
+		
+		Connect4AI bot = new Connect4AI();
+		
+		int win = 0;
+		
+		myboard.printBoard();
+		
+		while(win == 0)
+		{
+			System.out.println(bot.getNextBestMove(1, myboard, 5, 1));
+			System.out.println("What is X's move");
+			myboard.redMove(scanner.nextInt() -1);
+			myboard.printBoard();
+			win = myboard.winChecker();
+			checkWhoWon(win);
+			
+			if(win == 0)
+			{
+				System.out.println(bot.getNextBestMove(-1, myboard, 5, -1));
+				System.out.println("What is O's move");
+				
+				if(!myboard.isLegal(scanner.nextInt() -1))
+				{
+					
+				}
+				
+				myboard.yellowMove(scanner.nextInt() -1);
+				myboard.printBoard();
+				win = myboard.winChecker();
+				checkWhoWon(win);
+			}
+		}
+	}
+	
+	public static void checkWhoWon(int x)
+	{
+		if(x == 1)
+		{
+			System.out.println("The X's have WON!!!");
+		}
+		if(x == -1)
+		{
+			System.out.println("The O's have WON!!!");
+		}
+	}
+
+}

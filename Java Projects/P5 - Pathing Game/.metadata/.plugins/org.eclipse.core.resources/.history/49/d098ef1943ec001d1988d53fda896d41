@@ -1,0 +1,21 @@
+
+public class Obstacle extends Block {
+
+	private String label;
+	
+	public Obstacle(String label)
+	{
+		this.label = label;
+	}
+	public String toString()
+	{
+		return(label);
+	}
+	
+	@Override
+	public int getValue() {
+		
+		return 0;
+	}
+
+}

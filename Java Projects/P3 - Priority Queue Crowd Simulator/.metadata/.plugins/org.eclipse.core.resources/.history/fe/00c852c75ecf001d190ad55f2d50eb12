@@ -1,0 +1,9 @@
+
+public class VIPQueue extends Queue{
+	
+	 public VIPQueue (String serverName, int queueSize, boolean acceptAnyClients)
+	 {
+		 
+	 }
+
+}

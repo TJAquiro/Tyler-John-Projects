@@ -1,0 +1,20 @@
+
+public class Passage extends Block {
+	
+	private int value;
+	
+	public Passage(int value)
+	{
+		this.value = value;
+	}
+	
+	public String toString()
+	{
+		return (value + "");
+	}
+	
+	public int getValue()
+	{
+		return value;
+	}
+}

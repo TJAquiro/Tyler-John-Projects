@@ -1,0 +1,29 @@
+
+public class MultiOutput {
+	
+	private int colnum;
+	private int depth;
+	private boolean win;
+	
+	public MultiOutput(int colnum, int depth, boolean win)
+	{
+		this.colnum = colnum;
+		this.depth = depth;
+		this.win = win;
+	}
+	
+	public int getColnum()
+	{
+		return colnum;
+	}
+	
+	public int getDepth()
+	{
+		return depth;
+	}
+	
+	public boolean getWin()
+	{
+		return win;
+	}
+}

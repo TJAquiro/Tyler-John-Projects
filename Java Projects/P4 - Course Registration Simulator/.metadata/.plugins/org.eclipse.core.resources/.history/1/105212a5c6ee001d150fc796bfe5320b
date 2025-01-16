@@ -1,0 +1,5 @@
+
+public class AvailableCourse <K, V extends Comparable<V>> implements Comparable<AvailableCourse <K,V>>
+{
+
+}

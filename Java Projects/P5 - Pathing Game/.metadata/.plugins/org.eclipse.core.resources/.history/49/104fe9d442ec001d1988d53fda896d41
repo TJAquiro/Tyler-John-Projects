@@ -1,0 +1,15 @@
+
+public abstract class Block {
+	
+	/**
+	    * Constructor for Course Object
+	    * validates inputs
+	    *
+	    * @param crn the Course's Registration Number
+	    * @param title the Course's Name
+	    * @param levels the the levels that this course admits (Graduate, Non-Degree, Undergraduate)
+	    * @return none
+	    * */
+	
+	public abstract int getValue();
+}

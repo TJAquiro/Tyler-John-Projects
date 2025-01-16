@@ -1,0 +1,16 @@
+
+public class DoubleOutput {
+	
+	private int colnum;
+	private int depth;
+	
+	public DoubleOutput(int colnum, int depth)
+	{
+		this.colnum = colnum;
+		this.depth = depth;
+	}
+	
+	public getColnum()
+	
+	public getDepth()
+}

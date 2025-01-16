@@ -1,0 +1,165 @@
+
+public class Queue {
+	private String serverName;
+	private int queueSize;
+	private Client clientBeingServed;
+	private Request requestInProgress;
+	private int processingStartTime;
+	private Client[] clientsHistory;
+	private Client[] clientsInQueue;
+	
+	public Queue (String serverName, int queueSize)
+	{
+		this.serverName = serverName;
+		this.queueSize = queueSize;
+		this.clientsInQueue = new Client[queueSize];
+	}
+	
+	public String toString()
+	{
+		String addstring = "";
+		
+		for(int x = 0;x < clientsInQueue.length; ++x)
+		{
+			
+			if (clientsInQueue[x] == null)
+			{
+				addstring = addstring + "[" + "  " + "]";
+			}
+			else
+			{
+				addstring = addstring + "[" + (clientsInQueue[x]).getId() + "]";
+			}
+		}
+		
+		if (clientBeingServed == null)
+		{
+			return ("[Queue:" + (this.getIndex(QueueSystem.getQueues()) + 1) + "]" + "[" + "  " + "]" + "-----" + addstring);
+		}
+		else
+		{
+			if (clientBeingServed.getId() < 10)
+			{
+				return ("[Queue:" + (this.getIndex(QueueSystem.getQueues()) + 1) + "]" + "[" + "0" + clientBeingServed.getId() + "]" + "-----" + addstring);
+			}
+			return ("[Queue:" + (this.getIndex(QueueSystem.getQueues()) + 1) + "]" + "[" + clientBeingServed.getId() + "]" + "-----" + addstring);
+		}
+	}
+	
+	public String toString(boolean showID)
+	{
+		if(showID)
+		{
+			int adder = 0;
+			String addstring = "";
+			
+			for(int clientx = 0;clientx < clientsInQueue.length; ++clientx)
+			{
+				if (clientsInQueue[clientx] != null && (clientsInQueue[clientx]).getRequests() != null)
+				{
+					for(int requestarrayindex = 0;requestarrayindex < ((clientsInQueue[clientx]).getRequests()).length; ++requestarrayindex)
+					{
+						adder = adder + (((clientsInQueue[clientx]).getRequests())[requestarrayindex]).calculateProcessingTime();
+					}
+					
+					addstring = addstring + "[" + adder + "]";
+					adder = 0;
+				}
+				
+				else
+				{
+					addstring = addstring + "[" + "  " + "]";
+					adder = 0;
+				}
+			}
+			
+			int currentClientAdder = 0;
+			
+			for(int x = 0;x < (clientBeingServed.getRequests()).length; ++x)
+			{
+				currentClientAdder = currentClientAdder + ((clientBeingServed.getRequests())[x]).calculateProcessingTime();
+			}
+			
+			if (this.getIndex(QueueSystem.getQueues()) + 1 < 10)
+			{
+				
+			}
+			return ("[Queue:" + (this.getIndex(QueueSystem.getQueues()) + 1) + "]" + "[" + currentClientAdder + "]" + "-----" + addstring);
+		}
+		else
+		{
+			return this.toString();
+		}
+	}
+	
+	
+	//setters
+	public void setServerName(String serverName){
+		this.serverName = serverName;
+	}
+	
+	public void setQueueSize(int queueSize){
+		this.queueSize = queueSize;
+	}
+	
+	public void setClientBeingServed(Client clientBeingServed){
+		this.clientBeingServed = clientBeingServed;
+	}
+	
+	public void setRequestInProgress(Request requestInProgress){
+		this.requestInProgress = requestInProgress;
+	}
+	
+	public void setProcessingStartTime(int processingStartTime){
+		this.processingStartTime = processingStartTime;
+	}
+	
+	public void setClientsHistory(Client[] clientsHistory){
+		this.clientsHistory = clientsHistory;
+	}
+	
+	public void setClientsInQueue(Client[] clientsInQueue){
+		this.clientsInQueue = clientsInQueue;
+	}
+	
+	//getters
+	public String getServerName() {
+		return serverName;
+	}
+	
+	public int getQueueSize() {
+		return queueSize;
+	}
+	
+	public Client getClientBeingServed() {
+		return clientBeingServed;
+	}
+	
+	public Request getRequestInProgress() {
+		return requestInProgress;
+	}
+	
+	public int getProcessingStartTime() {
+		return processingStartTime;
+	}
+	
+	public Client[] getClientsHistory() {
+		return clientsHistory;
+	}
+	
+	public Client[] getClientsInQueue() {
+		return clientsInQueue;
+	}
+	
+    public int getIndex(Queue[] Queues) {
+        int index = -1;
+        for (int i = 0; i < Queues.length; i++) 
+        {
+            if (Queues[i] == this) {
+                index = i;
+                break;
+            }
+        }
+        return index;
+        }
+}

@@ -1,0 +1,12 @@
+
+public abstract class Block {
+	
+	/**
+	    * Constructor for Course Object
+	    * validates inputs
+	    *
+	    * @param None
+	    * */
+	
+	public abstract int getValue();
+}

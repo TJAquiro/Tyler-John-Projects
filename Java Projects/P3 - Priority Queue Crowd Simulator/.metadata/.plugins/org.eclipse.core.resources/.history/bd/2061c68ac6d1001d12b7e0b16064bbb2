@@ -1,0 +1,133 @@
+import org.junit.Assert;
+
+public class P3tester {
+	public static void main(String[] args) 
+    {
+		String[] StringArray = {"sus"};
+		
+		InformationRequest a = new InformationRequest("I am an info Req", 10, 1, StringArray);
+		BuyingProducts b = new BuyingProducts("I am an buy products", 8, 2, StringArray);
+		ReturningItems c = new ReturningItems("I am an info Req", 9, 1, StringArray);
+		InformationRequest d = new InformationRequest("I am an info Req", 10, 1, StringArray);
+		BuyingProducts e = new BuyingProducts("I am an buy products", 8, 1, StringArray);
+		
+		Request[] aArray = {a};
+		Request[] bArray = {b};
+		Request[] cArray = {c};
+		Request[] dArray = {d};
+		Request[] eArray = {e};
+		
+		Client client1 = new Client("jj", "a", 2001, "MALE", 1, 1, aArray);
+		
+		Client client2 = new Client("ii", "z", 2001, "MALE", 1, 2, aArray);
+		
+		Client client3 = new Client("hh", "f", 2001, "MALE", 1, 5, aArray);
+		
+		Client client4 = new Client("gg", "b", 2001, "MALE", 1, 5, aArray);
+		
+		Client client5 = new Client("ff", "j", 2001, "MALE", 1, 5, aArray);
+		
+		Client client6 = new Client("ee", "d", 2001, "MALE", 1, 5, aArray);
+		
+		Client client7 = new Client("dd", "k", 2001, "MALE", 1, 5, aArray);
+		
+		VIPClient client8 = new VIPClient("cc", "r", 2001, "MALE", 2, 5, aArray, 8, 7);
+		
+		VIPClient client9 = new VIPClient("bb", "t", 2001, "MALE", 2, 5, aArray, 9, 10);
+		
+		VIPClient client10 = new VIPClient("aa", "y", 2001, "MALE", 2, 5, aArray, 11, 12);
+		
+		//System.out.println(x.toString() + "\n");
+		
+		//System.out.println(y.toString() + "\n");
+
+		//System.out.println(z.toString() + "\n");
+		
+		//System.out.println(v.toString() + "\n");
+		
+		
+		//waitinglinesize = 1 , not TV, no coffee
+		QueueSystem qS = new QueueSystem(10, false, false);
+		
+		//sets up clients in world
+		Client[] clientsInWorld = new Client[10];
+		clientsInWorld[0] = client1;
+		clientsInWorld[1] = client2;
+		clientsInWorld[2] = client3;
+		clientsInWorld[3] = client4;
+		clientsInWorld[4] = client5;
+		clientsInWorld[5] = client6;
+		clientsInWorld[6] = client7;
+		clientsInWorld[7] = client8;
+		clientsInWorld[8] = client9;
+		clientsInWorld[9] = client10;
+		
+		
+		QueueSystem.setClientsWorld(clientsInWorld);
+		
+		//sets up queues in system
+		Queue q1 = new Queue("Noah", 2);
+		//Queue q2 = new Queue("Dez", 2);
+		//VIPQueue q3 = new VIPQueue("Lux", 2, false);
+		Queue[] queues1 = {q1};
+		qS.setQueues(queues1);
+		
+		
+		boolean tf = false;
+		
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		
+		/*
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		*/
+		
+		/*
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		qS.increaseTime();
+		System.out.println(qS.toString(tf));
+		*/
+		
+		/*
+		for(int x = 0;x < qS.getQueues().length; ++x)
+		{
+			for(int y = 0;y < qS.getQueues()[x].getClientsHistory().length; ++y)
+			{
+				System.out.println(qS.getQueues()[x].getClientsHistory()[y]);
+			}
+
+		}
+		*/
+		
+    }
+}

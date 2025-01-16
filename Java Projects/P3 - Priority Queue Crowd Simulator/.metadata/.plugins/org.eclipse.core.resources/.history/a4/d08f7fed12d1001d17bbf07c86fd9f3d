@@ -1,0 +1,216 @@
+import org.junit.Assert; // org.junit.Assert
+
+public class QueueingSimulation {
+
+	public static void main(String[] arg) {
+
+		{
+			// Before the test
+			QueueSystem.setClock(0);
+			QueueSystem.setQueues(null);
+
+			// Create the system objects for Test01
+			Client client1 = new Client("John1", "Peter1", 1977, "MALE", 1, 50, null);
+			String[] items1 = { "Q1" };
+			InformationRequest r11 = new InformationRequest("IR1", 5, 5, items1);
+			Request[] rList1 = { r11 };
+			client1.setRequests(rList1);
+			Queue q1 = new Queue("Noah", 2);
+			QueueSystem qS = new QueueSystem(1, false, false);
+			QueueSystem.setQueues(new Queue[1]);
+			Client[] clientsInWorld = new Client[1];
+			clientsInWorld[0] = client1;
+			QueueSystem.setClientsWorld(clientsInWorld);
+			QueueSystem.getQueues()[0] = q1;
+			
+			
+			Assert.assertEquals(0, QueueSystem.getClock());
+			Assert.assertEquals("[Queue:1][  ]-----[  ][  ]", q1.toString());
+			q1.toString(true)
+			Assert.assertEquals("[Queue:1][  ]-----[  ][  ]", q1.toString(false));
+			q1.toString(true)
+
+		}
+
+		{
+			// Before the test
+			QueueSystem.setClock(0);
+			QueueSystem.setQueues(null);
+			
+			// Create the system objects for Test02
+			Client client1 = new Client("John1", "Peter1", 1977, "MALE", 1, 50, null);
+			String[] items1 = { "Q1" };
+			InformationRequest r11 = new InformationRequest("IR1", 5, 5, items1);
+			Request[] rList1 = { r11 };
+			client1.setRequests(rList1);
+			Queue q1 = new Queue("Noah", 2);
+			QueueSystem qS = new QueueSystem(1, false, false);
+			QueueSystem.setQueues(new Queue[1]);
+			Client[] clientsInWorld = new Client[1];
+			clientsInWorld[0] = client1;
+			QueueSystem.setClientsWorld(clientsInWorld);
+			QueueSystem.getQueues()[0] = q1;
+
+			//Simulation
+			qS.increaseTime();
+
+			Assert.assertEquals(1, QueueSystem.getClock());
+			Assert.assertEquals("[Queue:1][02]-----[  ][  ]", q1.toString());
+			System.out.println(q1.toString());
+			Assert.assertEquals("[Queue:1][05]-----[  ][  ]", q1.toString(true));
+			System.out.println(q1.toString(true));
+
+		}
+
+		{
+			// Before the test
+			QueueSystem.setClock(0);
+			QueueSystem.setQueues(null);
+			
+			// Create the system objects for Test03
+			Client client1 = new Client("John1", "Peter1", 1977, "MALE", 1, 50, null);
+			String[] items1 = { "Q1" };
+			InformationRequest r11 = new InformationRequest("IR1", 5, 5, items1);
+			Request[] rList1 = { r11 };
+			client1.setRequests(rList1);
+			Queue q1 = new Queue("Noah", 2);
+			QueueSystem qS = new QueueSystem(1, false, false);
+			QueueSystem.setQueues(new Queue[1]);
+			Client[] clientsInWorld = new Client[1];
+			clientsInWorld[0] = client1;
+			QueueSystem.setClientsWorld(clientsInWorld);
+			QueueSystem.getQueues()[0] = q1;
+
+			//Simulation
+			qS.increaseTime();
+			qS.increaseTime();
+
+			Assert.assertEquals(2, QueueSystem.getClock());
+			Assert.assertEquals("[Queue:1][03]-----[  ][  ]", q1.toString());
+			Assert.assertEquals("[Queue:1][04]-----[  ][  ]", q1.toString(false));
+		}
+
+		{
+			// Before the test
+			QueueSystem.setClock(0);
+			QueueSystem.setQueues(null);
+			
+			// Create the system objects for Test04
+			Client client1 = new Client("John1", "Peter1", 1977, "MALE", 1, 50, null);
+			String[] items1 = { "Q1" };
+			InformationRequest r11 = new InformationRequest("IR1", 5, 5, items1);
+			Request[] rList1 = { r11 };
+			client1.setRequests(rList1);
+			Queue q1 = new Queue("Noah", 2);
+			QueueSystem qS = new QueueSystem(1, false, false);
+			QueueSystem.setQueues(new Queue[1]);
+			Client[] clientsInWorld = new Client[1];
+			clientsInWorld[0] = client1;
+			QueueSystem.setClientsWorld(clientsInWorld);
+			QueueSystem.getQueues()[0] = q1;
+
+			//Simulation
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+
+			Assert.assertEquals(3, QueueSystem.getClock());
+			Assert.assertEquals("[Queue:1][04]-----[  ][  ]", q1.toString());
+			Assert.assertEquals("[Queue:1][03]-----[  ][  ]", q1.toString(false));
+		}
+
+		{
+			/// Before the test
+			QueueSystem.setClock(0);
+			QueueSystem.setQueues(null);
+
+			// Create the system objects for Test05
+			Client client1 = new Client("John1", "Peter1", 1977, "MALE", 1, 50, null);
+			String[] items1 = { "Q1" };
+			InformationRequest r11 = new InformationRequest("IR1", 5, 5, items1);
+			Request[] rList1 = { r11 };
+			client1.setRequests(rList1);
+			Queue q1 = new Queue("Noah", 2);
+			QueueSystem qS = new QueueSystem(1, false, false);
+			QueueSystem.setQueues(new Queue[1]);
+			Client[] clientsInWorld = new Client[1];
+			clientsInWorld[0] = client1;
+			QueueSystem.setClientsWorld(clientsInWorld);
+			QueueSystem.getQueues()[0] = q1;
+
+			//Simulation
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+
+			Assert.assertEquals(4, QueueSystem.getClock());
+			Assert.assertEquals("[Queue:1][05]-----[  ][  ]", q1.toString());
+			Assert.assertEquals("[Queue:1][02]-----[  ][  ]", q1.toString(false));
+		}
+
+		{
+			// Before the test
+			QueueSystem.setClock(0);
+			QueueSystem.setQueues(null);
+			
+			// Create the system objects for Test06
+			Client client1 = new Client("John1", "Peter1", 1977, "MALE", 1, 50, null);
+			String[] items1 = { "Q1" };
+			InformationRequest r11 = new InformationRequest("IR1", 5, 5, items1);
+			Request[] rList1 = { r11 };
+			client1.setRequests(rList1);
+			Queue q1 = new Queue("Noah", 2);
+			QueueSystem qS = new QueueSystem(1, false, false);
+			QueueSystem.setQueues(new Queue[1]);
+			Client[] clientsInWorld = new Client[1];
+			clientsInWorld[0] = client1;
+			QueueSystem.setClientsWorld(clientsInWorld);
+			QueueSystem.getQueues()[0] = q1;
+
+			//Simulation
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+
+			Assert.assertEquals(5, QueueSystem.getClock());
+			Assert.assertEquals("[Queue:1][06]-----[  ][  ]", q1.toString());
+			Assert.assertEquals("[Queue:1][01]-----[  ][  ]", q1.toString(false));
+		}
+
+		{
+			// Before the test
+			QueueSystem.setClock(0);
+			QueueSystem.setQueues(null);
+			Client.setIdCounter(1); //to reset the counter for this new test.
+
+			// Create the system objects for Test07
+			Client client1 = new Client("John1", "Peter1", 1977, "MALE", 1, 50, null);
+			String[] items1 = { "Q1" };
+			InformationRequest r11 = new InformationRequest("IR1", 5, 5, items1);
+			Request[] rList1 = { r11 };
+			client1.setRequests(rList1);
+			Queue q1 = new Queue("Noah", 2);
+			QueueSystem qS = new QueueSystem(1, false, false);
+			QueueSystem.setQueues(new Queue[1]);
+			Client[] clientsInWorld = new Client[1];
+			clientsInWorld[0] = client1;
+			QueueSystem.setClientsWorld(clientsInWorld);
+			QueueSystem.getQueues()[0] = q1;
+
+			//Simulation
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+			qS.increaseTime();
+
+			Assert.assertEquals(6, QueueSystem.getClock());
+			Assert.assertEquals("[Queue:1][  ]-----[  ][  ]", q1.toString());
+			Assert.assertEquals("[Queue:1][  ]-----[  ][  ]", q1.toString(false));
+		}
+	}
+}

@@ -1,0 +1,43 @@
+
+public class AvailableCourse2 <K, V extends Comparable<V>> implements Comparable<AvailableCourse2 <K,V>>
+{
+	private K key;
+	private V value;
+	
+	public AvailableCourse2 (K key, V value)
+	{
+		this.key = key;
+		this.value = value;
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (x instanceof AvailableCourse2 && ((AvailableCourse2) x).getValue().equals(this.value))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	@Override
+	public int compareTo(AvailableCourse2<K, V> o) {
+		
+		return (this.value.compareTo(o.getValue()));
+	}
+
+	
+	
+	public K getKey() {
+		return key;
+	}
+
+	public V getValue() {
+		return value;
+	}
+	
+	
+
+}

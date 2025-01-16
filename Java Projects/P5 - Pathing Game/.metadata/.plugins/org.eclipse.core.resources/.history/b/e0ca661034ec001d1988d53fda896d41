@@ -1,0 +1,318 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+
+public class GUI extends JFrame implements ActionListener {
+	
+	private JTextField displayField;
+	private JTextArea ShowField;
+	private String file;
+	private JButton filebutton;
+	private JPanel panel;
+	private JButton passageIteration;
+	private JButton obstacleIteration;
+	private JButton allIteration;
+	private JTextArea displayIteration;
+	private JButton runRecursion;
+	
+	public GUI() {
+        super("GUI");
+        displayField = new JTextField(30);
+        ShowField = new JTextArea(10,50);
+        displayIteration = new JTextArea(5,40);
+        
+        panel = new JPanel();
+        
+        filebutton = new JButton("Enter File name, Then Press to Import file");
+        
+        passageIteration = new JButton("Passage Iteration");
+        obstacleIteration = new JButton("Obstacle Iteration");
+        allIteration = new JButton("All Iteration");
+        runRecursion = new JButton("Run Recursion");
+        
+        passageIteration.addActionListener(this);
+        obstacleIteration.addActionListener(this);
+        allIteration.addActionListener(this);
+        runRecursion.addActionListener(this);
+        
+        displayField.addActionListener(this);
+        
+        filebutton.addActionListener(this);
+        
+        panel.add(displayField);
+        
+        panel.add(filebutton);
+        
+        panel.add(ShowField);
+        
+        panel.add(passageIteration);
+        
+        panel.add(obstacleIteration);
+        
+        panel.add(allIteration);
+        
+        panel.add(runRecursion);
+        
+        panel.add(displayIteration);
+        
+        add(panel);
+        setSize(500, 800);
+        setVisible(true);
+	}
+        
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object source = e.getSource();
+		
+		if (source == filebutton)
+		{
+			Field<Block> field = FieldGenerator.loadDataFromFile(((JButton) source).getText());
+			
+			ShowField.setText(field.toString());
+		}
+		if (source == passageIteration)
+		{
+			Field<Block> field = FieldGenerator.loadDataFromFile(((JButton) source).getText());
+			
+			Iterator<Block> it = field.iterator("Passage");
+	        
+			String adderString = "";
+			
+	        while(it.hasNext())
+	        	adderString = adderString + it.next();
+	        
+	        displayIteration.setText(adderString);
+		}
+		if (source == obstacleIteration)
+		{
+			Field<Block> field = FieldGenerator.loadDataFromFile(((JButton) source).getText());
+			
+			Iterator<Block> it = field.iterator("Obstacle");
+	        
+			String adderString = "";
+			
+	        while(it.hasNext())
+	        	adderString = adderString + it.next();
+	        
+	        displayIteration.setText(adderString);
+		}
+		if (source == allIteration)
+		{
+			Field<Block> field = FieldGenerator.loadDataFromFile(((JButton) source).getText());
+			
+			Iterator<Block> it = field.iterator();
+	        
+			String adderString = "";
+			
+	        while(it.hasNext())
+	        	adderString = adderString + it.next();
+	        
+	        displayIteration.setText(adderString);
+		}
+		if (source == runRecursion)
+		{
+			Field<Block> field = FieldGenerator.loadDataFromFile(((JButton) source).getText());
+			
+			Iterator<Block> it = field.iterator();
+	        
+			String adderString = "";
+			
+	        while(it.hasNext())
+	        	adderString = adderString + it.next();
+	        
+	        displayIteration.setText(adderString);
+		}
+		
+	}
+	
+	//moved All the methods needed for the recursion to the GUI 
+	
+	public class TwoValues
+    {
+        public int startingColumn;
+        public int totalPoints;
+    }
+	
+	public TwoValues bestStartingPoint(Field field)
+    {
+    	int maxStarting = 0;
+    	int maxAdder = 0;
+    	
+    	for(int x = 0;x < field.getWidth(); ++x)
+    	{
+    		int PossibleBestStarting = x;
+    		int PossibleBestAdder = 0;
+    		
+    		for (Block b : recursive(field, 0, x))
+        	{
+    			if (field.getElement(0, x) instanceof Passage)
+    			{
+    				PossibleBestAdder = PossibleBestAdder + b.getValue();
+    			}
+        	}
+    		
+    		if (PossibleBestAdder > maxAdder)
+    		{
+    			maxStarting = PossibleBestStarting;
+    			maxAdder = PossibleBestAdder;
+    		}
+    		
+    	}
+    	
+    	TwoValues reTwoVal = new TwoValues();
+    	
+    	reTwoVal.startingColumn = maxStarting;
+    	reTwoVal.totalPoints = maxAdder;
+    	
+		return reTwoVal;
+    	
+    }
+    
+    public ArrayList<Block> bestRoute(Field field, int startingColumn)
+    {
+    	ArrayList<Block> a = recursive(field, 0, startingColumn); //the output of this is initially reversed
+    	
+    	//un-reverses the items
+    	
+    	ArrayList<Block> b = new ArrayList<Block>();
+    	
+    	for(int x = a.size() - 1; x >= 0; --x)
+    	{
+    		b.add(a.get(x));
+    	}
+		
+    	return b;
+    }
+    
+    private ArrayList<Block> recursive(Field field, int currentRow, int currentCol)
+    {
+    	//if last row is hit
+    	//*****Odd CASE*****
+    	if (field.getHeight() == 1)
+    	{
+    		ArrayList<Block> x = new ArrayList<Block>();
+    		
+    		x.add((Block) field.getElement(currentRow, currentCol));
+    		
+    		return x; 
+    	}
+    	//*****BASE CASE*****
+    	if(currentRow + 2 == field.getHeight()) //on the second to last row
+    	{
+    		
+    		Passage left = new Passage(-1);
+    		Passage mid = new Passage(-1);
+    		Passage right = new Passage(-1);
+    		
+    		ArrayList<Block> lastval = new ArrayList<Block>();
+    		
+    		if (currentCol - 1 >= 0)  // moving to the left works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol - 1) instanceof Passage)
+    			{
+    				left = (Passage)(field.getElement(currentRow + 1, currentCol - 1));
+    			}
+    		}
+    		
+    		if (field.getElement(currentRow + 1, currentCol) instanceof Passage)
+    		{
+    			mid = (Passage)(field.getElement(currentRow + 1, currentCol));
+    		}
+    		
+    		if (currentCol + 1 < field.getWidth())  // moving to the right works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol + 1) instanceof Passage)
+    			{
+    				right = (Passage)(field.getElement(currentRow + 1, currentCol + 1));
+    			}
+    		}
+    		
+    		Block maxLeaf = findMaxOf2Blocks(right, findMaxOf2Blocks(mid, left));
+    		
+    		lastval.add(maxLeaf);
+    		
+    		lastval.add((Block) field.getElement(currentRow, currentCol));
+    		
+    		return lastval;
+    	}
+    	
+    	//*****RECURSIVE CASE*****
+    	else
+    	{
+    		ArrayList<Block> left = new ArrayList<Block>();
+    		ArrayList<Block> mid = new ArrayList<Block>();
+    		ArrayList<Block> right = new ArrayList<Block>();
+    		
+    		ArrayList<Block> pathadder = new ArrayList<Block>();
+    		
+    		if (currentCol - 1 >= 0)  // checks if moving to the left works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol - 1) instanceof Passage)
+    			{
+    				left = recursive(field, currentRow + 1, currentCol - 1);
+    			}
+    		}
+    		
+    		if (field.getElement(currentRow + 1, currentCol) instanceof Passage)
+			{
+				mid = recursive(field, currentRow + 1, currentCol);
+			}
+    		
+    		if (currentCol + 1 < field.getWidth())  // checks if moving to the right works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol + 1) instanceof Passage)
+    			{
+    				right = recursive(field, currentRow + 1, currentCol + 1);
+    			}
+    		}
+    		
+    		//issue if mid and right are swapped doesn't give same answer
+    		ArrayList<Block> HighestArray = findMaxOf2BlockArrays(right, findMaxOf2BlockArrays(mid, left));
+    		
+    		HighestArray.add((Block) field.getElement(currentRow, currentCol));
+
+    		return HighestArray;
+    	}
+    }
+    
+    private Block findMaxOf2Blocks(Block x, Block y)
+    {
+		if (y.getValue() > x.getValue())
+		{
+			return(y);
+		}
+		return x;
+    }
+    
+    private ArrayList<Block> findMaxOf2BlockArrays(ArrayList<Block> a, ArrayList<Block> b)
+    {
+    	int aAdder = 0;
+    	int bAdder = 0;
+    	
+    	for(int x = 0;x < a.size(); ++x)
+    	{
+    		aAdder = aAdder + a.get(x).getValue();
+    	}
+    	
+    	for(int x = 0;x < b.size(); ++x)
+    	{
+    		bAdder = bAdder + b.get(x).getValue();
+    	}
+    	
+    	if (bAdder > aAdder)
+		{
+			return(b);
+		}
+    	return a;
+    }
+	
+	public static void main(String[] args) {
+		GUI gui = new GUI();
+		gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+	
+}

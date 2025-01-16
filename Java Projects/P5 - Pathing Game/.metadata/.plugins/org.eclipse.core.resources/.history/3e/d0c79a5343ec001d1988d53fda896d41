@@ -1,0 +1,37 @@
+
+public class Obstacle extends Block {
+
+	private String label;
+	
+	/**
+	    * Constructor for Obstacle Object
+	    * validates inputs
+	    *
+	    * @param label the Obstacle's Name
+	    * @return none
+	    * */
+	
+	public Obstacle(String label)
+	{
+		this.label = label;
+	}
+	
+	/**
+	    * @override
+	    * Overrides toString() method
+	    *
+	    * @param none
+	    * @return String, "label"
+	    * */
+	public String toString()
+	{
+		return(label);
+	}
+	
+	@Override
+	public int getValue() {
+		
+		return 0;
+	}
+
+}

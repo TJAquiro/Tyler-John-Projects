@@ -1,0 +1,71 @@
+import java.util.Iterator;
+
+public class FieldIterator<T> implements Iterator<T> {
+	
+	private String iterableObjectName;
+	private Field playingField;
+	private int rowIndex = 0;
+    private int colIndex = 0;
+	
+	public FieldIterator(String iterableObjectName, Field playingField) {
+		this.iterableObjectName = iterableObjectName;
+		this.playingField = playingField;
+	}
+
+	public boolean hasNext() 
+    {
+		while ((rowIndex < playingField.getHeight() && colIndex < playingField.getWidth()))
+		{
+			if (iterableObjectName.equals("Passage") && playingField.getElement(rowIndex, colIndex) instanceof Passage)
+			{
+				return true;
+			}
+			if (iterableObjectName.equals("Obstacle") && playingField.getElement(rowIndex, colIndex) instanceof Obstacle)
+			{
+				return true;
+			}
+			else
+			{
+				increaseIndexers();
+			}
+		}
+		
+        return false;
+    }
+
+    public T next() 
+    {
+    	if (playingField == null)
+    	
+        if (!hasNext()) 
+        {
+            throw new java.util.NoSuchElementException();
+        }
+        
+        T element = (T) playingField.getElement(rowIndex, colIndex);
+        colIndex++;
+        
+        if (colIndex == playingField.getWidth()) 
+        {
+            rowIndex++;
+            colIndex = 0;
+        }
+        return element;
+    }
+    
+    private void increaseIndexers()
+    {	
+    	colIndex++;
+        
+        if (colIndex == playingField.getWidth()) 
+        {
+            rowIndex++;
+            colIndex = 0;
+        }
+    }
+
+    public void remove() 
+    {
+        throw new UnsupportedOperationException();
+    }
+}

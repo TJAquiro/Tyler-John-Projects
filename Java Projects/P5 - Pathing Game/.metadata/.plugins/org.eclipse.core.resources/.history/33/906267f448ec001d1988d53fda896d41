@@ -1,0 +1,114 @@
+import java.util.Random;
+import java.util.Scanner;
+import java.io.File;
+import java.util.Iterator;
+
+public class FieldGenerator {
+	
+	/**
+	    * for loading field text files
+	    *
+	    * @param filename, a file
+	    * @return Field<Block>, a field of Block objects
+	    * */
+	
+	public static Field<Block> loadDataFromFile(String filename)
+	{
+		try
+		{
+			Scanner sc = new Scanner (new File(filename));
+			int fieldLength = 0;
+			int fieldWidth = 0;
+			
+			while (sc.hasNextLine())
+			{
+				
+				String[] x = sc.nextLine().split(" ");
+				
+				fieldWidth = x.length;
+				++fieldLength;
+			}
+			
+			sc = new Scanner (new File("Field.txt"));
+			
+			Field<Block> loadedField = new Field<Block>(fieldLength,fieldWidth);
+			
+			int rowIndexer = 0;
+			
+			while (sc.hasNextLine())
+			{
+				String[] k = sc.nextLine().split(" ");
+				
+				for(int h = 0;h < k.length; ++h)
+				{	
+					if ((k[h]).equals("-"))
+					{
+						loadedField.setElement(rowIndexer, h, new Obstacle("-"));
+					}
+					else
+					{
+						try
+						{
+							int num = Integer.parseInt(k[h]);
+							
+							loadedField.setElement(rowIndexer, h, new Passage(num));
+						}
+						catch (Exception e)
+						{
+							System.out.println("Non-Numeric input found");
+							return(null);
+						}
+					}
+				}
+				
+				++rowIndexer;
+			}
+			
+			return loadedField;
+		}
+		catch (Exception e)
+		{
+			System.out.println("File Not Found");
+			
+			return(null);
+		}
+	}
+	
+	public static Field<Block> randomIntegers(int h, int w, int l, int m, int n)
+	{
+		
+		
+		//creates field
+		Field<Block> returnField = new Field<Block>(h, w);
+		Random ran = new Random();
+		
+		//adds passages and their points
+		for(int row = 0;row < h; ++row)
+		{
+			for(int col = 0;col < w; ++col)
+			{
+				returnField.setElement(row, col, new Passage((ran.nextInt((m+1)-l)) + l));
+			}
+		}
+		
+		//adds Obstacles
+		int obstaclesToAdd = n;
+		while (obstaclesToAdd != 0)
+		{
+			int x = ran.nextInt(h);
+			int y = ran.nextInt(w);
+			
+			if (!(returnField.getElement(x, y) instanceof Obstacle))
+			{
+				returnField.setElement(x,y,new Obstacle("-"));
+				--obstaclesToAdd;
+			}
+		}
+		
+		
+		return returnField;
+	}
+	
+
+
+}

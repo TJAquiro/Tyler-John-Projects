@@ -1,0 +1,222 @@
+import java.util.Scanner;
+
+class P1 
+{
+	
+	//=======================================================================================================================================================================================
+	//=====(Problem 1)=======================================================================================================================================================================
+	//=======================================================================================================================================================================================
+	
+	public static int stringValue(String word)
+    {
+		String storedLetter = " ";
+		int wordTotal = 0;
+		String currentletter;
+		String nums = "1234567890";
+		int currentMax = 0;
+		
+		for (int i = 0; i < word.length(); i++)
+		{
+			currentletter = word.substring(i,i+1);
+			if (!(nums.contains(currentletter)))
+			{
+				if (!(currentletter.contains(" ")))
+				{
+					if (currentletter.contains(storedLetter))
+					{
+						storedLetter = " ";
+					}
+					else
+					{
+						wordTotal = wordTotal + (int)word.charAt(i);
+						storedLetter = word.substring(i,i+1);
+						if ((int)word.charAt(i) > currentMax)
+						{
+							currentMax = (int)word.charAt(i);
+						}
+					}
+				}
+				else
+				{
+					storedLetter = " ";
+				}
+			}
+			else
+			{
+				storedLetter = " ";
+			}
+		}
+		
+		for (int i = 0; i < word.length(); i++)
+		{
+			currentletter = word.substring(i,i+1);
+			if ((nums.contains(currentletter)))
+			{
+				wordTotal = wordTotal + ((int)word.charAt(i) * currentMax);
+			}
+
+		}
+		
+		
+		return wordTotal;
+	}
+	
+	//=======================================================================================================================================================================================
+	//=====(Problem 8)=======================================================================================================================================================================
+	//=======================================================================================================================================================================================
+	
+	public static int[] GetouterRing(int topStart, int topEnd, int sideStart, int sideEnd, int[][] array, int[] nublist, int indexx)
+	{	
+		for (int top = topStart; top < topEnd; ++top)
+		{
+			nublist[indexx] = array[sideStart][top];
+			++indexx;
+		}
+		for (int right = sideStart; right < sideEnd; ++right)
+		{
+			nublist[indexx] = array[right][topEnd];
+			++indexx;
+		}
+		for (int bottom = topEnd; bottom > topStart; --bottom)
+		{
+			nublist[indexx] = array[sideEnd][bottom];
+			++indexx;
+			if (topStart == topEnd)
+				break;
+		}
+		for (int left = sideEnd; left > sideStart; --left)
+		{
+			nublist[indexx] = array[left][topStart];
+			++indexx;
+			if (sideStart == sideEnd)
+				break;
+		}
+		if (topStart == topEnd && sideStart == sideEnd && topStart==sideStart)
+		{
+			nublist[indexx] = array[topStart][sideStart];
+			++indexx;
+		}
+
+		return nublist;
+	}
+	
+	public static int GetouterRingIndex(int topStart, int topEnd, int sideStart, int sideEnd, int[][] array, int[] nublist, int indexx)
+	{	
+		for (int top = topStart; top < topEnd; ++top)
+		{
+			nublist[indexx] = array[sideStart][top];
+			++indexx;
+		}
+		for (int right = sideStart; right < sideEnd; ++right)
+		{
+			nublist[indexx] = array[right][topEnd];
+			++indexx;
+		}
+		for (int bottom = topEnd; bottom > topStart; --bottom)
+		{
+			nublist[indexx] = array[sideEnd][bottom];
+			++indexx;
+			if (topStart == topEnd)
+				break;
+		}
+		for (int left = sideEnd; left > sideStart; --left)
+		{
+			nublist[indexx] = array[left][topStart];
+			++indexx;
+			if (sideStart == sideEnd)
+				break;
+		}
+		if (topStart == topEnd && sideStart == sideEnd && topStart==sideStart)
+		{
+			nublist[indexx] = array[topStart][sideStart];
+			++indexx;
+		}
+		return indexx;
+	}
+
+
+	
+	public static int[] vortex(int[][] array)
+	{
+		int ts = 0;
+		int te = array[0].length - 1;
+		int ss = 0;
+		int se = array.length - 1;
+		int[] numlist = new int[(array[0].length * array.length)];
+		int currentindex = 0;
+		
+		for(int x = 0;(x < (array[0].length / 2)) && (x < (array.length / 2)); ++x)
+		{	
+			numlist = GetouterRing(ts,te,ss,se,array,numlist,currentindex);
+			
+			currentindex = GetouterRingIndex(ts,te,ss,se,array,numlist,currentindex);
+			
+			++ts;
+			--te;
+			++ss;
+			--se;
+			
+		}
+		
+		if (ts == te || ss == se)
+		{
+			if (ts == te && ss == se)
+				numlist = GetouterRing(ts,te,ss,se,array,numlist,currentindex);
+			else if (ss == se)
+			{
+				for (int top = ts; top <= te; ++top)
+				{
+					numlist[currentindex] = array[ss][top];
+					++currentindex;
+				}
+			}
+			else if (ts == te)
+			{
+				for (int right = ss; right <= se; ++right)
+				{
+					numlist[currentindex] = array[right][te];
+					++currentindex;
+				}
+			}
+
+			
+		}
+		
+		
+		return numlist;
+		
+	}
+	
+	//=======================================================================================================================================================================================
+	//=====(Testing Zone)====================================================================================================================================================================
+	//=======================================================================================================================================================================================
+	
+    public static void main (String [] args) 
+    {
+		Scanner scnr = new Scanner(System.in);
+		String stringValueTester = " ";
+		/*// Method 1: tester
+		while (!(stringValueTester.equals("Stop")))
+		{
+			System.out.println("Enter Test String for stringValue: ");
+			stringValueTester = scnr.nextLine();
+			System.out.println(stringValue(stringValueTester));
+		}
+		*/
+		
+		int test2dList[][] = {{1,2,3,4},{5,6,7,8},{9,10,11,12},{13,14,15,16}};
+		int test2dList2[][] = {{1,2,3},{4,5,6},{7,8,9}};
+		int test2dList3[][] = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},{11, 12, 13, 14, 15, 16, 17, 18, 19, 20},{21, 22, 23, 24, 25, 26, 27, 28, 29, 30},{31, 32, 33, 34, 35, 36, 37, 38, 39, 40},{41, 42, 43, 44, 45, 46, 47, 48, 49, 50}};
+		int test2dList4[][] = {{1, 2, 3},{4, 5, 6},{7, 8, 9},{10, 11, 12},{13, 14, 15},{16, 17, 18},{19, 20, 21},{22, 23, 24},{25, 26, 27},{28, 29, 30}};
+		int test2dList5[][] = {{1, 2, 3, 4, 5},{6, 7, 8, 9, 10},{11, 12, 13, 14, 15},{16, 17, 18, 19, 20},{21, 22, 23, 24, 25},{26, 27, 28, 29, 30}};
+		int test2dList6[][] = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},{11, 12, 13, 14, 15, 16, 17, 18, 19, 20},{21, 22, 23, 24, 25, 26, 27, 28, 29, 30}};
+		int test2dList7[][] = {{1,2}{3,4}}
+		
+		int[] finallist = vortex(test2dList7);
+		
+		for (int item = 0; item < finallist.length; ++item)
+			System.out.print(finallist[item] + " ");
+		
+		
+    }
+}

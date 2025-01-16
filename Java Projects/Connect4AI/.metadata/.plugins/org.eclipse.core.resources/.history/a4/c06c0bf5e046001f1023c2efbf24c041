@@ -1,0 +1,260 @@
+
+public class ConnectFourBoard {
+	
+	private byte[][] Board;
+	
+	public ConnectFourBoard()
+	{
+		Board = new byte[6][7];
+	}
+	
+	public void clearBoard()
+	{
+		Board = new byte[6][7];
+	}
+	
+	public int[] getLegalMoves()
+	{
+		int[] moves = new int[7];
+		
+		int index = 0;
+		
+		for(int col = 0;col < Board[0].length; ++col)
+		{
+			if(Board[0][col] == 0)
+			{
+				moves[index] = 
+			}
+		}
+		return moves;
+		
+	}
+	
+	public void printBoard()
+	{
+		for(int row = Board.length -1 ;row > -1; --row)
+		{
+			for(int col = 0;col < Board[row].length; ++col)
+			{
+				if(Board[row][col] == 0)
+				{
+					System.out.print("- ");
+				}
+				if(Board[row][col] == 1)
+				{
+					System.out.print("X ");
+				}
+				if(Board[row][col] == -1)
+				{
+					System.out.print("O ");
+				}
+			}
+			System.out.println();
+		}
+		System.out.println("1 2 3 4 5 6 7");
+	}
+	
+	public boolean redMove(int i)
+	{
+		if(i < 0 || i > 6)
+		{
+			return false;
+		}
+		//find next open position 
+		for(int x = 0;x < 6; ++x)
+		{
+			if(Board[x][i] == 0)
+			{
+				Board[x][i] = 1;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean yellowMove(int i)
+	{
+		if(i < 0 || i > Board.length)
+		{
+			return false;
+		}
+		//find next open position 
+		for(int x = 0;x < Board.length; ++x)
+		{
+			if(Board[x][i] == 0)
+			{
+				Board[x][i] = -1;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public int winChecker()
+	{
+		int numBeingChecked = 0;
+		int SameInTheRow = 0;
+		
+		//check horizontal
+		for(int row = 0;row < Board.length; ++row)
+		{
+			numBeingChecked = 0;
+			SameInTheRow = 0;
+			
+			for(int col = 0;col < Board[row].length; ++col)
+			{
+				if(Board[row][col] == 0)
+				{
+					SameInTheRow = 0;
+					numBeingChecked = 0;
+				}
+				if(Board[row][col] == 1)
+				{
+					if(numBeingChecked == 1)
+					{
+						SameInTheRow++;
+					}
+					else
+					{
+						numBeingChecked = 1;
+						SameInTheRow = 1;
+					}
+				}
+				if(Board[row][col] == -1)
+				{
+					if(numBeingChecked == -1)
+					{
+						SameInTheRow++;
+					}
+					else
+					{
+						numBeingChecked = -1;
+						SameInTheRow = 11;
+					}
+				}
+				
+				if (SameInTheRow == 4)
+				{
+					return 1;
+				}
+				if (SameInTheRow == 14)
+				{
+					return -1;
+				}
+			}
+		}
+		
+		//check vertical
+		for(int col = 0;col < Board[0].length; ++col)
+		{
+			numBeingChecked = 0;
+			SameInTheRow = 0;
+			
+			for(int row = 0;row < Board.length; ++row)
+			{
+				if(Board[row][col] == 0)
+				{
+					SameInTheRow = 0;
+					numBeingChecked = 0;
+				}
+				if(Board[row][col] == 1)
+				{
+					if(numBeingChecked == 1)
+					{
+						SameInTheRow++;
+					}
+					else
+					{
+						numBeingChecked = 1;
+						SameInTheRow = 1;
+					}
+				}
+				if(Board[row][col] == -1)
+				{
+					if(numBeingChecked == -1)
+					{
+						SameInTheRow++;
+					}
+					else
+					{
+						numBeingChecked = -1;
+						SameInTheRow = 11;
+					}
+				}
+				
+				if (SameInTheRow == 4)
+				{
+					return 1;
+				}
+				if (SameInTheRow == 14)
+				{
+					return -1;
+				}
+			}
+		}
+		
+		//check diagonal right
+		for(int r = 0;r < 3; ++r) //row
+		{
+			for(int c = 0;c < 4; ++c) //col
+			{
+				numBeingChecked = 0;
+				
+				if(Board[r][c] == Board[r+1][c+1] && Board[r][c] == Board[r+2][c+2] && Board[r][c] == Board[r+3][c+3])
+				{
+					if (Board[r][c] == 1)
+					{
+						return 1;
+					}
+					if (Board[r][c] == -1)
+					{
+						return -1;
+					}
+				}
+			}
+		}
+		
+		//check diagonal left
+		for(int r = 0;r < 3; ++r) //row
+		{
+			for(int c = 3;c < 7; ++c) //col
+			{
+				numBeingChecked = 0;
+				
+				if(Board[r][c] == Board[r+1][c-1] && Board[r][c] == Board[r+2][c-2] && Board[r][c] == Board[r+3][c-3])
+				{
+					if (Board[r][c] == 1)
+					{
+						return 1;
+					}
+					if (Board[r][c] == -1)
+					{
+						return -1;
+					}
+				}
+			}
+		}
+		return 0;
+	}
+	
+	public byte getPiece(int x, int y)
+	{
+		return Board[x][y];
+	}
+	
+	public byte[][] getboard()
+	{
+		return Board;
+	}
+	
+	public void setboard(byte[][] x)
+	{
+		Board = x;
+	}
+	
+	
+	
+	
+	
+	
+}

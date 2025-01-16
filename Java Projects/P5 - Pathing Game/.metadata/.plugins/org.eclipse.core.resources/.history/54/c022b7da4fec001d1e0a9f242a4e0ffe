@@ -1,0 +1,171 @@
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class Field<T> implements FlexibleIterable<T> 
+{
+	private T[][] matrix;
+	
+	/**
+	    * Constructor for Field Object, sets up the matrix field
+	    *
+	    * @param height the height of the Field
+	    * @param width the height of the width
+	    * @return none
+	    * */
+	
+	public Field(int height, int width)
+	{
+		matrix = (T[][]) new Object[height][width];
+	}
+	
+	/**
+	    * Gets element at specific coordinates in the field
+	    *
+	    * @param row, of element on the field
+	    * @param col, of element on the field
+	    * @return T, the element at input coordinates
+	    * */
+	
+	public T getElement(int row, int col)
+	{
+		return matrix[row][col];
+	}
+	
+	/**
+	    * Sets element at specific coordinates in the field
+	    *
+	    * @param row, of the element being set
+	    * @param col, of the element being set
+	    * @return none
+	    * */
+	
+	public void setElement(int row, int col, T el)
+	{
+		matrix[row][col] = el;
+	}
+	
+	/**
+	    * Returns the Height of the field
+	    *
+	    * @param none
+	    * @return int
+	    * */
+	
+	public int getHeight()
+	{
+		return matrix.length;
+	}
+	
+	/**
+	    * Returns the Width of the field
+	    *
+	    * @param none
+	    * @return int
+	    * */
+	
+	public int getWidth()
+	{
+		return matrix[0].length;
+	}
+	
+	/**
+	    * @override
+	    * Overrides toString() method
+	    * returns a String of all the Blocks in the field using their toString() method
+	    *
+	    * @param none
+	    * @return String
+	    * */
+	
+	public String toString()
+	{
+		String AdderString = "";
+		
+		for(int x = 0;x < matrix.length; ++x)
+		{
+			for(int y = 0;y < matrix[x].length; ++y)
+			{
+				//ensures the element being added is an Obstacle or Passage
+				
+				if(matrix[x][y] instanceof Obstacle)
+				{
+					AdderString = AdderString + ((Obstacle)matrix[x][y]).toString() + " ";
+				}
+				else if(matrix[x][y] instanceof Passage)
+				{
+					AdderString = AdderString + ((Passage)matrix[x][y]).toString() + " ";
+				}
+			}
+			
+			//after each row a new line is made
+			
+			AdderString = AdderString + "\n";
+		}
+		
+		return AdderString;
+	}
+	
+
+	/**
+	    * Creates an iterator object for iterating over the field
+	    *
+	    * @param none
+	    * @return Iterator
+	    * */
+	
+	public Iterator<T> iterator() 
+	{
+        Iterator<Block> x = new Iterator<Block>() 
+        {
+            private int rowIndex = 0;
+            private int colIndex = 0;
+
+            public boolean hasNext() 
+            {
+            	//checks if the last element has been reached
+            	
+                return rowIndex < matrix.length && colIndex < matrix[rowIndex].length;
+            }
+
+            public T next() 
+            {
+            	//if next() is called and the hasNext() is false a NoSuchElementException is raised
+                if (!hasNext()) 
+                {
+                    throw new java.util.NoSuchElementException();
+                }
+                
+                T element = matrix[rowIndex][colIndex];
+                colIndex++;
+                
+                if (colIndex == matrix[rowIndex].length) 
+                {
+                    rowIndex++;
+                    colIndex = 0;
+                }
+                return element;
+            }
+            
+          //calling remove() raises an UnsupportedOperationException
+
+            public void remove() 
+            {
+                throw new UnsupportedOperationException();
+            }
+        };
+        return (Iterator<T>) x;
+    }
+	
+	/**
+	    * Creates an iterator object for only items with a specific type
+	    * ie “Obstacle” or “Passage”
+	    *
+	    * @param String
+	    * @return Iterator
+	    * */
+	
+	public Iterator<T> iterator(String iterableObjectName) 
+	{
+        return new FieldIterator<T>(iterableObjectName, this);
+    }
+}

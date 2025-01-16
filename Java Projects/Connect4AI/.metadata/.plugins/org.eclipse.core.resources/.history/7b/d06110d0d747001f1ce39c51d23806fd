@@ -1,0 +1,36 @@
+
+public class MultiOutput{
+	
+	private int colnum;
+	private int depth;
+	private int eval;
+	
+	public MultiOutput(int colnum, int depth, int eval)
+	{
+		this.colnum = colnum;
+		this.depth = depth;
+		this.eval = eval;
+	}
+	
+	public int getColnum()
+	{
+		return colnum;
+	}
+	
+	public int getDepth()
+	{
+		return depth;
+	}
+	
+	public int getEval()
+	{
+		return eval;
+	}
+	
+	public String toString()
+	{
+		String r = colnum+1 + " Evaluation: " + eval;
+		
+		return "column: " + r;
+	}
+}

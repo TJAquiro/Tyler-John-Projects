@@ -1,0 +1,27 @@
+
+public class Passage extends Block {
+	
+	private int value;
+	
+	/**
+	    * Constructor for Passage Object
+	    *
+	    * @param value the amount of points associated with the Passage
+	    * @return none
+	    * */
+	
+	public Passage(int value)
+	{
+		this.value = value;
+	}
+	
+	public String toString()
+	{
+		return (value + "");
+	}
+	
+	public int getValue()
+	{
+		return value;
+	}
+}

@@ -1,0 +1,17 @@
+
+public class VIPQueue extends Queue{
+	
+	private boolean acceptAnyClients;
+	
+	public VIPQueue (String serverName, int queueSize, boolean acceptAnyClients)
+	{
+		super(serverName, queueSize);
+		
+	}
+	 
+	 public VIPQueue (String serverName, int queueSize)
+	{
+		 
+	}
+
+}

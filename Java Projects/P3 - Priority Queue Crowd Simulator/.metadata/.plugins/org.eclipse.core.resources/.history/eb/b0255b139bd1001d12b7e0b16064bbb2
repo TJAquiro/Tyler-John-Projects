@@ -1,0 +1,332 @@
+
+public class Client {
+	
+	private static int counter = 0;
+	private int id;
+	private String firstName;
+	private String lastName;
+	private int yearOfBirth;
+	private Gender gender;
+	private Request[] requests;
+	private int arrivalTime;
+	private int waitingTime;
+	private int timeInQueue;
+	private int serviceTime;
+	private int departureTime;
+	private int patience;
+	
+	public Client (String firstName, String lastName, int yearOfBirth, String gender, int arrivalTime, int patience, Request[] requests)
+	{
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.yearOfBirth = yearOfBirth;
+		this.arrivalTime = arrivalTime;
+		this.patience = patience;
+		this.requests = requests;
+		
+		if (gender.equals("FEMALE"))
+		{
+			this.gender = Gender.MALE;
+		}
+		if (gender.equals("FEMALE"))
+		{
+			this.gender = Gender.FEMALE;
+		}
+		
+		Client.counter++;
+		this.id = Client.counter;
+		this.waitingTime = 0;
+		this.timeInQueue = 0;
+		this.serviceTime = 0;
+		this.departureTime = -1;
+		
+		if (arrivalTime <= 0)
+		{
+			arrivalTime = QueueSystem.getClock();
+		}
+		
+		//Validation checker
+		if(arrivalTime < 1)
+		{
+			System.out.println("Problem: arrivalTime is less than 1");
+		}
+		
+		if ((departureTime != 0) && (departureTime >= arrivalTime + waitingTime + timeInQueue))
+		{
+			System.out.println("Problem: departure Time is off");
+		}
+		
+		if(waitingTime < 0)
+		{
+			System.out.println("Problem: waitingTime is less than 1");
+		}
+		if(timeInQueue < 0)
+		{
+			System.out.println("Problem: timeInQueue is less than 1");
+		}
+	}
+	
+	
+	
+	public Client (String firstName, String lastName, int yearOfBirth, String gender, int patience, Request[] requests)
+	{
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.yearOfBirth = yearOfBirth;
+		this.patience = patience;
+		this.requests = requests;
+		
+		if (gender.equals("FEMALE"))
+		{
+			this.gender = Gender.MALE;
+		}
+		if (gender.equals("FEMALE"))
+		{
+			this.gender = Gender.FEMALE;
+		}
+		
+		Client.counter++;
+		this.id = Client.counter;
+		this.waitingTime = 0;
+		this.timeInQueue = 0;
+		this.serviceTime = 0;
+		this.departureTime = -1;
+		this.arrivalTime = QueueSystem.getClock();
+		
+		//Validation checker
+		if(arrivalTime < 1)
+		{
+			System.out.println("Problem: arrivalTime is less than 1");
+		}
+		
+		if ((departureTime != 0) && (departureTime >= arrivalTime + waitingTime + timeInQueue))
+		{
+			System.out.println("Problem: departure Time is off");
+		}
+		
+		if(waitingTime < 0)
+		{
+			System.out.println("Problem: waitingTime is less than 1");
+		}
+		if(timeInQueue < 0)
+		{
+			System.out.println("Problem: timeInQueue is less than 1");
+		}
+		
+	}
+	
+	
+	
+	public Client(String firstName, String lastName, int yearOfBirth, String gender, int patience)
+	{
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.yearOfBirth = yearOfBirth;
+		this.patience = patience;
+		
+		if (gender.equals("FEMALE"))
+		{
+			this.gender = Gender.MALE;
+		}
+		if (gender.equals("FEMALE"))
+		{
+			this.gender = Gender.FEMALE;
+		}
+		
+		Client.counter++;
+		this.id = Client.counter;
+		this.waitingTime = 0;
+		this.timeInQueue = 0;
+		this.serviceTime = 0;
+		this.departureTime = -1;
+		this.arrivalTime = QueueSystem.getClock();
+		
+		
+		//Validation checker
+		if(arrivalTime < 1)
+		{
+			System.out.println("Problem: arrivalTime is less than 1");
+		}
+		
+		if ((departureTime != 0) && (departureTime >= arrivalTime + waitingTime + timeInQueue))
+		{
+			System.out.println("Problem: departure Time is off");
+		}
+		
+		if(waitingTime < 0)
+		{
+			System.out.println("Problem: waitingTime is less than 1");
+		}
+		if(timeInQueue < 0)
+		{
+			System.out.println("Problem: timeInQueue is less than 1");
+		}
+	}
+	
+	public int getProcessingTime()
+	{
+		int adder = 0;
+		
+		for(int x = 0;x < requests.length; ++x)
+		{
+			adder = adder + requests[x].calculateProcessingTime();
+		}
+		
+		return adder;
+	}
+	
+	public int serviceTime()
+	{	
+		return serviceTime;
+	}
+	
+	public int estimateServiceLevel()
+	{
+		int ServiceLevelPoints = 10;
+		
+		if (waitingTime > 4)
+			--ServiceLevelPoints;
+		if (waitingTime > 6)
+			--ServiceLevelPoints;
+		if (waitingTime > 8)
+			--ServiceLevelPoints;
+		if (waitingTime > 10)
+			--ServiceLevelPoints;
+		if (waitingTime > 12)
+			--ServiceLevelPoints;
+		if (timeInQueue > 4)
+			--ServiceLevelPoints;
+		if (timeInQueue > 6)
+			--ServiceLevelPoints;
+		if (timeInQueue > 8)
+			--ServiceLevelPoints;
+		if (timeInQueue > 10)
+			--ServiceLevelPoints;
+		if (timeInQueue > 12)
+			--ServiceLevelPoints;
+		
+		
+		return ServiceLevelPoints;
+	}
+	
+	public String toString()
+	{
+		return (
+				"Client: " + lastName + "," + firstName + "\n" +
+				"** Arrival Time : " + arrivalTime + "\n" +
+				"** Waiting Time : " + waitingTime + "\n" +
+				"** Time In Queue : " + timeInQueue + "\n" +
+				"** Service Time : " + serviceTime + "\n" +
+				"** Departure Time : " + departureTime + "\n" +
+				"** Served By Server: " + "TODO add Server" + "\n" +
+				"** Service Level : " + estimateServiceLevel()
+				);
+	}
+	
+	//setters
+	public void setId(int id){
+		this.id = id;
+	}
+	
+	public void setFirstName(String firstName){
+		this.firstName = firstName;
+	}
+
+	public void setLastName(String lastName){
+		this.lastName = lastName;
+	}
+	
+	public void setYearOfBirth(int yearOfBirth){
+		this.yearOfBirth = yearOfBirth;
+	}
+	
+	public void setGender(String gender){
+		if (gender.equals("FEMALE")) {
+			this.gender = Gender.MALE;
+		}
+		if (gender.equals("FEMALE")) {
+			this.gender = Gender.FEMALE;
+		}
+	}
+	
+	public void setRequests(Request[] requests){
+		this.requests = requests;
+	}
+	
+	public void setArrivalTime(int arrivalTime){
+		this.arrivalTime = arrivalTime;
+	}
+	
+	public void setWaitingTime(int waitingTime){
+		this.waitingTime = waitingTime;
+	}
+	
+	public void setTimeInQueue(int timeInQueue){
+		this.timeInQueue = timeInQueue;
+	}
+	
+	public void setServiceTime(int serviceTime){
+		this.serviceTime = serviceTime;
+	}
+	
+	public void setDepartureTime(int departureTime){
+		this.departureTime = departureTime;
+	}
+	
+	public void setPatience(int patience){
+		this.patience = patience;
+	}
+	
+	//Getters
+	
+	public int getId(){
+		return id;
+	}
+	
+	public String getFirstName(){
+		return firstName;
+	}
+	
+	public String getLastName(){
+		return lastName;
+	}
+	
+	public int getYearOfBirth(){
+		return yearOfBirth;
+	}
+	
+	public Gender getGender(){
+		return gender;
+	}
+	
+	public Request[] getRequests(){
+		return requests;
+	}
+	
+	public int getArrivalTime(){
+		return arrivalTime;
+	}
+	
+	public int getWaitingTime(){
+		return waitingTime;
+	}
+	
+	public int getTimeInQueue(){
+		return timeInQueue;
+	}
+	
+	public int getServiceTime(){
+		return serviceTime;
+	}
+	public int getDepartureTime(){
+		return departureTime;
+	}
+	public int getPatience(){
+		return patience;
+	}
+	
+	public static void setIdCounter(int x)
+	{
+		counter = x;
+	}
+}

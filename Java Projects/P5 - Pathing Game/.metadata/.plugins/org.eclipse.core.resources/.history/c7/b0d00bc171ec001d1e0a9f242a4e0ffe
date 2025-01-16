@@ -1,0 +1,147 @@
+import java.util.Random;
+import java.util.Scanner;
+import java.io.File;
+
+public class FieldGenerator {
+	
+	/**
+	    * for loading field text files
+	    *
+	    * @param filename, a file
+	    * @return Field<Block>, a field of Block objects
+	    * */
+	
+	public static Field<Block> loadDataFromFile(String filename)
+	{
+		try
+		{
+			File file1 = new File(filename);
+			
+			Scanner sc = new Scanner (file1);
+			int fieldLength = 0;
+			int fieldWidth = 0;
+			
+			//figures out how many columns and rows are in the file
+			while (sc.hasNextLine())
+			{
+				
+				String[] x = sc.nextLine().split(" ");
+				
+				fieldWidth = x.length;
+				++fieldLength;
+			}
+			
+			sc = new Scanner (new File("Field.txt"));
+			
+			Field<Block> loadedField = new Field<Block>(fieldLength,fieldWidth);
+			
+			int rowIndexer = 0;
+			
+			//creates a field using the characters in the file 
+			
+			while (sc.hasNextLine())
+			{
+				String[] k = sc.nextLine().split(" ");
+				
+				//if a "-" is found an Obstacle object is added
+				
+				for(int h = 0;h < k.length; ++h)
+				{	
+					if ((k[h]).equals("-"))
+					{
+						loadedField.setElement(rowIndexer, h, new Obstacle("-"));
+					}
+					else
+					{
+						//else if an int is found an Passage object is added with that number of points assigned to it
+						
+						try
+						{
+							int num = Integer.parseInt(k[h]);
+							
+							loadedField.setElement(rowIndexer, h, new Passage(num));
+						}
+						catch (Exception e)
+						{
+							//if improper numbers are found field is set to empty field
+							
+							System.out.println("Non-Numeric input found");
+							
+							sc.close();
+							
+							return(new Field<Block>(0,0));
+						}
+					}
+				}
+				
+				++rowIndexer;
+			}
+			
+			sc.close();
+			return loadedField;
+		}
+		catch (Exception e)
+		{
+			//if the file doesn't exist
+			
+			System.out.println("File Not Present");
+			
+			//field is set to empty field
+			
+			Field<Block> j = new Field<Block>(1,1);
+			j.setElement(0, 0, new Obstacle("4"));
+			
+			return(j);
+		}
+	}
+	
+	/**
+	    * for Generating a Field
+	    *
+	    * @param h, the height of the desired field 
+	    * @param w, the width of the desired field 
+	    * @param l, the lowest random number of points that a Passage can have
+	    * @param m, the largest random number of points that a Passage can have
+	    * @param n, the amount of obstacles in the field 
+	    * @return Field<Block>, a field of Block objects
+	    * */
+	
+	public static Field<Block> randomIntegers(int h, int w, int l, int m, int n)
+	{		
+		//creates field
+		Field<Block> returnField = new Field<Block>(h, w);
+		Random ran = new Random();
+		
+		//adds passages and their points
+		for(int row = 0;row < h; ++row)
+		{
+			for(int col = 0;col < w; ++col)
+			{
+				returnField.setElement(row, col, new Passage((ran.nextInt((m+1)-l)) + l));
+			}
+		}
+		
+		//adds Obstacles
+		int obstaclesToAdd = n;
+		while (obstaclesToAdd != 0)
+		{
+			//chooses a random coordinate in the field
+			int x = ran.nextInt(h);
+			int y = ran.nextInt(w);
+			
+			//if an obstacle isn't already there one is added
+			
+			if (!(returnField.getElement(x, y) instanceof Obstacle))
+			{
+				returnField.setElement(x,y,new Obstacle("-"));
+				--obstaclesToAdd;
+			}
+		}
+		
+		
+		return returnField;
+	}
+	
+
+
+}

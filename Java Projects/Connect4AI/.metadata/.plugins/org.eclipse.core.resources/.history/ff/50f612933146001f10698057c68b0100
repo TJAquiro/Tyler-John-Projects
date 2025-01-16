@@ -1,0 +1,11 @@
+
+public class DoubleOutput {
+	
+	public int first;
+	public int second;
+	
+	public Connect4AI()
+	{
+		
+	}
+}

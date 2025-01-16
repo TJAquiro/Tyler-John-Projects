@@ -1,0 +1,11 @@
+public class P2tester
+{
+	public static void main (String [] args) 
+    {
+
+		Person a = new Person();
+	
+		a.setName("Jonny");
+	
+	}
+}

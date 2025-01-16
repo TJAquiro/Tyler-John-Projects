@@ -1,0 +1,110 @@
+import java.util.Iterator;
+
+public class FieldIterator<T> implements Iterator<T> {
+	
+	private String iterableObjectName;
+	private Field playingField;
+	private int rowIndex = 0;
+    private int colIndex = 0;
+	
+    /**
+	    * Constructor for FieldIterator Object
+	    *
+	    * @param iterableObjectName, a string specifying the type that the user wants to iterate through
+	    * @param playingField, the field being iterated through
+	    * @return none
+	    * */
+    
+	public FieldIterator(String iterableObjectName, Field playingField) {
+		this.iterableObjectName = iterableObjectName;
+		this.playingField = playingField;
+	}
+
+	/**
+	    * @override
+	    * Overrides hasNext() method
+	    * This will iterate through the field object until an object of iterableObjectName 
+	    * is meet or it reaches the end of the field
+	    *
+	    * @param none
+	    * @return Boolean, True or False
+	    * */
+	
+	public boolean hasNext()
+    {
+		if (playingField == null)
+    	{
+    		return false;
+    	}
+		
+		while ((rowIndex < playingField.getHeight() && colIndex < playingField.getWidth()))
+		{
+			if (iterableObjectName.equals("Passage") && playingField.getElement(rowIndex, colIndex) instanceof Passage)
+			{
+				return true;
+			}
+			if (iterableObjectName.equals("Obstacle") && playingField.getElement(rowIndex, colIndex) instanceof Obstacle)
+			{
+				return true;
+			}
+			else
+			{
+				increaseIndexers();
+			}
+		}
+		
+        return false;
+    }
+	
+	/**
+	    * @override
+	    * Overrides next() method
+	    * returns the next available object that matches iterableObjectName
+	    *
+	    * @param none
+	    * @return Passage or Obstacle object
+	    * */
+	
+    public T next() 
+    {
+    	if (playingField == null)
+    	{
+    		return null;
+    	}
+    	
+    	//if next() is called and the hasNext() is false a NoSuchElementException is raised
+        if (!hasNext()) 
+        {
+            throw new java.util.NoSuchElementException();
+        }
+        
+        T element = (T) playingField.getElement(rowIndex, colIndex);
+        
+        //after the element is got indexers increase to the next element in the field
+        colIndex++;
+     
+        
+        if (colIndex == playingField.getWidth()) 
+        {
+            rowIndex++;
+            colIndex = 0;
+        }
+        return element;
+    }
+    
+    private void increaseIndexers()
+    {	
+    	colIndex++;
+        
+        if (colIndex == playingField.getWidth()) 
+        {
+            rowIndex++;
+            colIndex = 0;
+        }
+    }
+
+    public void remove() 
+    {
+        throw new UnsupportedOperationException();
+    }
+}

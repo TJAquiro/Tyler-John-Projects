@@ -1,0 +1,12 @@
+
+public class DoubleOutput {
+	
+	public int first;
+	public int second;
+	
+	public DoubleOutput(int first, int second)
+	{
+		this.first = first;
+		this.second = second;
+	}
+}

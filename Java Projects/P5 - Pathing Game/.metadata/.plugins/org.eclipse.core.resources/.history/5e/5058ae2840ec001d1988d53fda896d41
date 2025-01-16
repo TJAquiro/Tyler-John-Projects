@@ -1,0 +1,274 @@
+import java.util.Scanner;
+import java.io.File;
+import java.util.Iterator;
+import java.util.ArrayList;
+
+public class P5testing
+{
+    /**
+    static nested class serving as a vehicle to return two values from a method
+    */
+    public static class TwoValues
+    {
+        public int startingColumn;
+        public int totalPoints;
+    }
+
+    public static void main(String args[])
+    {
+        /**
+        command line arguments validation
+        */
+    	/*
+        if (args.length != 1)
+        {
+            System.err.println("Usage: java " + Game.class.getName() + " <filename>");
+            return;
+        }
+        */
+
+        /**
+        example of loading data from a file
+        */
+        Field<Block> field = FieldGenerator.loadDataFromFile("Field.txt");
+
+        /**
+        example of generating a random Field
+        */
+        Field<Block> field2 = FieldGenerator.randomIntegers(3,1,0,9,1);
+        
+        /**
+        print the whole field
+        */
+        
+        FieldIterator pq = new FieldIterator("Obstacle", field2);
+        
+        
+        System.out.println("Field Print Test1");
+        
+        System.out.println(field2);
+        
+        Iterator<Block> iter = field2.iterator("Passage");
+        
+        System.out.println(pq.hasNext());
+        System.out.println(pq.next());
+        System.out.println(pq.hasNext());
+        System.out.println(pq.next());
+        System.out.println(pq.hasNext());
+        System.out.println(pq.next());
+        System.out.println(pq.hasNext());
+        System.out.println(pq.next());
+
+        /**
+        Example of running a foreach loop
+        This will invoke the default iterator (the one using the anonymous inner class)
+        */
+        
+        /*
+        System.out.println("Field Print Test2");
+        
+        for(Block b:field)
+            System.out.println(b);
+            */
+        /**
+        Example of running a while loop
+        This will invoke the overloaded iterator (the one using the FieldIterator class)
+        */
+        
+        System.out.println("Iterations Test");
+        
+        Iterator<Block> it = field.iterator("Obstacle");
+//      Iterator<Block> it = field.iterator("Obstacle"); // same thing for Obstacle objects
+        while(it.hasNext())
+            System.out.println(it.next());
+
+        /**
+        find the best starting point and print the results
+        */
+        
+        System.out.println("Recursion Test");
+        
+        TwoValues br = bestStartingPoint(field);
+        System.out.println("Best starting point is in column " + br.startingColumn + " and the total points collected from this route is " + br.totalPoints);
+
+        /**
+        find the best route and print it
+        */
+        ArrayList<Block> al = bestRoute(field, br.startingColumn);
+        for (Block b : al)
+            System.out.println(b);
+    }
+    
+    public static TwoValues bestStartingPoint(Field field)
+    {
+    	int maxStarting = 0;
+    	int maxAdder = 0;
+    	
+    	for(int x = 0;x < field.getWidth(); ++x)
+    	{
+    		int PossibleBestStarting = x;
+    		int PossibleBestAdder = 0;
+    		
+    		for (Block b : recursive(field, 0, x))
+        	{
+    			if (field.getElement(0, x) instanceof Passage)
+    			{
+    				PossibleBestAdder = PossibleBestAdder + b.getValue();
+    			}
+        	}
+    		
+    		if (PossibleBestAdder > maxAdder)
+    		{
+    			maxStarting = PossibleBestStarting;
+    			maxAdder = PossibleBestAdder;
+    		}
+    		
+    	}
+    	
+    	TwoValues reTwoVal = new TwoValues();
+    	
+    	reTwoVal.startingColumn = maxStarting;
+    	reTwoVal.totalPoints = maxAdder;
+    	
+		return reTwoVal;
+    	
+    }
+    
+    public static ArrayList<Block> bestRoute(Field field, int startingColumn)
+    {
+    	ArrayList<Block> a = recursive(field, 0, startingColumn); //the output of this is initially reversed
+    	
+    	//un-reverses the items
+    	
+    	ArrayList<Block> b = new ArrayList<Block>();
+    	
+    	for(int x = a.size() - 1; x >= 0; --x)
+    	{
+    		b.add(a.get(x));
+    	}
+		
+    	return b;
+    }
+    
+    private static ArrayList<Block> recursive(Field field, int currentRow, int currentCol)
+    {
+    	//if last row is hit
+    	//*****Odd CASE*****
+    	if (field.getHeight() == 1)
+    	{
+    		ArrayList<Block> x = new ArrayList<Block>();
+    		
+    		x.add((Block) field.getElement(currentRow, currentCol));
+    		
+    		return x; 
+    	}
+    	//*****BASE CASE*****
+    	if(currentRow + 2 == field.getHeight()) //on the second to last row
+    	{
+    		
+    		Passage left = new Passage(-1);
+    		Passage mid = new Passage(-1);
+    		Passage right = new Passage(-1);
+    		
+    		ArrayList<Block> lastval = new ArrayList<Block>();
+    		
+    		if (currentCol - 1 >= 0)  // moving to the left works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol - 1) instanceof Passage)
+    			{
+    				left = (Passage)(field.getElement(currentRow + 1, currentCol - 1));
+    			}
+    		}
+    		
+    		if (field.getElement(currentRow + 1, currentCol) instanceof Passage)
+    		{
+    			mid = (Passage)(field.getElement(currentRow + 1, currentCol));
+    		}
+    		
+    		if (currentCol + 1 < field.getWidth())  // moving to the right works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol + 1) instanceof Passage)
+    			{
+    				right = (Passage)(field.getElement(currentRow + 1, currentCol + 1));
+    			}
+    		}
+    		
+    		Block maxLeaf = findMaxOf2Blocks(right, findMaxOf2Blocks(mid, left));
+    		
+    		lastval.add(maxLeaf);
+    		
+    		lastval.add((Block) field.getElement(currentRow, currentCol));
+    		
+    		return lastval;
+    	}
+    	
+    	//*****RECURSIVE CASE*****
+    	else
+    	{
+    		ArrayList<Block> left = new ArrayList<Block>();
+    		ArrayList<Block> mid = new ArrayList<Block>();
+    		ArrayList<Block> right = new ArrayList<Block>();
+    		
+    		ArrayList<Block> pathadder = new ArrayList<Block>();
+    		
+    		if (currentCol - 1 >= 0)  // checks if moving to the left works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol - 1) instanceof Passage)
+    			{
+    				left = recursive(field, currentRow + 1, currentCol - 1);
+    			}
+    		}
+    		
+    		if (field.getElement(currentRow + 1, currentCol) instanceof Passage)
+			{
+				mid = recursive(field, currentRow + 1, currentCol);
+			}
+    		
+    		if (currentCol + 1 < field.getWidth())  // checks if moving to the right works
+    		{
+    			if (field.getElement(currentRow + 1, currentCol + 1) instanceof Passage)
+    			{
+    				right = recursive(field, currentRow + 1, currentCol + 1);
+    			}
+    		}
+    		
+    		//issue if mid and right are swapped doesn't give same answer
+    		ArrayList<Block> HighestArray = findMaxOf2BlockArrays(right, findMaxOf2BlockArrays(mid, left));
+    		
+    		HighestArray.add((Block) field.getElement(currentRow, currentCol));
+
+    		return HighestArray;
+    	}
+    }
+    
+    private static Block findMaxOf2Blocks(Block x, Block y)
+    {
+		if (y.getValue() > x.getValue())
+		{
+			return(y);
+		}
+		return x;
+    }
+    
+    private static ArrayList<Block> findMaxOf2BlockArrays(ArrayList<Block> a, ArrayList<Block> b)
+    {
+    	int aAdder = 0;
+    	int bAdder = 0;
+    	
+    	for(int x = 0;x < a.size(); ++x)
+    	{
+    		aAdder = aAdder + a.get(x).getValue();
+    	}
+    	
+    	for(int x = 0;x < b.size(); ++x)
+    	{
+    		bAdder = bAdder + b.get(x).getValue();
+    	}
+    	
+    	if (bAdder > aAdder)
+		{
+			return(b);
+		}
+    	return a;
+    }
+}

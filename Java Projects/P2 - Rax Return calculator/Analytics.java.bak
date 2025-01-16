@@ -1,0 +1,154 @@
+public class Analytics
+{
+	/**
+	* @param povertyThreshold - holds povertyThreshold statistic
+	* @param year - holds a TaxYear object
+	*/
+	
+	private static float povertyThreshold = 27750.0f;
+	private TaxYear year;
+	
+	/**
+	* This is the constructor for the Analytics object
+	* Used to set Tax Year
+	*/
+	
+	public Analytics(TaxYear year)
+	{
+		this.year = year;
+	}
+	
+	//@setPovertyThreshold setter for povertyThreshold
+	
+	public void setPovertyThreshold(float povertyThreshold)
+	{
+		this.povertyThreshold = povertyThreshold;
+	}
+	
+	//@averageFamilyIncome calculates taxable Income of all families in a taxation year
+	
+	public float averageFamilyIncome()
+	{
+		Family[] filedFams = year.getFiledFamilies();
+		
+		float counter = 0;
+		float adder = 0;
+		
+		for(int x = 0;x < filedFams.length; ++x)
+		{
+			System.out.println("  " + filedFams[x].getTaxableIncome());
+			
+			adder = adder + filedFams[x].getTaxableIncome();
+			++counter;
+		}
+		
+		if (counter > 0)
+		{
+			adder = (adder / counter);
+		}
+		
+		return (Math.round(adder*100.0f)/100.0f);
+	}
+	
+	//@averagePersonIncome calculates average taxable Income of all people in a taxation year
+	
+	public float averagePersonIncome()
+	{
+		Family[] filedFams = year.getFiledFamilies();
+		
+		float taxableIncome = 0;
+		float pplAmount = 0;
+		
+		for(int x = 0;x < filedFams.length; ++x)
+		{	
+			taxableIncome = taxableIncome + filedFams[x].getTaxableIncome();
+			pplAmount = pplAmount + (filedFams[x].getMembers()).length;
+		}
+		
+		float k = (taxableIncome / pplAmount);
+		
+		return (Math.round(k*100.0f)/100.0f);
+	}
+	
+	//@maxFamilyIncome returns the family with the highest taxable income
+	
+	public float maxFamilyIncome()
+	{
+		Family[] filedFams = year.getFiledFamilies();
+		
+		float maxtaxableIncome = 0;
+		
+		for(int x = 0;x < filedFams.length; ++x)
+		{	
+			if (filedFams[x].getTaxableIncome() > maxtaxableIncome)
+			{
+				maxtaxableIncome = filedFams[x].getTaxableIncome();
+			}
+		}
+		return (Math.round(maxtaxableIncome*100.0f)/100.0f);
+	}
+	
+	//@maxPersonIncome returns the person with the highest taxable income
+	
+	public float maxPersonIncome()
+	{
+		Family[] filedFams = year.getFiledFamilies();
+		
+		float maxPersonalTaxableIncome = 0;
+		
+		for(int x = 0;x < filedFams.length; ++x)
+		{	
+			Person[] ppl = filedFams[x].getMembers();
+				
+			for(int i = 0;i < ppl.length; ++i)
+			{	
+				if (ppl[i] instanceof Adult)
+				{
+					if (((Adult)ppl[i]).adjustedIncome() - ((Adult)ppl[i]).deduction(filedFams[x]) > maxPersonalTaxableIncome)
+					{
+						maxPersonalTaxableIncome = ((Adult)ppl[i]).adjustedIncome() - ((Adult)ppl[i]).deduction(filedFams[x]);
+					}
+					
+				}
+			}
+		}
+		return (Math.round(maxPersonalTaxableIncome*100.0f)/100.0f);
+	}
+	
+	//@familiesBelowPovertyLimit returns number of families Below the Poverty Limit
+	
+	public int familiesBelowPovertyLimit()
+	{
+		Family[] filedFams = year.getFiledFamilies();
+		
+		int counter = 0;
+		
+		for(int x = 0;x < filedFams.length; ++x)
+		{	
+			if (filedFams[x].getTaxableIncome() < povertyThreshold)
+			{
+				++counter;
+			}
+		}
+		return counter;
+	}
+	
+	//@familyRank returns rank of a family accourding to their taxable Income highest is first lowest is last
+	
+	public int familyRank(Family family)
+	{
+		Family[] filedFams = year.getFiledFamilies();
+		
+		int counter = 1;
+		
+		for(int x = 0;x < filedFams.length; ++x)
+        {
+            if (family.getTaxableIncome() < filedFams[x].getTaxableIncome())
+            {
+                ++counter;
+            }
+        }
+		
+		return counter;
+	}
+}

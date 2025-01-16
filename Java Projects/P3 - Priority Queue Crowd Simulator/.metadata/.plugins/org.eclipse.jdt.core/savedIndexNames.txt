@@ -1,0 +1,6 @@
+INDEX VERSION 1.131+C:\Users\tjaqu\Desktop\College_2023_Spring\CS\P3\.metadata\.plugins\org.eclipse.jdt.core
+1167745669.index
+3221611016.index
+1156151971.index
+1865797976.index
+3295996359.index

@@ -1,0 +1,92 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Iterator;
+
+
+public class GUI extends JFrame implements ActionListener {
+	
+	private JTextField displayField;
+	private JTextArea ShowField;
+	private String file;
+	private JButton filebutton;
+	private JPanel panel;
+	private JButton passageIteration;
+	private JButton obstacleIteration;
+	private JButton allIteration;
+	private JTextField displayIteration;
+	
+	public GUI() {
+        super("GUI");
+        displayField = new JTextField(30);
+        ShowField = new JTextArea(10,50);
+        displayIteration = new JTextField(50);
+        
+        panel = new JPanel();
+        
+        filebutton = new JButton("Enter File name, Then Press to Import file");
+        
+        passageIteration = new JButton("Passage Iteration");
+        obstacleIteration = new JButton("Obstacle Iteration");
+        allIteration = new JButton("All Iteration");
+        
+        passageIteration.addActionListener(this);
+        obstacleIteration.addActionListener(this);
+        allIteration.addActionListener(this);
+        
+        displayField.addActionListener(this);
+        
+        filebutton.addActionListener(this);
+        
+        panel.add(displayField);
+        
+        panel.add(filebutton);
+        
+        panel.add(ShowField);
+        
+        panel.add(passageIteration);
+        
+        panel.add(obstacleIteration);
+        
+        panel.add(allIteration);
+        
+        panel.add(displayIteration);
+        
+        add(panel);
+        setSize(500, 800);
+        setVisible(true);
+	}
+        
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object source = e.getSource();
+		
+		if (source == filebutton)
+		{
+			Field<Block> field = FieldGenerator.loadDataFromFile(((JButton) source).getText());
+			
+			ShowField.setText(field.toString());
+		}
+		if (source == passageIteration)
+		{
+			Field<Block> field = FieldGenerator.loadDataFromFile(((JButton) source).getText());
+			
+			Iterator<Block> it = field.iterator("Passage"); // same thing for Obstacle objects
+	        
+			String adderString = "";
+			
+	        while(it.hasNext())
+	        	adderString = adderString + it.next();
+	        
+	        displayIteration.setText(field.toString());
+		}
+		
+	}
+	
+	public static void main(String[] args) {
+		GUI gui = new GUI();
+		gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+	
+}

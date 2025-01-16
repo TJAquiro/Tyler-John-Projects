@@ -1,0 +1,200 @@
+import java.util.Arrays;
+
+public class Connect4AI {
+	
+	public Connect4AI()
+	{
+		
+	}
+	
+	public MultiOutput getNextBestMove(int playerNum, ConnectFourBoard game, int depth, int playerNumToWin)
+	{	
+		if(depth == 0)
+		{
+			return new MultiOutput(-1, depth, 0);
+		}
+		
+		if(playerNum == playerNumToWin)
+		{
+			//check for mate in 1
+			for(int x = 0;x < 7; ++x)
+			{
+				if(game.isLegal(x))
+				{
+					if(simulateTurn(playerNum, x, game) == playerNum)
+					{
+						if(playerNum == playerNumToWin)
+						{	
+							//returns col number, depth found at, and eval (100 is a guarentee win)
+							return new MultiOutput(x, depth, 100);
+						}
+					}
+				}
+			}
+			
+			//check for defending mate in 1
+			for(int x = 0;x < 7; ++x)
+			{
+				if(game.isLegal(x))
+				{
+					if(simulateTurn(playerNum * -1, x, game) == playerNum * -1)
+					{
+						if(playerNum == playerNumToWin)
+						{	
+							//returns col number, depth found at, and eval (-10 represents an unconformable position)
+							return new MultiOutput(x, depth, -10);
+						}
+					}
+				}
+			}
+			
+			int bestOptionCol = -1;
+			int bestEval = -200;
+			
+			for(int x = 0;x < 7; ++x)
+			{
+				if(game.isLegal(x))
+				{
+					//recursive call, passes in a simulated board where the bot plays a random move and checks what the opponent does
+					MultiOutput result = getNextBestMove(playerNum * -1, simulateTurnNewBoardState(playerNum, x, game), depth -1, playerNumToWin);
+					
+					if(bestEval < result.getEval())
+					{
+						if(x == 3)
+						{
+							bestEval = result.getEval()+1;
+							bestOptionCol = x;
+						}
+						else
+						{
+							bestEval = result.getEval();
+							bestOptionCol = x;
+						}
+					}
+				}
+			}
+			
+			return new MultiOutput(bestOptionCol, depth, bestEval); 
+		}
+		
+		
+		else
+		{
+			for(int x = 0;x < 7; ++x)
+			{
+				if(game.isLegal(x))
+				{
+					if(simulateTurn(playerNum, x, game) == playerNum)
+					{
+						if(playerNum == playerNumToWin)
+						{	
+							//returns col number, depth found at, and eval (-100 is a guarentee lose)
+							return new MultiOutput(x, depth, -100);
+						}
+					}
+				}
+			}
+			
+			//check for defending mate in 1
+			for(int x = 0;x < 7; ++x)
+			{
+				if(game.isLegal(x))
+				{
+					if(simulateTurn(playerNum * -1, x, game) == playerNum * -1)
+					{
+						if(playerNum == playerNumToWin)
+						{	
+							//returns col number, depth found at, and eval (10 represents an slightly better position)
+							return new MultiOutput(x, depth, 10);
+						}
+					}
+				}
+			}
+			
+			int bestOptionCol = -1;
+			int WorstEval = 200;
+			
+			for(int x = 0;x < 7; ++x)
+			{
+				if(game.isLegal(x))
+				{
+					//recursive call, passes in a simulated board where the bot plays a random move and checks what the opponent does
+					MultiOutput result = getNextBestMove(playerNum * -1, simulateTurnNewBoardState(playerNum, x, game), depth -1, playerNumToWin);
+					if(result.getEval() < WorstEval)
+					{
+						if(x == 3)
+						{
+							System.out.println("Test 1");
+							WorstEval = result.getEval()-1;
+							bestOptionCol = x;
+						}
+						else
+						{
+							WorstEval = result.getEval();
+							bestOptionCol = x;
+						}
+					}
+				}
+			}
+			return new MultiOutput(bestOptionCol, depth, WorstEval);
+		}
+	}
+	
+	public int simulateTurn(int playerNum, int col, ConnectFourBoard game)
+	{
+		ConnectFourBoard simBoard = new ConnectFourBoard();
+		
+		byte[][] b = new byte[6][7];
+		
+		//deepcopy
+		for(int x = 0;x < 6; ++x)
+		{
+			for(int y = 0;y < 7; ++y)
+			{
+				b[x][y] = game.getPiece(x, y);
+			}
+		}
+		
+		simBoard.setboard(b);
+		
+		if(playerNum == 1)
+		{
+			simBoard.redMove(col);
+		}
+		if(playerNum == -1)
+		{
+			simBoard.yellowMove(col);
+		}
+		
+		return simBoard.winChecker();
+	}
+	
+	public ConnectFourBoard simulateTurnNewBoardState(int playerNum, int col, ConnectFourBoard game)
+	{
+		ConnectFourBoard simBoard = new ConnectFourBoard();
+		
+		byte[][] b = new byte[6][7];
+		
+		//deepcopy
+		for(int x = 0;x < 6; ++x)
+		{
+			for(int y = 0;y < 7; ++y)
+			{
+				b[x][y] = game.getPiece(x, y);
+			}
+		}
+		
+		simBoard.setboard(b);
+		
+		if(playerNum == 1)
+		{
+			simBoard.redMove(col);
+		}
+		if(playerNum == -1)
+		{
+			simBoard.yellowMove(col);
+		}
+		
+		return simBoard;
+	}
+}
