@@ -1,0 +1,286 @@
+body{
+    background: linear-gradient(to bottom right, #4E6688, #6b3186);
+    color: black;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+main{
+    background-color: #71C0BB;
+    border-radius: 10px;
+    padding: 4px;
+    grid-area: main;
+    margin: 10;
+}
+
+header h1{
+    font-size: 70px;
+    color: rgb(255, 255, 255);
+    margin: 10;
+}
+header h2{
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+    margin: 10;
+}
+header h3{
+    font-size: 20px;
+    color: rgb(255, 255, 255);
+    margin: 10;
+}
+
+main h1, h2, h3, p{
+    margin-left: 30;
+    margin-right: 30;
+}
+
+main h1{
+    font-size: 35px;
+    color: #332D56;
+    margin: 10;
+}
+main h2{
+    font-size: 23px;
+    color: #000000;
+    margin-left: 40;
+}
+main h3{
+    font-size: 14px;
+    color: rgb(0, 0, 0);
+    margin: 10;
+}
+main p{
+    font-size: 20px;
+    color: rgb(0, 0, 0);
+    margin: 10;
+}
+main p2{
+    font-size: 20px;
+    color: rgb(0, 0, 0);
+    margin-left: 80;
+}
+
+img{
+    max-width: 200px;
+}
+
+#headshot {
+    padding: 2px;
+    margin: 10px;
+    border-radius: 100px;
+    max-height: 200px;
+}
+
+.experience .title {
+    font-weight: bold;
+}
+
+.project .title {
+    font-weight: bold;
+}
+
+.experience-bullets {
+    font-size: 20px;
+    color: black;
+    margin-left: 80px;
+    padding-left: 0;
+}
+.experience-bullets li {
+    margin-bottom: 2px;
+}
+
+header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    grid-area: header;
+}
+
+.container{
+    display: grid;
+    grid-template-areas: 
+    "header header"
+    "aside main"
+    "footer footer";
+    grid-template-columns: 400px 1fr;
+    grid-gap: 1px;
+}
+
+aside{
+    background-color:#71C0BB;
+    padding: 4px;
+    margin: 10;
+    border-radius: 5px;
+    max-width: 350px;
+}
+
+.secctionbox {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 30px;
+    box-shadow: 8px 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.secctionbox:hover {
+    transform: scale(1.04);
+}
+
+aside .secctionbox{
+    margin: 20px 15px;
+    padding: 10;
+}
+
+aside h1{
+    color: #332D56;
+}
+aside h2{
+    font-size: 18;
+    text-align: center;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 30px;
+}
+
+.job-header h2 {
+    font-size: 23px;
+    color: black;
+    margin: 0;
+}
+
+.job-dates {
+    font-size: 18px;
+    color: #444;
+    white-space: nowrap;
+}
+
+aside li{
+    display:flex;
+    padding: 8px;
+}
+
+.skills-tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+}
+
+.skill-tag {
+    background-color:#E3EEB2;
+    border: 1px solid #909771;
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+    cursor: default;
+    white-space: nowrap;
+}
+
+.leftAlign{
+    text-align: left;
+}
+
+.linkedin-button {
+    margin-left: 10;
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 16px;
+    background-color: #E3EEB2;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.linkedin-button:hover {
+    background-color: #005983;
+}
+
+.icon-links {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    margin-left: 10;
+}
+
+.icon {
+    width: 32px;
+    height: 32px;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+
+.icon:hover {
+    transform: scale(1.1);
+}
+
+.job-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.job-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.job-header {
+    margin-bottom: 0.25rem;
+}
+
+.experience-bullets {
+    margin-top: 0.5rem;
+    margin-left: 4rem;
+    padding-left: 1rem;
+}
+
+/* #formInfo{
+    font-size: 14px;
+    font-style: italic;
+} */
+
+/* footer{
+    background-color: lightslategray;
+    color: black;
+    text-align: center;
+    padding: 2px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    left: 0;
+    grid-area: footer;
+} */
+
+/* #menu li{
+    display: inline;
+    padding: 8px;
+    background-color: rgb(87, 87, 87);
+}
+
+#menu li a{
+    color: white !important;
+    text-decoration: none;
+}
+
+#menu{
+    float: right;
+}
+
+#menu li.active{
+    background-color: darkslategray;
+} */
+
