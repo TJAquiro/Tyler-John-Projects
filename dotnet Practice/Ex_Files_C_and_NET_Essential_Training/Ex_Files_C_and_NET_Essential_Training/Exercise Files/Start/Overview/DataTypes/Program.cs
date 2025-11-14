@@ -12,7 +12,9 @@ bool tf = default;
 Console.WriteLine($"{a}, {b}, {tf}, {c}, {f}, {d}");
 
 // TODO: implicit type conversion
-
+s s1;
+s1.a = 5;
+s1.b = false;
 
 // TODO: Create an instance of a struct (which is a value type)
 
@@ -25,10 +27,10 @@ void StructOp(s theStruct) {
     Console.WriteLine($"{theStruct.a}, {theStruct.b}");
 }
 
-// Console.WriteLine("Structs are passed by copy, since they are value types:");
-// Console.WriteLine($"{s1.a}, {s1.b}");
-// StructOp(s1);
-// Console.WriteLine($"{s1.a}, {s1.b}");
+Console.WriteLine("Structs are passed by copy, since they are value types:");
+Console.WriteLine($"{s1.a}, {s1.b}");
+StructOp(s1);
+Console.WriteLine($"{s1.a}, {s1.b}");
 
 // TODO: Create an object instance of a class (which is a reference type)
 
