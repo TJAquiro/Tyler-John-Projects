@@ -1,0 +1,10 @@
+This is a template for what your .env file should look like.
+You can copy this file, update the DB_PASSWORD field, remove all this text at the top, and rename the file to .env.
+
+DB_HOST="localhost"
+DB_USER="root"
+DB_PASSWORD="YOUR PASSWORD HERE"
+DB_NAME="shoppingtime"
+DB_PORT=3306
+PORT = 3001
+FRONTEND_DOMAIN="http://localhost:5173"

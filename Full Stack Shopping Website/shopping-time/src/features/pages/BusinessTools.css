@@ -1,0 +1,66 @@
+/**
+ * generated using AI, with edits
+ * 
+ * Displays buttons for buisness owners to interact with their shop
+ */
+
+
+.business-tools-container {
+  padding: 2rem;
+  background-color: #966fe4;
+  min-height: 50vh;
+  border-radius: 12px;
+}
+
+.business-tools-container h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.tools-container {
+  border: 2px solid #644a97;
+  border-radius: 16px;
+  padding: 2rem;
+  background-color: #8261c4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tools-container a {
+  text-decoration: none;
+}
+
+.tools-container .MuiCard-root {
+  width: 10rem;
+  height: 10rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  padding: 1rem;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 16px;
+}
+
+.tools-container .MuiCard-root:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.tools-container h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.tools-container img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+}

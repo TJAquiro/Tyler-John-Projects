@@ -1,0 +1,209 @@
+.manager-container {
+  padding: 20px;
+}
+
+.create-button {
+  display: block;
+  background-color: #4CAF50;
+  color: black;
+  padding: 16px 24px;
+  margin: 10px auto 30px auto;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.create-button:hover {
+  background-color: #45a049;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.modal-content {
+  background-color: #f0f0f0;
+  color: #222;
+  padding: 20px;
+  width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  border-radius: 10px;
+}
+
+.form-grid input,
+.form-grid textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.uploaded-image {
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.delete-button,
+.form-button,
+.remove-tag-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  margin: 5px 5px 5px 0;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+}
+
+.delete-button:hover,
+.form-button:hover,
+.remove-tag-button:hover {
+  background-color: #c0392b;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 6px 0;
+  margin-bottom: 8px;
+  gap: 6px;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #3498db;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 14px;
+  font-size: 14px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.tag .remove-tag-button {
+  margin-left: 8px;
+  background: transparent;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.tag-checkboxes {
+  margin-top: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.product-grid {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.product-card {
+  flex: 0 0 auto;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  background-color: #fff;
+  color: black;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tag-management input[type="text"] {
+  width: 100px; /* approx. width for 5 letters */
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+
+.tag-scroll-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.tag-row {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.edit-tag-input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.save-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.save-button:hover {
+  background-color: #27ae60;
+}
+
+
+.tag-row input[type="text"] {
+  min-width: 120px;
+  max-width: 200px;
+  padding: 6px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}

@@ -1,0 +1,97 @@
+body{
+    background-color: rgb(112, 112, 168);
+}
+
+.header{
+    /* header color */
+    background-color: rgb(20, 130, 137);
+    /* text color */
+    color: white;
+    /* spacing top-bottom, left-right */
+    padding: 1rem 2rem;
+    /* positioning */
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* width */
+    width: 100%;
+    /* above other content */
+    z-index: 1000;
+    /* flexbox */
+    display: flex;
+    /* space between logo and links */
+    justify-content: space-between;
+    /* centers itmes in header */
+    align-items: center;
+    /* shadow under header */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+
+    /* option for small tab to scroll */
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+
+.header::-webkit-scrollbar{
+    display: none;
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    width: 95%;
+    align-items: center;
+    overflow: visible;
+}
+
+.header .logo {
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-right: auto;
+}
+
+.header .search-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+}
+.header .search-bar{
+    margin: 0 2rem;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    max-width: 350px;
+    outline: none;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.header .search-bar::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.header .search-bar:focus {
+    border: 2px solid white;
+}
+
+.header .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    padding-right: 2rem;
+}
+
+.header .nav-links a {
+    text-decoration: none;
+    color: white;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.header .nav-links a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}

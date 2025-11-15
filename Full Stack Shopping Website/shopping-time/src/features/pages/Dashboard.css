@@ -1,0 +1,23 @@
+.dashboard-header {
+    background-color: 'white';
+    padding-inline: '2rem';
+    margin-block: '2rem';
+    min-height: '20rem';
+}
+
+.featured-section, .tags-section {
+    background-color: rgba(255, 255, 255, 0.351);
+    padding-top: .1rem;
+    padding-bottom: 2rem;
+    border-radius: 2%;
+    margin-block: 2rem;
+}
+
+.featured-header, .tags-header {
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
+.featured-list, .tags-list {
+    padding-inline: 3rem;
+    padding-block: .3rem;
+}

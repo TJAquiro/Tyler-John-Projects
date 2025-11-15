@@ -1,0 +1,301 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%; /* Changed from height to min-height */
+    font-family: "Futura", sans-serif;
+    background: linear-gradient(90deg, hsla(271, 28%, 55%, 1) 8%, hsla(202, 31%, 49%, 1) 60%);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Keeps gradient fixed while scrolling */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Changed from center to allow scrolling */
+    padding-top: 2rem; /* Add some padding at the top */
+  }
+  
+  .cart-page {
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 2rem; /* Added padding */
+    display: flex;
+    flex-direction: column; /* Changed to column for better layout */
+    gap: 30px;
+    max-width: 1000px; /* Slightly reduced max-width */
+    width: 90%; /* Added width for responsiveness */
+    margin-bottom: 3rem; /* Added margin at bottom */
+  }
+  
+  /* Cart Header */
+  .cart-header {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+    position: relative; /* For the underline effect */
+  }
+  
+  .cart-header h1 {
+    font-size: 36px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    display: inline-block;
+  }
+  
+  .cart-header h1:after {
+    content: '';
+    position: absolute;
+    width: 50%;
+    height: 3px;
+    background: white;
+    bottom: -10px;
+    left: 25%;
+    border-radius: 2px;
+  }
+  
+  /* Cart Items Section */
+  .cart-items {
+    display: flex;
+    flex-direction: column; /* Changed to column for better layout */
+    gap: 20px;
+    width: 100%;
+  }
+  
+  .cart-item {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .cart-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  }
+  
+  .cart-item img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain; /* Changed from cover to contain */
+    margin-right: 30px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    padding: 10px;
+  }
+  
+  .cart-item-info {
+    flex: 1;
+  }
+  
+  .cart-item-info h2 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .cart-item-info p {
+    font-size: 18px;
+    color: #9c27b0; /* Changed to match the purple from the game catalogue */
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+  
+  /* Button Styles */
+  button {
+    padding: 12px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background-color: #3498db;
+    color: white;
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+  
+  button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+  }
+  
+  .cart-item button {
+    background-color: #f44336;
+    margin-left: 15px;
+  }
+  
+  .cart-item button:hover {
+    background-color: #d32f2f;
+  }
+  
+  /* Quantity Controls */
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .quantity-controls button {
+    background-color: #9c27b0; /* Changed to match the purple from the game catalogue */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    margin: 0;
+  }
+  
+  .quantity-controls button:hover {
+    background-color: #7b1fa2;
+  }
+  
+  .quantity-controls span {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    min-width: 30px;
+    text-align: center;
+  }
+  
+  /* Cart Summary */
+  .cart-summary {
+    margin-top: 20px;
+    text-align: center;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+  }
+  
+  .cart-summary h3 {
+    font-size: 24px;
+    color: #fff;
+    margin-bottom: 15px;
+  }
+  
+  .cart-summary p {
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 25px;
+  }
+  
+  /* Checkout Button */
+  .cart-summary a button {
+    padding: 15px 30px;
+    background-color: #9c27b0; /* Changed to match the purple from the game catalogue */
+    border-radius: 6px;
+    color: white;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .cart-summary a button:hover {
+    background-color: #7b1fa2;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Undo Remove */
+  .undo-remove {
+    text-align: center;
+    margin: 15px 0;
+    background-color: rgba(255, 204, 0, 0.9);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .undo-remove p {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .undo-remove button {
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    margin-left: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .undo-remove button:hover {
+    background-color: #f57c00;
+  }
+  
+  /* Empty Cart Message */
+  .empty-cart {
+    text-align: center;
+    font-size: 20px;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 30px;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+  }
+  
+  /* Add a back to dashboard link */
+  .back-link {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    align-self: flex-start;
+    transition: transform 0.2s ease;
+  }
+  
+  .back-link:hover {
+    transform: translateX(-5px);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .cart-item {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: center;
+    }
+    
+    .cart-item img {
+      margin-right: 0;
+      margin-bottom: 15px;
+    }
+    
+    .cart-item-info {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+    
+    .cart-item button {
+      margin-left: 0;
+      width: 100%;
+    }
+    
+    .quantity-controls {
+      justify-content: center;
+      width: 100%;
+    }
+  }
