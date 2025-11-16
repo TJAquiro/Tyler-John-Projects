@@ -4,6 +4,9 @@ import Welcome from './Components/Welcome';
 import Helloworld from './Components/HelloWorld';
 import Message from './Components/Message';
 import Counter from './Components/Counter';
+import FunctionClick from './Components/FunctionClick';
+import ClassClick from './Components/ClassClick';
+import EventBind from './Components/EventBind';
 
 function App() {
   return (
@@ -22,12 +25,20 @@ function App() {
       <Helloworld></Helloworld>
 
       <Message />
-      */}
 
       <Counter />
 
       <Greet name = "Tyler" heroname = "superman"></Greet>
 
+      <Welcome name = "Tyler" heroname = "superman"/>
+
+      <FunctionClick />
+
+      <ClassClick />
+
+      */}
+      
+      <EventBind />
 
 
     </div>
