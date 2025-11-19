@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Practice — Pixel Form</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card form-card" aria-labelledby="form-title">
+      <h1 id="form-title" class="form-card__title">Sign up for product updates</h1>
+
+      <!-- GOOD: Form ID matches JS -->
+      <form id="signupForm" class="form" novalidate>
+
+        <div class="form__row">
+          <label for="fullName">Full name</label>
+
+          <!-- FIX MADE: input was correct, no change needed -->
+          <input id="fullName" name="fullName" type="text" required minlength="2" />
+
+          <!-- GOOD: error ID matches JS -->
+          <p class="form__error" id="err-fullName" aria-live="polite"></p>
+        </div>
+
+        <div class="form__row">
+          <label for="email">Email</label>
+
+          <!-- GOOD -->
+          <input id="email" name="email" type="email" required />
+
+          <!-- GOOD -->
+          <p class="form__error" id="err-email" aria-live="polite"></p>
+        </div>
+
+        <div class="form__row">
+          <label for="role">Interested in</label>
+
+          <!-- GOOD -->
+          <select id="role" name="role" required>
+            <option value="">Select...</option>
+            <option value="dev">Developer</option>
+            <option value="designer">Designer</option>
+            <option value="pm">Product</option>
+          </select>
+
+          <!-- GOOD -->
+          <p class="form__error" id="err-role" aria-live="polite"></p>
+        </div>
+
+        <div class="form__actions">
+
+          <!-- ❌ PROBLEM #1 — You wrapped “Join” inside a <label> inside a <button>
+               JS updates button.textContent = "Sending…" — but the <label> blocks it.
+               FIXED by removing the <label> wrapper. -->
+          <button type="submit" id="submitBtn" class="btn">Join</button>
+
+          <!-- ❌ PROBLEM #2 — formMsg must NOT be inside .form__actions
+               Your JS resets it and expects it to appear under the form, not inside the button row.
+               FIXED by moving it OUTSIDE this container.
+          -->
+        </div>
+
+        <!-- FIX: Moved formMsg outside the button container so JS can style/update properly -->
+        <div id="formMsg" class="form__msg" aria-live="polite"></div>
+
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
