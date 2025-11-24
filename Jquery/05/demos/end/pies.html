@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Pies | Bethany's Pie Shop</title>
+    <link rel="stylesheet" href="site.css" type="text/css" />
+    <script type="text/javascript" src="scripts/jquery-3.6.0.js"></script>
+    <style>
+      .big-border {
+        border:10px solid #5ecda9;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="pies.html">Pies</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <aside>
+        <img src="images/logo.png" alt="Bethany's Pie Shop" />
+      </aside>
+
+      <article>
+        <h1>Pies</h1>
+
+        <div>
+          <button id="order">Order</button>
+        </div>
+        <img src="images/apple-pie.png" id="pie" alt="Apple Pie" />
+      </article>
+    </main>
+
+    <footer>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="pies.html">Pies</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </footer>
+  </body>
+  <script>
+    /*
+    Fetching data
+    Add elements in a loop
+    Make bound elements interactive
+    Sort elements alphabetically
+    */
+   $(() => {
+    
+    $.get("/data/pies.json")
+        .done((data) => {
+          console.log(data);
+        });
+
+   });
+  </script>
+</html>
