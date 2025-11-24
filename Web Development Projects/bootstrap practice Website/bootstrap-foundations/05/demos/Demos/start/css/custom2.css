@@ -1,0 +1,59 @@
+.question2 .my-custom-border {
+  border: 1px solid lightgray;
+  border-top: 10px solid red;
+  border-radius: 3px;
+}
+
+.question3 .my-custom-border {
+  border: 1px solid lightgray;
+  border-left: 10px solid red;
+  border-radius: 3px;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: top;
+  justify-content: center;
+  width: 100%;
+  background: none;
+  position: relative;
+}
+
+.sidebar {
+  flex: 1;
+  height: 64px;
+  background-color: rgb(73, 70, 96);
+}
+
+
+.logo {
+  z-index: 2;
+  flex: 0 0 auto;
+  height: 72px;
+  background-color: white;
+  display: block;
+}
+
+.answerChoice:hover {
+  background-color: #1d2398;
+  cursor: pointer;
+  color: white;
+}
+
+.answerChoice {
+  background-color:rgb(223, 223, 223);
+  border-radius: 3px;
+}
+
+.card {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+  border-radius: 5px;
+  max-width: 1200px;     /* shrink as much as you want */
+  width: 100%;          /* allows it to shrink on small screens */
+  margin: 0 auto;       /* centers it */
+}
