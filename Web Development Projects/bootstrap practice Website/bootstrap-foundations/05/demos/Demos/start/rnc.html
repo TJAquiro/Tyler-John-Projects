@@ -12,6 +12,25 @@
 </head>
 
 <body>
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Enter Your Name</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control nameInput" placeholder="Enter your name">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary saveName">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
     <header>
         <div class="topbar">
             <div class="sidebar"></div>
@@ -33,27 +52,29 @@
                 <div class="row g-3">
                     
                     <div class="col-12">
-                        <h2 class="greeting">Hello, Name</h2>
+                        <h2 class=" greeting">Hello, Name</h2>
+                        <!-- Button trigger modal -->
+                        <button class="changeNameButton" data-bs-toggle="modal" data-bs-target="#exampleModal">Change Name</button>
                     </div>
 
                     <div class="col-12">
-                        <p1 class="row-12 fw-bold">Share your Results</p1>
-                        <div class="socialmedia">
-                            <button class="facebookButton">Facebook</button>
-                            <button class="twitterButton">Twitter</button>
-                        </div>
+                      <p1 class="row-12 fw-bold">Share your Results</p1>
+                      <div class="socialmedia">
+                        <button class="facebookButton">Share on Facebook (0)</button>
+                        <button class="twitterButton">Share on Twitter (0)</button>
+                      </div>
                     </div>
 
                     <hr>
                     
                     <!-- Question 1 -->
 
-                    <section class="col-12 question1">
+                    <section class="col question1">
                         <p class="questionTitle">Question 1: Choose item</p>
-            
+
                         <div class="row g-3">
-                          <div class="col-4">
-                            <div class="card answerChoice">
+                          <div class="col-md-4">
+                            <div class="card answerChoice" question="1" value="1">
                               <img class="card-img-top" src="images/bethany-fullsize.jpg">
                               <div class="card-body">
                                 <p class="card-text">Pen</p>
@@ -61,8 +82,8 @@
                             </div>
                           </div>
             
-                          <div class="col-4">
-                            <div class="card answerChoice">
+                          <div class="col-md-4">
+                            <div class="card answerChoice" question="1" value="2">
                               <img class="card-img-top" src="images/bethany-fullsize.jpg">
                               <div class="card-body">
                                 <p class="card-text">Wax Seal</p>
@@ -70,8 +91,8 @@
                             </div>
                           </div>
             
-                          <div class="col-4">
-                            <div class="card answerChoice">
+                          <div class="col-md-4">
+                            <div class="card answerChoice" question="1" value="3">
                               <img class="card-img-top" src="images/bethany-fullsize.jpg">
                               <div class="card-body">
                                 <p class="card-text">Table Clock</p>
@@ -85,22 +106,22 @@
 
                     <section class="col-12 question2">
                         <p class="questionTitle">Question 2: Choose an animal</p>
-            
+
                         <div class="row g-3">
-                          <div class="col-4">
-                            <div class="answerChoice my-custom-border text-center p-2"> 
+                          <div class="col-md-4">
+                            <div class="answerChoice redOnTop text-center p-2" question="2" value="1"> 
                                 <h2>Horse</h2> 
                             </div>
                           </div>
 
-                          <div class="col-4">
-                            <div class="answerChoice my-custom-border text-center p-2"> 
+                          <div class="col-md-4">
+                            <div class="answerChoice redOnTop text-center p-2" question="2" value="2"> 
                                 <h2>Dog</h2> 
                             </div>
                           </div>
 
-                          <div class="col-4">
-                            <div class="answerChoice my-custom-border text-center p-2"> 
+                          <div class="col-md-4">
+                            <div class="answerChoice redOnTop text-center p-2" question="2" value="3"> 
                                 <h2>Cat</h2> 
                             </div>
                           </div>
@@ -114,32 +135,31 @@
             
                         <div class="row g-3">
                           <div class="col-12">
-                            <div class="answerChoice my-custom-border text-left p-2"> 
+                            <div class="answerChoice redOnleft text-left p-2" question="3" value="1"> 
                                 <h2>New York</h2> 
                             </div>
                           </div>
 
                           <div class="col-12">
-                            <div class="answerChoice my-custom-border text-left p-2"> 
+                            <div class="answerChoice redOnleft text-left p-2" question="3" value="2"> 
                                 <h2>Nebraska</h2> 
                             </div>
                           </div>
 
                           <div class="col-12">
-                            <div class="answerChoice my-custom-border text-left p-2"> 
+                            <div class="answerChoice redOnleft text-left p-2" question="3" value="3"> 
                                 <h2>Kentucky</h2> 
                             </div>
                           </div>
                         </div>
                     </section>
 
-                    <hr>
-
-                    <section class="row results g-3">
+                    <section class="row results g-3" hidden>
+                        <hr>
                         <div class="col-8">
                             <p>Which Republican President Are You?</p>
-                            <p class="fw-bold">YOU GOT: Name</p>
-                            <p>Some description about the president based on the user's choices. Some description about the president based on the user's choices. Some description about the president based on the user's choices. Some description about the president based on the user's choices. Some description about the president based on the user's choices.</p>
+                            <p class="fw-bold resultName">Please answer all questions.</p>
+                            <p class="resultDescription"></p>
                         </div>
                         <div class="col-4">
                             <img class="card-img-top" src="images/bethanysquare.jpg">
@@ -150,7 +170,9 @@
         </div>
     </div>
     
-
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="script.js"></script>
 
 
     
