@@ -1,1 +1,89 @@
-<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css?family=Inter&display=swap" rel="stylesheet" /><link href="./css/main.css" rel="stylesheet" /><title>Document</title></head><body><div class="v1_3"><span class="v1_4">Study app</span><div class="v1_9"><div class="v1_105"><span class="v1_106">Current Task Name</span><div class="v1_107"><span class="v1_264">00:30:00</span><span class="v1_266">Remaining...</span></div><div class="v1_268"><div class="v1_269"></div></div></div></div><div class="v1_184"><div class="v1_185"><span class="v1_186">Upcoming Assignments </span><div class="v1_188"><div class="v1_189"><div class="v4_50"><span class="v1_190">Task Name</span><span class="v4_48">Priority: High</span></div><div class="v1_191"><span class="v1_192">Due: 11/11/2011</span><span class="v1_193">Time: 30 mins</span></div></div><div class="v1_194"><div class="v1_195"><span class="v1_196">Edit</span></div><div class="v1_197"><span class="v1_198">Start Task ></span></div></div></div></div><div class="v1_254"><span class="v1_255">Quick Actions</span><div class="v1_256"><span class="v1_257">Create a Task</span></div></div></div><div class="v4_56"><div class="v4_57"><span class="v4_63"><</span></div><div class="v4_58"><span class="v4_59">Calendar</span><span class="v4_60">11/11/2011 - 12/12/2012</span></div><div class="v4_65"><span class="v4_66">></span></div></div><div class="v1_273"><div class="v1_739"><div class="v1_274"><span class="v1_634">11.</span><div class="v4_2"><span class="v4_3">Task Name</span></div></div></div></div></div></body></html>
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link
+			href="https://fonts.googleapis.com/css?family=Inter&display=swap"
+			rel="stylesheet"
+		/>
+		<link href="./css/main.css" rel="stylesheet" />
+		<title>Study App</title>
+	</head>
+
+	<body>
+		<div class="app-container">
+			<span class="app-title">Study app</span>
+
+			<!-- Current Task -->
+			<section class="current-task-section">
+				<div class="current-task">
+					<span class="current-task-title">Current Task Name</span>
+
+					<div class="timer">
+						<span class="timer-value">00:30:00</span>
+						<span class="timer-label">Remaining...</span>
+					</div>
+
+					<div class="progress">
+						<div class="progress-bar"></div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Upcoming Assignments -->
+			<section class="assignments-section">
+				<div class="assignments-container">
+					<span class="assignments-title">Upcoming Assignments</span>
+
+					<div class="assignments-list">
+						<article class="assignment-card">
+							<div class="assignment-title-row">
+								<span class="assignment-title">Task Name</span>
+								<span class="assignment-priority">Priority: High</span>
+							</div>
+							<div class="assignment-meta">
+								<span class="assignment-due">Due: 11/11/2011</span>
+								<span class="assignment-duration">Time: 30 mins</span>
+							</div>
+
+							<div class="assignment-actions">
+								<button class="btn-edit">Edit</button>
+								<button class="btn-start">Start Task &gt;</button>
+							</div>
+						</article>
+					</div>
+				</div>
+
+				<aside class="quick-actions-section">
+					<span class="quick-actions-title">Quick Actions</span>
+					<div class="quick-actions-list">
+						<button class="quick-action-item">Create a Task</button>
+					</div>
+				</aside>
+			</section>
+
+			<!-- Calendar -->
+			<div class="calendar-bar">
+				<div class="calendar-arrow-left">&lt;</div>
+				<div class="calendar-info">
+					<span class="calendar-title">Calendar</span>
+					<span class="calendar-range">11/11/2011 - 12/12/2012</span>
+				</div>
+				<div class="calendar-arrow-right">&gt;</div>
+			</div>
+
+			<!-- Task list -->
+			<section class="task-list-section">
+				<div class="task-list">
+					<div class="task-list-column">
+						<span class="task-list-number">11.</span>
+						<div class="task-list-item">
+							<span class="task-list-item-title">Task Name</span>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+	</body>
+</html>
