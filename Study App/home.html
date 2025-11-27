@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container py-5 px-3">
+        <h1 class="text-center mb-3">Study App</h1>
+        <div class="card timerCard mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Current Task Name</h5>
+                <p class="card-text">Time Remaining: 00:30:00</p>
+                <div class="progress mb-3">
+                    <div class="progress-bar" role="progressbar" style="width: 40%;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                <div class="timerButtons d-flex gap-2">
+                    <button class="btn btn-primary">I'm Done!</button>
+                    <button class="btn btn-primary">Pause</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="quickMenu mb-3">
+            <div class="row g-3">
+                <!-- Upcoming Assignments -->
+                <div class="col-lg-8">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Upcoming Assignments</h5>
+        
+                            <!-- Assignment Item -->
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div class="row g-4">
+        
+                                        <div class="col-10">
+                                            <strong>Math Homework</strong>
+                                            <strong>(Due Today - 11:59)</strong>
+                                            <p class="mt-2">At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque...</p>
+        
+                                            <div class="row mt-2 text-muted small">
+                                                <div class="col-auto">Time: 30 mins</div>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-lg-2 col-12 d-flex flex-column">
+                                            <button class="btn btn-success w-100">Start</button>
+                                            <button class="btn w-100">Edit</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- END Assignment Item -->
+        
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Quick Actions -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Create A Task</h5>
+
+                            <form>
+                                <div class="mb-3">
+                                    <label for="taskName" class="form-label">Task Name</label>
+                                    <input type="text" class="form-control" id="taskName" placeholder="Enter task name">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="taskDescription" class="form-label">Description</label>
+                                    <input type="text" class="form-control" id="taskDescription" placeholder="(Optional)">
+                                </div>
+                                <div class="row">
+                                    <div class="col mb-3">
+                                        <label for="taskDueDate" class="form-label">Due Date</label>
+                                        <input type="date" class="form-control" id="taskDueDate">
+                                    </div>
+                                    <div class="col mb-3">
+                                        <label for="taskDueDate" class="form-label">Time Due</label>
+                                        <input type="time" class="form-control" id="taskDueTime">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="taskEstimatedTime" class="form-label">Estimated Time</label>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="col btn btn-sm btn-secondary mb-1">30 mins</button>
+                                        <button type="button" class="col btn btn-sm btn-secondary mb-1">60 mins</button>
+                                        <button type="button" class="col btn btn-sm btn-secondary mb-1">90 mins</button>
+                                        <input type="number" class="col form-control" id="taskEstimatedTime" placeholder="Other">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Add Task</button>
+
+                            </form>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+        </div>
+
+        <div class="Calendar mt-4">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Header -->
+                    <div class="row d-flex flex-row align-items-center justify-content-center mb-3">
+                        <div class="col-auto">
+                            <button class="btn btn-primary">Back</button>
+                        </div>
+                        <div class="col-auto text-center">
+                            <h3 class="mb-0">Calendar</h3>
+                            <p class="mb-0 small">11/11/2011 - 11/16/2011</p>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary">Next</button>
+                        </div>
+                    </div>
+        
+                    <!-- Calendar Days Row -->
+                    <div class="row g-3 justify-content-center">
+        
+                        <!-- Day Template — copy as needed -->
+                        <div class="col-lg-2 col-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center date">11/11</h5>
+                                    <div class="list-unstyled">
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Math Homework</p>
+                                            <div class="text-muted small">Due: 5:00 pm</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Science Project</p>
+                                            <div class="text-muted small">Due: 11:59 pm</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- Day 2 -->
+                        <div class="col-lg-2 col-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center date">11/12</h5>
+                                    <div class="list-unstyled">
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Math Homework</p>
+                                            <div class="text-muted small">Due: 5:00 pm</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Science Project</p>
+                                            <div class="text-muted small">Due: 11:59 pm</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- Day 3 -->
+                        <div class="col-lg-2 col-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center date">11/13</h5>
+                                    <div class="list-unstyled">
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Math Homework</p>
+                                            <div class="text-muted small">Due: 5:00 pm</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Science Project</p>
+                                            <div class="text-muted small">Due: 11:59 pm</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- Day 4 -->
+                        <div class="col-lg-2 col-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center date">11/14</h5>
+                                    <div class="list-unstyled">
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Math Homework</p>
+                                            <div class="text-muted small">Due: 5:00 pm</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Science Project</p>
+                                            <div class="text-muted small">Due: 11:59 pm</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- Day 5 -->
+                        <div class="col-lg-2 col-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center date">11/15</h5>
+                                    <div class="list-unstyled">
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Math Homework</p>
+                                            <div class="text-muted small">Due: 5:00 pm</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Science Project</p>
+                                            <div class="text-muted small">Due: 11:59 pm</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- Day 6 -->
+                        <div class="col-lg-2 col-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center date">11/16</h5>
+                                    <div class="list-unstyled">
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Math Homework</p>
+                                            <div class="text-muted small">Due: 5:00 pm</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <p class="small mb-0">Science Project</p>
+                                            <div class="text-muted small">Due: 11:59 pm</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

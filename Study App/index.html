@@ -7,83 +7,133 @@
 			href="https://fonts.googleapis.com/css?family=Inter&display=swap"
 			rel="stylesheet"
 		/>
+		<!-- Bootstrap CSS (CDN) -->
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+		/>
 		<link href="./css/main.css" rel="stylesheet" />
 		<title>Study App</title>
 	</head>
 
 	<body>
-		<div class="app-container">
-			<span class="app-title">Study app</span>
+		<div class="container py-4 app-container">
+			<h1 class="app-title text-center">Study app</h1>
 
-			<!-- Current Task -->
-			<section class="current-task-section">
-				<div class="current-task">
-					<span class="current-task-title">Current Task Name</span>
+			<div class="row g-4 align-items-start">
 
-					<div class="timer">
-						<span class="timer-value">00:30:00</span>
-						<span class="timer-label">Remaining...</span>
-					</div>
+                <!-- Current Task (left side) -->
+                <div class="col-lg-8">
+                    <div class="current-task-section">
+                        <div class="current-task">
+                            <span class="current-task-title">Current Task Name</span>
+            
+                            <div class="timer d-flex align-items-center gap-3">
+                                <span class="timer-value">00:30:00</span>
+                                <span class="timer-label">Remaining...</span>
+                            </div>
+            
+                            <div class="progress mt-3">
+                                <div class="progress-bar" role="progressbar" style="width: 40%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Quick Actions (right side) -->
+                <div class="col-lg-4">
+                    <aside class="quick-actions-section">
+                        <span class="quick-actions-title">Quick Actions</span>
+                        <div class="quick-actions-list mt-2">
+                            <button class="quick-action-item btn btn-primary w-100">Create a Task</button>
+                        </div>
+                    </aside>
+                </div>
+            </div>
 
-					<div class="progress">
-						<div class="progress-bar"></div>
-					</div>
-				</div>
-			</section>
+            <div class="calendar-bar mt-4 d-flex align-items-center justify-content-between">
+                <div class="calendar-arrow-left">&lt;</div>
+                    <div class="calendar-info text-center">
+                        <span class="calendar-title d-block">Calendar</span>
+                        <span class="calendar-range">11/11/2011 - 12/12/2012</span>
+                    </div>
+                <div class="calendar-arrow-right">&gt;</div>
+            </div>
 
-			<!-- Upcoming Assignments -->
-			<section class="assignments-section">
-				<div class="assignments-container">
-					<span class="assignments-title">Upcoming Assignments</span>
+            <!-- Five-day row under calendar -->
+            <div class="five-day-row mt-4 d-flex gap-3">
+                <div class="day-box p-3 bg-white rounded shadow-sm">
+                    <div class="day-header mb-2">
+                        <div class="day-label text-muted small">11/10/2005 (Yesterday)</div>
+                        <div class="day-date text-muted small">Thursday</div>
+                    </div>
+                    <div class="day-tasks">
+                        <div class="task-entry mb-2">
+                            <div class="task-title">Task name</div>
+                            <div class="task-desc text-muted small">task description (default no description)</div>
+                        </div>
+                        <div class="task-entry mb-2">
+                            <div class="task-title">Task name 2</div>
+                            <div class="task-desc text-muted small">task description (default no description)</div>
+                        </div>
+                    </div>
+                </div>
 
-					<div class="assignments-list">
-						<article class="assignment-card">
-							<div class="assignment-title-row">
-								<span class="assignment-title">Task Name</span>
-								<span class="assignment-priority">Priority: High</span>
-							</div>
-							<div class="assignment-meta">
-								<span class="assignment-due">Due: 11/11/2011</span>
-								<span class="assignment-duration">Time: 30 mins</span>
-							</div>
+                <div class="day-box p-3 bg-white rounded shadow-sm">
+                    <div class="day-header mb-2">
+                        <div class="day-label text-muted small">11/11/2005 (Today)</div>
+                        <div class="day-date text-muted small">Friday</div>
+                    </div>
+                    <div class="day-tasks">
+                        <div class="task-entry mb-2">
+                            <div class="task-title">Task name</div>
+                            <div class="task-desc text-muted small">task description (default no description)</div>
+                        </div>
+                    </div>
+                </div>
 
-							<div class="assignment-actions">
-								<button class="btn-edit">Edit</button>
-								<button class="btn-start">Start Task &gt;</button>
-							</div>
-						</article>
-					</div>
-				</div>
+                <div class="day-box p-3 bg-white rounded shadow-sm">
+                    <div class="day-header mb-2">
+                        <div class="day-label text-muted small">11/12/2005</div>
+                        <div class="day-date text-muted small">Saturday</div>
+                    </div>
+                    <div class="day-tasks">
+                        <div class="task-entry mb-2">
+                            <div class="task-title">Task name</div>
+                            <div class="task-desc text-muted small">task description (default no description)</div>
+                        </div>
+                    </div>
+                </div>
 
-				<aside class="quick-actions-section">
-					<span class="quick-actions-title">Quick Actions</span>
-					<div class="quick-actions-list">
-						<button class="quick-action-item">Create a Task</button>
-					</div>
-				</aside>
-			</section>
+                <div class="day-box p-3 bg-white rounded shadow-sm">
+                    <div class="day-header mb-2">
+                        <div class="day-label text-muted small">11/13/2005</div>
+                        <div class="day-date text-muted small">Sunday</div>
+                    </div>
+                    <div class="day-tasks">
+                        <div class="task-entry mb-2">
+                            <div class="task-title">Task name</div>
+                            <div class="task-desc text-muted small">task description (default no description)</div>
+                        </div>
+                    </div>
+                </div>
 
-			<!-- Calendar -->
-			<div class="calendar-bar">
-				<div class="calendar-arrow-left">&lt;</div>
-				<div class="calendar-info">
-					<span class="calendar-title">Calendar</span>
-					<span class="calendar-range">11/11/2011 - 12/12/2012</span>
-				</div>
-				<div class="calendar-arrow-right">&gt;</div>
-			</div>
-
-			<!-- Task list -->
-			<section class="task-list-section">
-				<div class="task-list">
-					<div class="task-list-column">
-						<span class="task-list-number">11.</span>
-						<div class="task-list-item">
-							<span class="task-list-item-title">Task Name</span>
-						</div>
-					</div>
-				</div>
-			</section>
+                <div class="day-box p-3 bg-white rounded shadow-sm">
+                    <div class="day-header mb-2">
+                        <div class="day-label text-muted small">11/14/2005</div>
+                        <div class="day-date text-muted small">Monday</div>
+                    </div>
+                    <div class="day-tasks">
+                        <div class="task-entry mb-2">
+                            <div class="task-title">Task name</div>
+                            <div class="task-desc text-muted small">task description (default no description)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 		</div>
+
+		<!-- Bootstrap JS bundle (CDN) -->
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 	</body>
 </html>
