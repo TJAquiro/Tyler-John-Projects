@@ -1,0 +1,54 @@
+PROJECT SPECIFICATION
+---------------------
+This exercise simulates a simplified Youth Villages technical screening.
+
+You are given:
+1. A Java source file with compiler issues.
+2. A small HTML form.
+3. A list of enhancement requests.
+
+You will have 25 minutes to:
+- Fix all compiler issues in the Java file.
+- Review the code structure.
+- Read the enhancement list (DO NOT implement enhancements yet).
+
+During the meeting, you will be asked to:
+- Fix one functional defect in real time.
+- Explain how you prioritize and approach enhancements.
+- Answer basic Java and React theory questions.
+
+--------------------------------------------------------------
+
+PROBLEM DESCRIPTION
+-------------------
+The Java program is intended to:
+- Accept "age" inputs (as integers).
+- Store them in a list.
+- Calculate the average age.
+
+The current implementation has:
+- Multiple compiler issues.
+- A logic defect in the calculation method.
+- Poor naming consistency.
+
+You must correct the compile errors for the first phase.
+You must NOT implement any enhancements until instructed.
+
+--------------------------------------------------------------
+
+ENHANCEMENTS (DO NOT IMPLEMENT YET)
+-----------------------------------
+Enhancement 1:
+    Add validation so that addAge() rejects values below 0 or above 25.
+
+Enhancement 2:
+    Update calculateAverage() so it returns a double with two decimal places.
+
+Enhancement 3:
+    Add a new method: getOldestAge() that returns the highest age in the list.
+
+Enhancement 4:
+    Add unit tests for all public methods.
+
+Enhancement 5:
+    Connect the HTML form to the Java program (conceptual discussion only).

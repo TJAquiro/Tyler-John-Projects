@@ -1,0 +1,54 @@
+PROJECT SPECIFICATION
+---------------------
+This exercise simulates the structure of the Youth Villages technical screening.
+
+Included:
+1. A Java source file containing multiple compiler errors.
+2. A simple HTML form.
+3. A list of enhancement requests.
+
+You will have 25 minutes to:
+- Fix compiler errors in the Java file.
+- Read (but not implement) the enhancements.
+- Become familiar with the structure.
+
+During the meeting, you will:
+- Fix one defect in the Java code.
+- Explain how you prioritize and would approach enhancements.
+- Answer a few Java and React theory questions.
+
+--------------------------------------------------------------
+
+PROBLEM DESCRIPTION
+-------------------
+The Java program is intended to:
+- Accept input numbers.
+- Store them internally.
+- Compute the median value.
+
+The current Java implementation:
+- Contains several compilation issues.
+- Contains at least one runtime logic bug.
+- Needs cleanup and correction.
+
+Do not implement enhancements until the instructed phase.
+
+--------------------------------------------------------------
+
+ENHANCEMENTS (DO NOT IMPLEMENT YET)
+-----------------------------------
+
+Enhancement 1:
+    Modify addNumber() to reject negative inputs.
+
+Enhancement 2:
+    Add a method: getMinimum() returning the smallest number.
+
+Enhancement 3:
+    Add a method: getMaximum() returning the largest number.
+
+Enhancement 4:
+    Refactor median() so it does not modify the original list.
+
+Enhancement 5:
+    Add unit tests for all methods.

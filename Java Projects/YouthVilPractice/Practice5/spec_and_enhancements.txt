@@ -1,0 +1,40 @@
+PROJECT SPECIFICATION
+---------------------
+This exercise evaluates Java fundamentals, debugging ability,
+and problem-solving communication.
+
+You are given:
+1. A Java file with compilation issues.
+2. A simple HTML file.
+3. A list of enhancement requests.
+
+You have 25 minutes to:
+- Fix Java compilation errors.
+- Review program behavior.
+- Read enhancements only (do not implement).
+
+--------------------------------------------
+
+PROBLEM DESCRIPTION
+-------------------
+The Java program is intended to:
+- Accept numeric metrics
+- Store them internally
+- Calculate basic statistics
+
+The current implementation:
+- Does not compile
+- Produces incorrect results in some cases
+- Lacks basic validation
+
+--------------------------------------------
+
+ENHANCEMENTS (DO NOT IMPLEMENT)
+-------------------------------
+1. Reject invalid or negative metric values.
+2. Prevent division-by-zero scenarios.
+3. Return averages with two decimal places.
+4. Add a method to return the lowest metric.
+5. Improve naming and readability.
+6. Describe how the HTML form could send data to the Java logic.
+7. Describe how this would change in a React-based frontend.

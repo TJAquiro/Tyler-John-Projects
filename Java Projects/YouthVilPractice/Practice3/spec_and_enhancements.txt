@@ -1,0 +1,33 @@
+PROJECT OVERVIEW
+----------------
+You are given a Java file, an HTML file, and this document.
+
+You have 25 minutes to:
+- Fix all Java compilation issues
+- Review the code and understand its intent
+- Read the enhancement requests
+
+Do not implement enhancements before the interview.
+
+---------------------------------------------
+
+PROBLEM DESCRIPTION
+-------------------
+The Java program is intended to:
+- Store numeric assessment scores
+- Calculate the average score
+- Display the result
+
+The current implementation contains:
+- Compilation errors
+- A logic defect
+
+---------------------------------------------
+
+ENHANCEMENTS (DO NOT IMPLEMENT)
+-------------------------------
+1. Validate scores are between 0 and 100
+2. Display the average with two decimal places
+3. Add a method to return the highest score
+4. Refactor for readability
+5. Describe how the HTML form would send data to the Java logic
