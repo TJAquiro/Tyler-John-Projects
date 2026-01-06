@@ -1,0 +1,15 @@
+File 3: Enhancements.docx (READ ONLY INITIALLY)
+
+You do not implement these during the first 25 minutes.
+
+Enhancement Requests:
+
+Allow age and risk score to be passed as command-line arguments. (Mid) 
+
+Validate that risk score is between 1 and 10. (Mid) 
+
+Display an error message in the HTML if result.json is missing. (High)
+
+Refactor priority logic to be configurable (future-proofing). (low priority)
+
+Discuss how this could be integrated into a React frontend.

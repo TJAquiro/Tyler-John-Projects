@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Youth Intake Priority</title>
+</head>
+<body>
+
+<h2>Youth Intake Result</h2>
+
+<div id="result">Waiting for result...</div>
+
+<script>
+    fetch("output.json")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("results").innerHTML =
+                "Priority Level: " + data.priority;
+        })
+        .catch(error => {
+            console.log("Error loading data");
+        });
+</script>
+
+</body>
+</html>

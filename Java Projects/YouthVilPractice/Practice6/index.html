@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Youth Intake Result</title>
+</head>
+<body>
+    <h1>Youth Priority Result</h1>
+
+    <div id="output">Loading...</div>
+
+    <script>
+
+            fetch("result.json")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("output").innerText =
+                    "Priority Level: " + data.priority;
+            });
+
+    </script>
+</body>
+</html>

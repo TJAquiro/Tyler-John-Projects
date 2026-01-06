@@ -11,12 +11,12 @@ public class YouthMetrics {
 
     public void addMetric(String metric) throws NegativeNumberException {
         try {
-            int value = Integer.parseInt(metric);
+            int addedMetricInt = Integer.parseInt(metric);
 
-            if (value < 0) {
+            if (addedMetricInt < 0) {
                 throw new NegativeNumberException();
             }
-            metrics.add(value);
+            metrics.add(addedMetricInt);
         } catch (NumberFormatException e) {
             System.out.println("Invalid input: " + metric);
         } catch (NegativeNumberException e) {
@@ -37,9 +37,9 @@ public class YouthMetrics {
     public int highestMetric() {
         int max = metrics.get(0);
 
-        for (Integer m : metrics) {
-            if (m > max)
-                max = m;
+        for (Integer metric : metrics) {
+            if (metric > max)
+                max = metric;
         }
 
         return max;
@@ -48,9 +48,9 @@ public class YouthMetrics {
     public int lowestMetric() {
         int min = metrics.get(0);
 
-        for (Integer m : metrics) {
-            if (m < min)
-                min = m;
+        for (Integer metric : metrics) {
+            if (metric < min)
+                min = metric;
         }
 
         return min;
@@ -69,6 +69,7 @@ public class YouthMetrics {
         ym.addMetric("potato");
         ym.addMetric("-1000");
         ym.addMetric("1");
+        ym.addMetric("");
 
         System.out.println("Average: " + ym.calculateAverage());
         System.out.println("Highest: " + ym.highestMetric());
