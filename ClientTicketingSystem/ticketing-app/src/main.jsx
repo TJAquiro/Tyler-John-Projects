@@ -6,6 +6,8 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { Login } from './Login.jsx'
 import { Homepage } from './Homepage.jsx'
 import { HashRouter, Routes, Route } from 'react-router-dom'
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const CLIENT_ID = "513139989236-obemhc05j988q2rrpv9ifubh5qfmcfg7.apps.googleusercontent.com"
 

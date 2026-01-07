@@ -1,6 +1,7 @@
 import { GoogleLogin, googleLogout } from "@react-oauth/google"
 import { jwtDecode } from "jwt-decode"
 import { useNavigate } from "react-router-dom";
+import { LoginWithGoogle } from "./LoginWithGoogle";
 
 export function Login() {
 
@@ -8,28 +9,36 @@ export function Login() {
 
     return (
         <>
-            <GoogleLogin 
-            
-            onSuccess={(credentialResponse) => {
-                console.log(credentialResponse)
-                console.log(jwtDecode(credentialResponse.credential))
-                console.log(jwtDecode(credentialResponse.credential).given_name)
-                console.log(jwtDecode(credentialResponse.credential).family_name)
+            <div className="container">
+                <h1>
+                    Login to your Ticketing Center
+                </h1>
 
-                const decoded = jwtDecode(credentialResponse.credential);
+                <div className="row">
+                    <div className="col">
+                        <div className="card">
+                            <div className="card-body">
+                                <form>
+                                    <div className="mb-3">
+                                        <label className="form-label">Email</label>
+                                        <input type="email" className="form-control" />
+                                    </div>
 
-                localStorage.setItem("email", decoded.email);
-                localStorage.setItem("givenName", decoded.given_name);
-                localStorage.setItem("family_name", decoded.family_name);
+                                    <div className="mb-3">
+                                        <label className="form-label">Password</label>
+                                        <input type="Password" className="form-control" />
+                                    </div>
+                                </form>
 
-                navigate("/Homepage")
-            }} 
-            
-            onError={() => console.log("Login Failed")}
 
-            auto_select={true}/>
-
-            <button onClick={() => googleLogout()}> Logout </button>
+                                <div className="d-grid" >
+                                    <LoginWithGoogle />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </>
     )
 }
