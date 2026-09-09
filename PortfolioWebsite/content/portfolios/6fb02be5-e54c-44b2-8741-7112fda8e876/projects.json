@@ -1,0 +1,73 @@
+[
+  {
+    "id": "showcase-common-ground",
+    "slug": "common-ground",
+    "title": "Common Ground",
+    "date": "2026",
+    "description": "A community investment platform that helps neighbors turn shared priorities into visible, fundable action. Research, service design, and a clear contribution model bring local progress into focus.",
+    "thumbnail": "/images/common-ground.svg",
+    "images": [
+      "/images/common-ground.svg",
+      "/images/common-ground-detail.svg"
+    ],
+    "imageDescriptions": {
+      "/images/common-ground.svg": "A warm, optimistic identity built around the idea of shared space.",
+      "/images/common-ground-detail.svg": "A visual system connecting community goals with transparent progress."
+    },
+    "technologies": [
+      "Figma",
+      "Framer",
+      "Research",
+      "Design systems"
+    ],
+    "link": "",
+    "featured": true
+  },
+  {
+    "id": "showcase-soft-focus",
+    "slug": "soft-focus",
+    "title": "Soft Focus",
+    "date": "2025",
+    "description": "A slower, more intentional way to collect and revisit ideas. A tactile visual language and a quiet interface make room for inspiration without distraction.",
+    "thumbnail": "/images/soft-focus.svg",
+    "images": [
+      "/images/soft-focus.svg",
+      "/images/soft-focus-detail.svg"
+    ],
+    "imageDescriptions": {
+      "/images/soft-focus.svg": "The collection experience pairs soft colors with a simple, deliberate hierarchy.",
+      "/images/soft-focus-detail.svg": "Details from the interaction and visual design system."
+    },
+    "technologies": [
+      "Figma",
+      "Adobe Illustrator",
+      "Interaction design"
+    ],
+    "link": "",
+    "featured": false
+  },
+  {
+    "id": "showcase-second-nature",
+    "slug": "second-nature",
+    "title": "Second Nature",
+    "date": "2024",
+    "description": "A mobile companion that makes everyday climate choices understandable and motivating. Research-led prompts turn household habits into small, achievable steps.",
+    "thumbnail": "/images/second-nature.svg",
+    "images": [
+      "/images/second-nature.svg",
+      "/images/second-nature-detail.svg"
+    ],
+    "imageDescriptions": {
+      "/images/second-nature.svg": "An approachable palette inspired by landscapes and everyday rituals.",
+      "/images/second-nature-detail.svg": "Supporting illustrations make progress clear at a glance."
+    },
+    "technologies": [
+      "Figma",
+      "Blender",
+      "Mobile design",
+      "Prototyping"
+    ],
+    "link": "",
+    "featured": false
+  }
+]

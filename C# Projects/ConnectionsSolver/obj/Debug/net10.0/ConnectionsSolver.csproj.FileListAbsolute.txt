@@ -1,0 +1,15 @@
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\bin\Debug\net10.0\ConnectionsSolver.exe
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\bin\Debug\net10.0\ConnectionsSolver.deps.json
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\bin\Debug\net10.0\ConnectionsSolver.runtimeconfig.json
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\bin\Debug\net10.0\ConnectionsSolver.dll
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\bin\Debug\net10.0\ConnectionsSolver.pdb
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.AssemblyInfoInputs.cache
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.AssemblyInfo.cs
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.csproj.CoreCompileInputs.cache
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.sourcelink.json
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.dll
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\refint\ConnectionsSolver.dll
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.pdb
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ConnectionsSolver.genruntimeconfig.cache
+C:\Users\tjaqu\Desktop\Tyler-John-Projects\C# Projects\ConnectionsSolver\obj\Debug\net10.0\ref\ConnectionsSolver.dll

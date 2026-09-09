@@ -1,8 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "VfNd6XKF/YgmIeijdV6oStgxCucIIp2JgBc8eP9WHkS1MxawXmtJy/jWO+9ew46qeXHy/Btd3aPM+XDpFTqIOg==",
+  "dgSpecHash": "45kNPw6NxLU=",
   "success": true,
   "projectFilePath": "C:\\Users\\tjaqu\\Desktop\\Tyler-John-Projects\\dotnet Practice\\Ex_Files_C_and_NET_Essential_Training\\Ex_Files_C_and_NET_Essential_Training\\Exercise Files\\Start\\Strings\\Manipulation\\Manipulation.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\tjaqu\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.36\\microsoft.netcore.app.ref.6.0.36.nupkg.sha512",
+    "C:\\Users\\tjaqu\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.36\\microsoft.windowsdesktop.app.ref.6.0.36.nupkg.sha512",
+    "C:\\Users\\tjaqu\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.36\\microsoft.aspnetcore.app.ref.6.0.36.nupkg.sha512",
+    "C:\\Users\\tjaqu\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\6.0.36\\microsoft.netcore.app.host.win-x64.6.0.36.nupkg.sha512"
+  ],
   "logs": []
 }

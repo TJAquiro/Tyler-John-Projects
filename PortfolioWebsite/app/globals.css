@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root { --paper: #f5f2ea; --ink: #17231f; --moss: #4e654f; --coral: #e47b5c; --line: #d7d8ce; }
+* { box-sizing: border-box; }
+html { background: var(--paper); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; }
+::selection { background: var(--coral); color: var(--ink); }
+a { text-decoration: none; }
+h1, h2, h3, p { overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--moss); outline-offset: 4px; }
+.display { font-family: 'Playfair Display', Georgia, serif; }
+.mono { font-family: 'DM Mono', monospace; }
+.eyebrow { font-family: 'DM Mono', monospace; font-size: .7rem; line-height: 1.7; letter-spacing: .16em; text-transform: uppercase; color: var(--moss); }
+.public-nav { padding: .4rem 0; }
+.public-nav:hover, .public-nav[aria-current=page] { text-decoration: underline; text-underline-offset: 6px; }
+.markdown p + p, .markdown ul, .markdown ol, .markdown blockquote { margin-top: .8em; }
+.markdown ul { list-style: disc; padding-left: 1.25em; }
+.markdown ol { list-style: decimal; padding-left: 1.25em; }
+.markdown a { text-decoration: underline; text-underline-offset: 3px; }
+.markdown blockquote { border-left: 2px solid var(--line); padding-left: 1em; }
+.skip-link { position: fixed; z-index: 100; top: .5rem; left: .5rem; background: var(--ink); color: var(--paper); padding: .75rem 1rem; border-radius: .5rem; transform: translateY(-200%); }
+.skip-link:focus { transform: translateY(0); }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+.animate-rise { animation: rise .7s ease both; }
+.animate-rise-delay { animation: rise .7s .13s ease both; }
+.reveal-grid > * { animation: rise .65s ease both; }
+.reveal-grid > *:nth-child(2) { animation-delay: .1s; }
+.reveal-grid > *:nth-child(3) { animation-delay: .2s; }
+.project-image { transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.project-card:hover .project-image { transform: scale(1.025); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

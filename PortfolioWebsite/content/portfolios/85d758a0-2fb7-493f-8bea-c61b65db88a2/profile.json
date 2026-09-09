@@ -1,0 +1,36 @@
+{
+  "name": "Tyler",
+  "headshotImage": "/images/b5c32d3f-0a40-432b-bbeb-647522c6fcd7.webp",
+  "biography": "I’m a versatile software developer and frontend designer specializing in building fast, responsive, and dynamic web and mobile applications. I work confidently across HTML, CSS, JavaScript, jQuery, and Bootstrap, combining strong visual design instincts with clean, scalable, and maintainable code.\n\nBacked by a solid object-oriented programming foundation in Java, Python, and C, I develop reliable full-stack features, optimize UI performance across devices, and turn complex requirements into intuitive, user-centered interfaces. My experience spans frontend engineering, backend logic, UI/UX design, and prototyping—supported by tools like Figma, Framer, Bubble.io, Git/GitHub, and modern development workflows.\n\nI thrive in collaborative, fast-paced environments where problem-solving, iteration, and communication are essential. Whether coding, designing, or refining user flows, I focus on delivering polished, high-quality experiences that are both functional and visually engaging.",
+  "tools": [
+    "Autodesk 3ds Max",
+    "Figma",
+    "Visual Studio Code"
+  ],
+  "education": [
+    {
+      "institution": "GMU",
+      "degree": "BFA",
+      "field": "Game Design",
+      "startYear": "2021",
+      "endYear": "2025",
+      "description": "Activities and societies: GMU Chess Club, President\t2023 - 2024\nChess Club | Filipino Student Association | Vietnamese Student Association | Japanese Student Association | Badminton Club | Fencing Club | Deep Run Robotics | Game Analysis Design Interest Grou"
+    }
+  ],
+  "jobs": [
+    {
+      "company": "handshake ai",
+      "position": "ai trainer",
+      "description": "• Developed and evaluated domain-specific prompts to assess the performance of large language models (LLMs) in 2D design\n• Contributed to improving AI's understanding of complex artistic decision-making through creating high quality 2D graphics\n• Reviewed, proofread, edited, and refined team members' work to ensure clarity, accuracy, and high-quality deliverables.",
+      "startDate": "march 1",
+      "endDate": "Present"
+    },
+    {
+      "company": "TGC",
+      "position": "UIUX designer",
+      "description": "· Conducted competitive research and analysis of app features to identify market trends and inform product design decisions\n· Gather and analyze feedback from early users and testers\n· Propose design or technical improvements aligned with app goals and behavior insights\n· Collaborate with marketing and design to incorporate user feedback into the interface\n· Support wireframe testing or Figma iterations in collaboration with the design contractor\n· Support integration of in-app tracking tools",
+      "startDate": "1/2/3",
+      "endDate": "4/5/6"
+    }
+  ]
+}

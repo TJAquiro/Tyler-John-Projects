@@ -1,0 +1,41 @@
+{
+  "name": "Alex Morgan",
+  "headshotImage": "/images/mara.svg",
+  "biography": "I’m an independent product designer turning complex ideas into thoughtful, approachable digital experiences.\n\nMy practice connects **research, interaction design, and clear visual systems**. I work with ambitious teams to make everyday tools more useful, welcoming, and human.",
+  "education": [
+    {
+      "institution": "Northbridge School of Design",
+      "degree": "BFA",
+      "field": "Interaction Design",
+      "startYear": "2017",
+      "endYear": "2021",
+      "description": "Focused on human-centered design, visual communication, and accessible interfaces. My final project explored digital tools for stronger local communities."
+    }
+  ],
+  "tools": [
+    "Figma",
+    "FigJam",
+    "Adobe Illustrator",
+    "Adobe Photoshop",
+    "Framer",
+    "Blender",
+    "Visual Studio Code",
+    "Miro"
+  ],
+  "jobs": [
+    {
+      "company": "Independent",
+      "position": "Product Designer",
+      "startDate": "2024",
+      "endDate": "Present",
+      "description": "Partnering with early-stage teams on research, product strategy, and thoughtful web and mobile experiences."
+    },
+    {
+      "company": "Fieldwork Studio",
+      "position": "UX/UI Designer",
+      "startDate": "2021",
+      "endDate": "2024",
+      "description": "Designed and shipped accessible interfaces across education, community, and climate projects. Built reusable design systems and mentored junior designers."
+    }
+  ]
+}

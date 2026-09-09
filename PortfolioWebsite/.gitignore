@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+.env
+.env.local
+.DS_Store
+.local-backups/
+.qa/
+.next-qa/
+.next-qa-dev/
+test-results/
+playwright-report/
+*.tsbuildinfo
+.studio/

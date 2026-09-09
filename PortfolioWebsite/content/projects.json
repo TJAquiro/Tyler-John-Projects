@@ -1,0 +1,20 @@
+[
+  {
+    "id": "72ec64c3-59ec-439f-9f80-0ae759b1dbd0",
+    "slug": "campaign-website",
+    "images": [
+      "/images/66a9fdd0-2382-4d09-9a71-b92516d2e7ee.webp",
+      "/images/400d0783-4b27-40a8-b2c1-a272c0f7f77d.webp",
+      "/images/e9c5646c-06be-45fd-962e-6fb50a7457d5.webp"
+    ],
+    "link": "",
+    "title": "Campaign Website",
+    "date": "2026",
+    "description": "Personal project showing ability to deliver persuasive, action-oriented content. Created a campaign site prototype with clear content hierarchy and strong calls-to-action to drive engagement.",
+    "thumbnail": "/images/66a9fdd0-2382-4d09-9a71-b92516d2e7ee.webp",
+    "technologies": [
+      "Sketch",
+      "Framer"
+    ]
+  }
+]

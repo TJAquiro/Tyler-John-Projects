@@ -1,0 +1,24 @@
+[
+  {
+    "id": "ca14a7d5-c134-40fb-b4b6-976786c68e4e",
+    "slug": "campain-website",
+    "images": [
+      "/images/5fc527f3-75eb-4417-a1b3-ce09ef805a35.webp",
+      "/images/0cbd1bd2-bd57-4e66-906b-87cdb0cfbca6.webp",
+      "/images/1d6c1621-a381-401b-8058-f6adc0edd585.webp"
+    ],
+    "imageDescriptions": {
+      "/images/5fc527f3-75eb-4417-a1b3-ce09ef805a35.webp": "The landing page",
+      "/images/1d6c1621-a381-401b-8058-f6adc0edd585.webp": "Call to action"
+    },
+    "link": "",
+    "title": "Campain website",
+    "date": "2026",
+    "description": "a website for a political canadate",
+    "thumbnail": "/images/5fc527f3-75eb-4417-a1b3-ce09ef805a35.webp",
+    "technologies": [
+      "figma",
+      "sketch"
+    ]
+  }
+]

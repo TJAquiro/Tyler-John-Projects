@@ -1,0 +1,59 @@
+[
+  {
+    "id": "project-01",
+    "title": "Common Ground",
+    "thumbnail": "/images/common-ground.svg",
+    "images": [
+      "/images/common-ground.svg",
+      "/images/common-ground-detail.svg"
+    ],
+    "date": "2024-01-12",
+    "description": "A community investment platform that helps neighbors turn shared priorities into visible, fundable action. I led the end-to-end product experience, from a new contribution model to the visual language that makes progress feel tangible.",
+    "technologies": [
+      "Product strategy",
+      "UX/UI",
+      "Design systems"
+    ],
+    "link": "https://example.com",
+    "slug": "common-ground",
+    "featured": true
+  },
+  {
+    "id": "project-02",
+    "title": "Soft Focus",
+    "thumbnail": "/images/soft-focus.svg",
+    "images": [
+      "/images/soft-focus.svg",
+      "/images/soft-focus-detail.svg"
+    ],
+    "date": "2023-09-18",
+    "description": "A slower, more intentional way to save and revisit the things that inspire us. Soft Focus pairs a tactile collection experience with a quiet recommendation engine built around context, not clicks.",
+    "technologies": [
+      "Research",
+      "Interaction design",
+      "Prototyping"
+    ],
+    "link": "https://example.com",
+    "slug": "soft-focus",
+    "featured": false
+  },
+  {
+    "id": "project-03",
+    "title": "Second Nature",
+    "thumbnail": "/images/second-nature.svg",
+    "images": [
+      "/images/second-nature.svg",
+      "/images/second-nature-detail.svg"
+    ],
+    "date": "2022-04-22",
+    "description": "Making everyday climate choices legible, motivating, and a little less lonely. This mobile companion turns household habits into a shared ritual with an optimistic, data-informed voice.",
+    "technologies": [
+      "Brand experience",
+      "Mobile product",
+      "Motion"
+    ],
+    "link": "https://example.com",
+    "slug": "second-nature",
+    "featured": false
+  }
+]
