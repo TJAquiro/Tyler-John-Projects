@@ -1,5 +1,17 @@
 # Design portfolio studio
 
+## Browser drafts and online publishing
+
+Open **/studio** for the new workflow: create without signing in, save drafts and cropped images on your device, preview privately, download/import backups, then sign in and Publish for a shareable `/p/your-address` link. Further edits stay private until **Publish updates**. Restore your last published version on a new device.
+
+Firebase App Hosting, Authentication, Firestore, and Storage support publishing. Without Firebase configuration the local studio and backups work; the Publish section explains that online publishing is not connected. See [Firebase setup, limits, and verification](docs/FIREBASE-HOSTING.md). Nothing is deployed by installing or running this project.
+
+Your earlier local editor and content remain available at `/admin` on this computer. Export the existing root portfolio with `node scripts/export-portfolio.mjs`, or pass a local account ID to export that account, then import the resulting backup at `/studio`. This copies content/images and never moves credentials or changes the original files. Existing ambiguous dates may need completing before publication.
+
+Run `npm run check` for local regressions and `npm run test:firebase` for the isolated Firebase emulator suite (Java 21+ required).
+
+The sections below document the preserved **legacy local editor**. Its repository-deployment publishing instructions do not apply to the new browser studio.
+
 Next.js 15, React, TypeScript, and Tailwind CSS. Each local account has its own portfolio and guided content editor. Public portfolio pages are static snapshots generated when you deploy.
 
 ## Run on Windows

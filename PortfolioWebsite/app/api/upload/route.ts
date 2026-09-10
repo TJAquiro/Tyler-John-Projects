@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       : bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 ? "jpg"
       : bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP" ? "webp" : null;
     if (!extension) return NextResponse.json({ error: "Choose a PNG, JPG, or WebP image. SVG uploads are not supported." }, { status: 400 });
-    const directory = path.join(process.cwd(), "public", "images");
+    const directory = process.env.PORTFOLIO_UPLOAD_DIR || path.join(process.cwd(), "public", "images");
     await mkdir(directory, { recursive: true });
     const filename = `${randomUUID()}.${extension}`;
     await writeFile(path.join(directory, filename), bytes, { flag: "wx" });

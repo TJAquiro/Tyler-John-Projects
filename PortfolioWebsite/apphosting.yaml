@@ -1,0 +1,14 @@
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 40
+  cpu: 1
+  memoryMiB: 512
+env:
+  - variable: PORTFOLIO_DISABLE_LOCAL_EDITOR
+    value: "1"
+    availability: [BUILD, RUNTIME]
+# Set FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_WEB_API_KEY,
+# FIREBASE_WEB_APP_ID and FIREBASE_AUTH_DOMAIN in the App Hosting console.
+# Use the backend service account's Application Default Credentials.
+# Do not upload .env.local or a service-account key.

@@ -11,4 +11,10 @@ out
 test-results/
 playwright-report/
 *.tsbuildinfo
+.firebase/
+*-debug.log
+.env.*.local
+*service-account*.json
 .studio/
+
+.next-qa-firebase/

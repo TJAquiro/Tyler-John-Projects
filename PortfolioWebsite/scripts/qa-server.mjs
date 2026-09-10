@@ -13,7 +13,7 @@ fs.writeFileSync(path.join(content, "portfolios", id, "studio.json"), JSON.strin
 fs.writeFileSync(path.join(content, "portfolios", "index.json"), JSON.stringify([{ id, handle: "qa-portfolio", name: "Alex Morgan" }]));
 const salt = "qa-salt-for-tests";
 fs.writeFileSync(path.join(accounts, "accounts.json"), JSON.stringify([{ id, name: "Alex Morgan", handle: "qa-portfolio", email: "qa@example.com", salt, hash: scryptSync("qa-password-only", salt, 64).toString("hex"), createdAt: "2026-01-01T00:00:00.000Z" }]));
-const env = { ...process.env, PORTFOLIO_CONTENT_DIR: content, PORTFOLIO_ACCOUNT_DIR: accounts, PORTFOLIO_BUILD_DIR: ".next-qa", SESSION_SECRET: "qa-session-secret-never-used-for-real-content", NEXT_TELEMETRY_DISABLED: "1", VERCEL: "0" };
+const env = { ...process.env, FIREBASE_PROJECT_ID: "", FIREBASE_WEB_API_KEY: "", PORTFOLIO_DISABLE_LOCAL_EDITOR: "0", PORTFOLIO_UPLOAD_DIR: path.resolve(".qa/uploads"), PORTFOLIO_CONTENT_DIR: content, PORTFOLIO_ACCOUNT_DIR: accounts, PORTFOLIO_BUILD_DIR: ".next-qa", SESSION_SECRET: "qa-session-secret-never-used-for-real-content", NEXT_TELEMETRY_DISABLED: "1", VERCEL: "0" };
 const next = path.resolve("node_modules/next/dist/bin/next");
 function run(args) { return spawn(process.execPath, [next, ...args], { env, stdio: "inherit", windowsHide: true }); }
 const build = run(["build"]);

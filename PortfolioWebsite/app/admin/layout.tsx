@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { currentAccount } from "@/lib/auth";
 import { AccountScopeProvider } from "@/components/AccountScope";
+import { editingEnabled } from "@/lib/auth";
+import { redirect } from "next/navigation";
 export const metadata: Metadata = { title: "Portfolio studio", robots: { index: false, follow: false } };
-export default async function AdminLayout({ children }: { children: React.ReactNode }) { const account = await currentAccount(); return <AccountScopeProvider id={account?.id || "signed-out"}>{children}</AccountScopeProvider>; }
+export default async function AdminLayout({ children }: { children: React.ReactNode }) { if (!editingEnabled()) redirect("/studio"); const account = await currentAccount(); return <AccountScopeProvider id={account?.id || "signed-out"}>{children}</AccountScopeProvider>; }

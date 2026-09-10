@@ -7,6 +7,7 @@ import { SoftwarePicker } from "./SoftwarePicker";
 import { CropDialog } from "./CropDialog";
 import { DateField } from "./DateField";
 import { formatDate, todayISO } from "@/lib/dates";
+import { useLocalMedia } from "./LocalMedia";
 
 export async function saveJSON(url: string, body: unknown, method = "PUT") {
   let response: Response;
@@ -25,6 +26,7 @@ export function DraftNotice({ conflict, restore }: { conflict: boolean; restore:
   return conflict ? <div className="notice mb-5"><p>A newer saved version was loaded. Your older browser draft was kept separately.</p><button className="btn-text mt-2" type="button" onClick={restore}>Restore older draft</button></div> : null;
 }
 export function ImagePicker({ label, value, onChange, onBusy, required = false }: { label: string; value: string; onChange: (value: string) => void; onBusy?: (busy: boolean) => void; required?: boolean }) {
+  const local = useLocalMedia();
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [source, setSource] = useState<string | null>(null);
   const objectURL = useRef<string | null>(null);
   useEffect(() => () => { if (objectURL.current) URL.revokeObjectURL(objectURL.current); }, []);
@@ -40,6 +42,7 @@ export function ImagePicker({ label, value, onChange, onBusy, required = false }
     setError(""); setBusy(true);
     try {
       if (file.size > 5 * 1024 * 1024) throw new Error("The cropped image is larger than 5 MB. Use a smaller crop.");
+      if (local) { onChange(await local.save(file)); close(); return; }
       const data = new FormData(); data.append("file", file);
       const response = await fetch("/api/upload", { method: "POST", body: data });
       const result = await response.json() as { path?: string; error?: string };
@@ -48,10 +51,10 @@ export function ImagePicker({ label, value, onChange, onBusy, required = false }
     } finally { setBusy(false); }
   }
   return <div className="image-picker">
-    {value && /^\/images\/[a-zA-Z0-9_-]+\.(png|jpe?g|webp|svg)$/i.test(value) && <div className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-lg bg-line"><Image src={value} alt={`${label} preview`} fill sizes="112px" className="object-contain" /></div>}
-    <div className="min-w-0 flex-1"><Field label={label} value={value} required={required} hint="Upload and crop a photo, or use an existing /images/ path." onChange={onChange} />
+    {value && /^\/images\/[a-zA-Z0-9_-]+\.(png|jpe?g|webp|svg)$/i.test(value) && <div className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-lg bg-line"><Image src={local?.images[value] || value} alt={`${label} preview`} fill sizes="112px" className="object-contain" /></div>}
+    <div className="min-w-0 flex-1">{local ? <p className="text-sm font-bold">{label}{required ? " *" : ""}</p> : <Field label={label} value={value} required={required} hint="Upload and crop a photo, or use an existing /images/ path." onChange={onChange} />}
       <label className="mt-3 block text-sm"><span className="sr-only">Upload {label.toLowerCase()}</span><input className="w-full text-xs file:mr-3 file:rounded-full file:border file:border-line file:bg-paper file:px-3 file:py-2 file:font-semibold" type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={e => { choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
-      {/^\/images\/[a-zA-Z0-9_-]+\.(png|jpe?g|webp|svg)$/i.test(value) && <button type="button" className="btn-text mt-3" disabled={busy} onClick={() => { setSource(value); onBusy?.(true); }}>Crop {label.toLowerCase()}</button>}
+      {/^\/images\/[a-zA-Z0-9_-]+\.(png|jpe?g|webp|svg)$/i.test(value) && <button type="button" className="btn-text mt-3" disabled={busy} onClick={() => { setSource(local?.images[value] || value); onBusy?.(true); }}>Crop {label.toLowerCase()}</button>}
       <p className="mt-2 text-xs text-moss" role="status">{busy ? "Uploading…" : "PNG, JPG or WebP · Up to 5 MB"}</p>
       {error && <p className="form-error mt-2" role="alert">{error}</p>}
     </div>{source && <CropDialog src={source} onSave={upload} onCancel={close} />}
@@ -70,6 +73,7 @@ export function ProfileFields({ profile, onChange, section, onBusy }: { profile:
   return <div className="space-y-5">{!profile.jobs.length && <p className="empty-note">Add the roles, collaborations, and independent work that shaped your practice.</p>}{profile.jobs.map((entry, index) => <fieldset className="entry-card" key={index}><legend className="px-2 text-sm font-bold">Experience {index + 1}</legend><div className="grid gap-4 sm:grid-cols-2">{(["company", "position", "startDate", "endDate"] as const).map(key => key === "startDate" || key === "endDate" ? <DateField key={key} label={key === "startDate" ? "Start date" : "End date"} value={entry[key]} allowPresent={key === "endDate"} onChange={value => change("jobs", profile.jobs.map((item, i) => i === index ? { ...item, [key]: value } : item))} /> : <Field key={key} label={{ company: "Company", position: "Position", startDate: "Start date", endDate: "End date" }[key]} required={key === "company" || key === "position"} value={entry[key]} onChange={value => change("jobs", profile.jobs.map((item, i) => i === index ? { ...item, [key]: value } : item))} />)}</div><div className="mt-4"><Field label="Role description" value={entry.description} multiline onChange={value => change("jobs", profile.jobs.map((item, i) => i === index ? { ...item, description: value } : item))} /></div><button className="btn-text mt-4" type="button" onClick={() => change("jobs", profile.jobs.filter((_, i) => i !== index))}>Remove experience {index + 1}</button></fieldset>)}<button className="btn-secondary" type="button" onClick={() => change("jobs", [...profile.jobs, { company: "", position: "", description: "", startDate: todayISO(), endDate: todayISO() }])}>+ Add experience</button></div>;
 }
 export function ProjectFields({ project, onChange, section, onBusy }: { project: Project; onChange: (value: Project) => void; section: number; onBusy?: (busy: boolean) => void }) {
+  const local = useLocalMedia();
   const [imagePath, setImagePath] = useState(""), [imageError, setImageError] = useState("");
   const change = <K extends keyof Project>(key: K, value: Project[K]) => onChange({ ...project, [key]: value });
   const addImage = (value: string) => {
@@ -87,7 +91,7 @@ export function ProjectFields({ project, onChange, section, onBusy }: { project:
   if (section === 1) return <div className="space-y-6"><ImagePicker label="Thumbnail" required value={project.thumbnail} onBusy={onBusy} onChange={v => onChange({ ...project, thumbnail: v, images: project.images.length || !/^\/images\/[a-zA-Z0-9_-]+\.(png|jpe?g|webp|svg)$/i.test(v) ? project.images : [v] })} />
     <div>{imageError && <p className="form-error" role="alert">{imageError}</p>}<h3 className="text-lg font-bold">Supporting images <span className="font-normal text-moss">({project.images.length}/6)</span></h3><p className="mt-1 text-sm text-moss">Add 1–6 images. The first image leads the case study.</p></div>
     <div className="grid gap-3 sm:grid-cols-2">{project.images.map((src, i) => <div key={src} className="rounded-xl border border-line p-3"><ImagePicker label={`Image ${i + 1}`} value={src} onBusy={onBusy} onChange={next => { try { validateImagePath(next); } catch { setImageError("Use a valid image path or upload a photo."); return; } onChange({ ...project, images: project.images.map((old, index) => index === i ? next : old), imageDescriptions: { ...project.imageDescriptions, [next]: project.imageDescriptions?.[src] || "" } }); }} /><div className="mt-3"><Field label={`Description for photo ${i + 1}`} value={project.imageDescriptions?.[src] || ""} multiline hint="Optional. Appears beneath this photo on the project page." maxLength={2000} onChange={description => change("imageDescriptions", { ...project.imageDescriptions, [src]: description })} /></div><div className="mt-2 flex items-center justify-between"><span className="text-xs text-moss">Image {i + 1}</span><div className="flex gap-3">{i > 0 && <button type="button" className="btn-text" aria-label={`Move image ${i + 1} earlier`} onClick={() => { const images = [...project.images]; [images[i-1], images[i]] = [images[i], images[i-1]]; change("images", images); }}>Move up</button>}<button type="button" className="btn-text" aria-label={`Remove image ${i + 1}`} onClick={() => change("images", project.images.filter((_, index) => index !== i))}>Remove</button></div></div></div>)}</div>
-    {project.images.length < 6 ? <div><ImagePicker label="New supporting image" value={imagePath} onBusy={onBusy} onChange={v => { setImagePath(v); if (/^\/images\/.+\.(png|jpe?g|webp)$/i.test(v)) addImage(v); }} /><button className="btn-secondary mt-3" type="button" disabled={!imagePath || project.images.includes(imagePath)} onClick={() => addImage(imagePath)}>Add image path</button></div> : <p className="empty-note">All six image slots are filled. Remove an image to replace it.</p>}
+    {project.images.length < 6 ? <div><ImagePicker label="New supporting image" value={imagePath} onBusy={onBusy} onChange={v => { setImagePath(v); if (/^\/images\/.+\.(png|jpe?g|webp)$/i.test(v)) addImage(v); }} />{!local && <button className="btn-secondary mt-3" type="button" disabled={!imagePath || project.images.includes(imagePath)} onClick={() => addImage(imagePath)}>Add image path</button>}</div> : <p className="empty-note">All six image slots are filled. Remove an image to replace it.</p>}
   </div>;
   return <div className="space-y-6"><SoftwarePicker value={project.technologies} onChange={v => change("technologies", v)} /><Field label="External project link" type="url" hint="Optional. Include https:// for a website that opens in a new tab." value={project.link} onChange={v => change("link", v)} /><div className="rounded-xl bg-paper p-5"><p className="eyebrow">Project summary</p><h3 className="display mt-2 text-3xl">{project.title || "Untitled project"}</h3><p className="mt-2 text-sm text-moss">{formatDate(project.date)} · {project.images.length} supporting images</p><p className="mt-3 leading-7">{project.description || "Add a description in the Details step."}</p></div></div>;
 }

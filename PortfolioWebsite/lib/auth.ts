@@ -5,7 +5,7 @@ import { accountById } from "./accounts";
 export const SESSION_COOKIE = "portfolio_session";
 export const SESSION_AGE = 60 * 60 * 24 * 7;
 export const authConfigured = () => Boolean(process.env.SESSION_SECRET);
-export const editingEnabled = () => process.env.VERCEL !== "1";
+export const editingEnabled = () => process.env.VERCEL !== "1" && process.env.PORTFOLIO_DISABLE_LOCAL_EDITOR !== "1" && !process.env.K_SERVICE;
 function equal(a: string, b: string) { const first = Buffer.from(a), second = Buffer.from(b); return first.length === second.length && timingSafeEqual(first, second); }
 function signature(value: string) { return createHmac("sha256", process.env.SESSION_SECRET!).update(value).digest("hex"); }
 export function createSessionToken(accountId: string) {
@@ -14,6 +14,7 @@ export function createSessionToken(accountId: string) {
   return `${value}.${signature(value)}`;
 }
 export async function currentAccount() {
+  if (!editingEnabled()) return null;
   if (!authConfigured()) return null;
   const actual = (await cookies()).get(SESSION_COOKIE)?.value || "", [id, expires, nonce, signed, extra] = actual.split(".");
   if (extra || !/^[a-z0-9-]{36}$/.test(id || "") || !/^\d+$/.test(expires || "") || !/^[a-f0-9]{32}$/.test(nonce || "") || !/^[a-f0-9]{64}$/.test(signed || "")) return null;
@@ -27,7 +28,7 @@ export function sameOrigin(request: Request) {
   try { const source = new URL(origin), target = new URL(request.url); return source.host === (request.headers.get("host") || target.host) && source.protocol === target.protocol; } catch { return false; }
 }
 export function localDevelopment(request?: Request) {
-  if (process.env.NODE_ENV !== "development" || process.env.VERCEL === "1") return false;
+  if (process.env.NODE_ENV !== "development" || !editingEnabled()) return false;
   if (!request) return true;
   const host = (request.headers.get("host") || new URL(request.url).host).split(":")[0];
   return ["localhost", "127.0.0.1", "[::1]"].includes(host);

@@ -228,6 +228,6 @@ test("image picker rejects bad paths, uploads files, and enforces gallery capaci
     await expect(page.getByRole("heading", { name: "Supporting images (5/6)" })).toBeVisible();
     await expect(page.getByLabel("New supporting image", { exact: true })).toBeVisible();
   } finally {
-    if (/^\/images\/[a-f0-9-]+\.webp$/.test(uploaded)) fs.unlinkSync(path.join("public", uploaded));
+    if (/^\/images\/[a-f0-9-]+\.webp$/.test(uploaded)) fs.unlinkSync(path.join(".qa/uploads", path.basename(uploaded)));
   }
 });

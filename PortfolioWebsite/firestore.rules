@@ -1,0 +1,7 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Server-only access. The Admin SDK verifies Firebase ID tokens and ownership.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -82,7 +82,7 @@ test("software, education descriptions, exact crop, photo caption, and responsiv
   await page.goto("/admin/preview?view=" + encodeURIComponent("/about"));
   await expect(page.getByText("Graduated with a focus on accessible interfaces.")).toBeVisible();
   expect(hydration).toEqual([]);
-  if (/^\/images\/[a-f0-9-]+\.webp$/.test(src)) fs.unlinkSync(path.join("public", src));
+  if (/^\/images\/[a-f0-9-]+\.webp$/.test(src)) fs.unlinkSync(path.join(".qa/uploads", path.basename(src)));
 });
 test("dev showcase is opt-in and reset clears accounts, projects, and sessions", async ({ page, request }) => {
   await register(page, "dev-owner");
