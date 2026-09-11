@@ -45,7 +45,7 @@ test("device draft persists offline, crops locally, previews, and backs up witho
   await page.getByRole("link", { name: "About", exact: true }).click();
   await expect(page.getByAltText("Jamie Rivers", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Back to studio", exact: true }).click();
-  if (await page.getByLabel("Portfolio section", { exact: true }).isVisible()) await page.getByLabel("Portfolio section", { exact: true }).selectOption("8"); else await page.getByRole("button", { name: "09 Publish", exact: true }).click();
+  await page.getByRole("button", { name: "09 Publish", exact: true }).click();
   await expect(page.getByText("Online publishing is not connected yet.")).toBeVisible();
   expect(writes).toEqual([]);
 });
@@ -63,7 +63,7 @@ test("backup imports preserve unfinished work, reject unsafe data, and studio fi
   await page.getByLabel("Import draft backup").setInputFiles({ name: "unsafe.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(bad)) });
   await expect(page.getByRole("alert").filter({ hasText: "Choose an image" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveValue("Taylor Studio");
-  if (await page.getByLabel("Portfolio section", { exact: true }).isVisible()) await page.getByLabel("Portfolio section", { exact: true }).selectOption("7"); else await page.getByRole("button", { name: "Projects", exact: false }).click();
+  await page.getByRole("button", { name: "Projects", exact: false }).click();
   await page.getByRole("button", { name: "Add project", exact: true }).click();
   await page.getByRole("textbox", { name: "Project title", exact: true }).fill("Unfinished study");
   await expect(page.getByText("Saved on this device", { exact: true })).toBeVisible(); await page.reload();
@@ -71,12 +71,16 @@ test("backup imports preserve unfinished work, reject unsafe data, and studio fi
   fs.mkdirSync(".qa/screenshots", { recursive: true });
   for (const width of [375,768,1440]) {
     await page.setViewportSize({ width, height: 960 });
+    await expect(page.getByRole("combobox", { name: "Portfolio section", exact: true })).toHaveCount(0);
+    const navigation = page.getByRole("navigation", { name: "Portfolio setup" });
+    await expect(navigation.getByRole("button")).toHaveCount(9);
+    for (const button of await navigation.getByRole("button").all()) await expect(button).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect((await new AxeBuilder({ page }).withTags(["wcag2a","wcag2aa","wcag21aa"]).analyze()).violations).toEqual([]);
     await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
     await page.screenshot({ path: `.qa/screenshots/local-studio-${width}.png`, fullPage: true });
-    if (await page.getByLabel("Portfolio section", { exact: true }).isVisible()) await page.getByLabel("Portfolio section", { exact: true }).selectOption("8"); else await page.getByRole("button", { name: "09 Publish", exact: true }).click();
+    await page.getByRole("button", { name: "09 Publish", exact: true }).click();
     await page.screenshot({ path: `.qa/screenshots/local-publish-${width}.png`, fullPage: true });
-    if (await page.getByLabel("Portfolio section", { exact: true }).isVisible()) await page.getByLabel("Portfolio section", { exact: true }).selectOption("7"); else await page.getByRole("button", { name: "Projects", exact: false }).click();
+    await page.getByRole("button", { name: "Projects", exact: false }).click();
   }
 });

@@ -14,9 +14,25 @@ The sections below document the preserved **legacy local editor**. Its repositor
 
 Next.js 15, React, TypeScript, and Tailwind CSS. Each local account has its own portfolio and guided content editor. Public portfolio pages are static snapshots generated when you deploy.
 
+## Required software (Linux, macOS and Windows)
+
+Use Node.js 24 LTS (Node 22+ is supported) and its bundled npm. Install the locked dependencies with `npm ci`, then install the test browser with `npx playwright install chromium`. Next.js, React, TypeScript, Tailwind, the Firebase SDKs and Firebase CLI are project dependencies; separate global installations are unnecessary. The package manifest explicitly permits the four reviewed dependency setup scripts used by npm 12, including the Firebase CLI’s native `re2` module. No browser extensions, database drivers or special GPU drivers are required. Editor extensions are optional.
+
+Firebase emulator tests also need Java 21+. Install a JDK on your PATH, or extract a portable JDK into `.qa/java/<jdk-folder>/` so its `bin/java` (Linux/macOS) or `bin/java.exe` (Windows) is present. The test launcher detects it automatically. This Linux workspace has a portable Temurin 21 runtime there. On Linux, if Chromium reports missing system libraries, use `npx playwright install-deps chromium` with your system administrator's privileges.
+
+```sh
+npm ci
+npx playwright install chromium
+npm run check
+npm run test:firebase
+npm run dev -- --hostname 127.0.0.1
+```
+
+Open http://localhost:3000/studio. The Firebase launch steps and required project settings are in [FIREBASE-HOSTING.md](docs/FIREBASE-HOSTING.md). Java and Chromium are development/test requirements; App Hosting supplies the hosted Node runtime.
+
 ## Run on Windows
 
-Node.js 22+ is required; Node.js 24 is installed on this computer.
+Node.js 22+ is required; Node.js 24 LTS is recommended.
 
 ```powershell
 cd "C:\Users\tjaqu\Desktop\PortfolioWebsite"

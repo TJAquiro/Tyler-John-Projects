@@ -3,6 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 test.use({ baseURL: "http://127.0.0.1:3101" });
+// Compile development-only routes before measuring the functional flows.
+// GET requests are anonymous and never create accounts or mutate fixture data.
+test.beforeAll(async ({ request }) => {
+  test.setTimeout(180000);
+  for (const route of ["/admin", "/admin/register", "/admin/login", "/admin/onboarding", "/admin/dashboard", "/admin/projects/new", "/admin/projects/qa-warmup", "/admin/preview", "/admin/dev", "/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/content", "/api/upload", "/api/dev"]) {
+    const response = await request.get(route);
+    expect(response.status()).toBeLessThan(500);
+  }
+});
 async function register(page: Page, suffix: string) {
   await page.goto("/admin/register");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Test Designer");
@@ -38,7 +47,7 @@ test("accounts start empty, onboard immediately, sign in, and isolate content", 
   expect(errors).toEqual([]);
 });
 test("software, education descriptions, exact crop, photo caption, and responsive crop dialog", async ({ page }) => {
-  test.setTimeout(90000);
+  test.setTimeout(180000);
   const hydration: string[] = []; page.on("console", msg => { if (/hydration|hydrated|server rendered/i.test(msg.text())) hydration.push(msg.text()); });
   await register(page, "feature-account"); await page.goto("/admin/dashboard");
   await page.getByRole("button", { name: "Tools", exact: true }).click();

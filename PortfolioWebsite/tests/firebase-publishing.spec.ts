@@ -47,14 +47,14 @@ test("create locally, publish images, update the same link, restore on another d
   const owner = await account(request, "designer@example.com");
   await page.goto("/studio"); await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Jamie Rivers");
   await page.getByRole("button", { name: "Biography", exact: false }).click(); await page.getByLabel("Biography", { exact: true }).fill("Thoughtful digital experiences.");
-  if (await page.getByLabel("Portfolio section", { exact: true }).isVisible()) await page.getByLabel("Portfolio section", { exact: true }).selectOption("7"); else await page.getByRole("button", { name: "Projects", exact: false }).click(); await page.getByRole("button", { name: "Add project", exact: true }).click();
+  await page.getByRole("button", { name: "Projects", exact: false }).click(); await page.getByRole("button", { name: "Add project", exact: true }).click();
   await page.getByRole("textbox", { name: "Project title", exact: true }).fill("A Useful Study"); await page.getByRole("textbox", { name: "Project description", exact: true }).fill("A project about making everyday tasks clearer.");
   await page.getByRole("button", { name: "Images", exact: true }).click();
   const png = await page.evaluate(() => { const c=document.createElement("canvas"); c.width=240; c.height=180; const x=c.getContext("2d")!; x.fillStyle="#355f52"; x.fillRect(0,0,240,180); return c.toDataURL("image/png").split(",")[1]; });
   await page.getByLabel("Upload thumbnail", { exact: true }).setInputFiles({ name: "study.png", mimeType: "image/png", buffer: Buffer.from(png,"base64") });
   await page.getByRole("button", { name: "Use this crop" }).click(); await expect(page.getByRole("dialog")).not.toBeVisible();
   await page.getByRole("button", { name: "Review", exact: true }).click(); await page.getByRole("button", { name: "Save project to draft" }).click();
-  if (await page.getByLabel("Portfolio section", { exact: true }).isVisible()) await page.getByLabel("Portfolio section", { exact: true }).selectOption("8"); else await page.getByRole("button", { name: "09 Publish", exact: true }).click();
+  await page.getByRole("button", { name: "09 Publish", exact: true }).click();
   await page.getByRole("textbox", { name: "Email address", exact: true }).fill("designer@example.com"); await page.getByLabel("Password", { exact: true }).fill("qa-password-only"); await page.getByRole("button", { name: "Sign in to publish" }).click();
   await page.getByRole("button", { name: "Use this device draft" }).click();
   await page.getByLabel("Portfolio address", { exact: true }).fill("jamie-rivers");
@@ -71,7 +71,7 @@ test("create locally, publish images, update the same link, restore on another d
   expect((await request.get("/p/jamie-rivers")).status()).toBe(200);
   expect((await db.collection("publishedPortfolios").doc("jamie-rivers").get()).data()!.profile.biography).toBe("Thoughtful digital experiences.");
   await db.collection("publishers").doc(owner.uid).set({ lastPublish: 0 }, { merge: true });
-  if (await page.getByLabel("Portfolio section", { exact: true }).isVisible()) await page.getByLabel("Portfolio section", { exact: true }).selectOption("8"); else await page.getByRole("button", { name: "09 Publish", exact: true }).click(); await page.getByRole("button", { name: "Publish updates", exact: true }).click();
+  await page.getByRole("button", { name: "09 Publish", exact: true }).click(); await page.getByRole("button", { name: "Publish updates", exact: true }).click();
   await expect(page.getByText("Your portfolio is published. Copy the link to share it.")).toBeVisible();
   await publicPage.goto("http://127.0.0.1:3102/p/jamie-rivers"); await expect(publicPage.getByText("New private biography.")).toBeVisible();
   fs.mkdirSync(".qa/screenshots", { recursive: true });
