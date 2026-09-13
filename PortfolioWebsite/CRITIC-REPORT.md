@@ -1,3 +1,25 @@
+# Repository recovery — September 13, 2026
+
+The subsequent Git synchronization request restored local Git metadata from the matching GitHub main commit (`1409742`). The damaged metadata is preserved outside the repository at `/home/tjaquiro/Desktop/Tyler-John-Projects-recovery-20260913-161614/`. Working files and owner content were preserved. Git integrity and change inspection now work; corruption limitations below describe the earlier deployment review. No application behavior/layout changes or additional critic pass were performed for this recovery. Existing final scores remain unchanged.
+
+---
+
+# Current review — Firebase deployment, September 13, 2026
+
+Exactly one independent final critic pass was completed after verification. [Full findings and screenshot evidence](docs/CRITIC-DEPLOYMENT-2026-09-13.md) · [Deployment evidence](docs/DEPLOYMENT-2026-09-13.md).
+
+Initial scores: N/A (no deployed site before this request). Final scores: usability **8.0**, user flow **7.8**, aesthetics **8.3**, clarity **8.0**, layout **8.1**, professional finish **7.8**. Arithmetic mean: **8.0/10**.
+
+Resolved: missing App Hosting target, Firebase runtime configuration, Auth/database/bucket provisioning, client access rules, and deployment archive exclusions. Owner content and credentials preserved. Build READY and rollout SUCCEEDED.
+
+Verification: `npm run check` **15 passed**; `npm run test:firebase` **2 passed**. Live home/about/studio at 375/768/1440 pixels: no overflow, broken images, axe WCAG A/AA violations, or captured page runtime errors. Screenshots: `.qa/screenshots/live-{home,about,studio}-{375,768,1440}.png`; emulator screenshots: `firebase-{public,published}-{375,768,1440}.png`. Full paths and test evidence are in the linked report.
+
+Remaining: long homepage biography delays projects, mobile studio navigation overhead, “01 projects” copy, and unclear root-snapshot versus device-draft relationship. Live publish screenshot is transitional despite successful sign-in DOM evidence. Production email delivery and real-account publish/restore were not tested; mutation tests used isolated fixtures/emulators. Git HEAD corruption remains. No second critic iteration or design revisions were performed.
+
+---
+
+## Historical report (previous change request)
+
 # Final critic report — accounts and media update
 
 ## Review count and method

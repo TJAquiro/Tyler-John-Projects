@@ -8,7 +8,18 @@ env:
   - variable: PORTFOLIO_DISABLE_LOCAL_EDITOR
     value: "1"
     availability: [BUILD, RUNTIME]
-# Set FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_WEB_API_KEY,
-# FIREBASE_WEB_APP_ID and FIREBASE_AUTH_DOMAIN in the App Hosting console.
-# Use the backend service account's Application Default Credentials.
-# Do not upload .env.local or a service-account key.
+  - variable: FIREBASE_PROJECT_ID
+    value: "portfolio-website-6b3a5"
+    availability: [RUNTIME]
+  - variable: FIREBASE_STORAGE_BUCKET
+    value: "portfolio-website-6b3a5.firebasestorage.app"
+    availability: [RUNTIME]
+  - variable: FIREBASE_WEB_API_KEY
+    value: "AIzaSyD2I4mK6NJcPbgo7G580de6G8L6TVk_Mj0"
+    availability: [RUNTIME]
+  - variable: FIREBASE_WEB_APP_ID
+    value: "1:577228825212:web:52bb7200b70123f6761ff9"
+    availability: [RUNTIME]
+  - variable: FIREBASE_AUTH_DOMAIN
+    value: "portfolio-website-6b3a5.firebaseapp.com"
+    availability: [RUNTIME]

@@ -1,5 +1,7 @@
 # Design portfolio studio
 
+Live on Firebase: [Portfolio Website](https://portfolio-website--portfolio-website-6b3a5.us-central1.hosted.app/) · [Online studio](https://portfolio-website--portfolio-website-6b3a5.us-central1.hosted.app/studio). See [deployment evidence and limitations](docs/DEPLOYMENT-2026-09-13.md).
+
 ## Browser drafts and online publishing
 
 Open **/studio** for the new workflow: create without signing in, save drafts and cropped images on your device, preview privately, download/import backups, then sign in and Publish for a shareable `/p/your-address` link. Further edits stay private until **Publish updates**. Restore your last published version on a new device.
