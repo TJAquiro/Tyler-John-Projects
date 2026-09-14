@@ -4,8 +4,11 @@ import { imagePath, validateProfile, validateProject } from "./validation";
 export type Snapshot = { profile: Profile; projects: Project[] };
 export type Publication = Snapshot & { handle: string; revision: number; publishedAt: string; assets: Record<string, string> };
 export const MAX_PROJECTS = 20;
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-export const MAX_DRAFT_BYTES = 100 * 1024 * 1024;
+export const MAX_IMAGE_BYTES = 500 * 1024 * 1024;
+export const IMAGE_CHUNK_BYTES = 8 * 1024 * 1024;
+export const MAX_LIBRARY_BYTES = 1024 * 1024 * 1024;
+// Includes base64 overhead for a 500 MB image and portfolio metadata.
+export const MAX_DRAFT_BYTES = 768 * 1024 * 1024;
 export function imageReferences(snapshot: Snapshot): string[] {
   return [...new Set([snapshot.profile.headshotImage, snapshot.profile.bannerImage || "", ...snapshot.projects.flatMap(p => [p.thumbnail, ...p.images])].filter(Boolean))];
 }

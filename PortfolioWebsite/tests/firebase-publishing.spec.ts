@@ -1,11 +1,14 @@
+import http from "node:http";
 import { test, expect, type APIRequestContext } from "@playwright/test";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { getStorage } from "firebase-admin/storage";
 import { getFirestore } from "firebase-admin/firestore";
 import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
 process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
 const app = initializeApp({ projectId: "demo-portfolio" }, "qa-publishing-tests"), auth = getAuth(app), db = getFirestore(app);
 const blank = (name: string) => ({ profile: { name, biography: "I make useful things.", headshotImage: "", education: [], tools: [], jobs: [] }, projects: [] });
 async function account(request: APIRequestContext, email: string, verified = true) {
@@ -39,7 +42,7 @@ test("publishing enforces identity, verification, address ownership, revision ch
   snapshot.profile.headshotImage = "/images/stolen.webp";
   expect((await request.post("/api/publish", { headers: loser.headers, data: { ...body, handle: "image-theft", snapshot, assets: { "/images/stolen.webp": "a".repeat(64) } } })).status()).toBe(400);
   expect((await request.post("/api/publish/image", { headers: first.headers, data: "not-an-image" })).status()).toBe(400);
-  expect((await request.post("/api/publish/image", { headers: first.headers, data: Buffer.alloc(5 * 1024 * 1024 + 1) })).status()).toBe(413);
+  expect((await request.post("/api/publish/image/chunks", { headers: first.headers, data: { size: 500 * 1024 * 1024 + 1 } })).status()).toBe(413);
   expect((await request.post("/api/auth/register", { data: { name: "No hosted files", email: "legacy@example.com", password: "qa-password-only", handle: "legacy" } })).status()).toBe(403);
 });
 
@@ -105,6 +108,7 @@ test("landing signup starts blank, verifies, publishes, counts creators, and res
   await page.getByRole("button", { name: "Create account & start setup" }).click();
   await expect(page.getByRole("main").getByRole("alert")).toContainText("passwords do not match");
   await page.getByLabel("Confirm password", { exact: true }).fill("qa-password-only");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
   await page.getByRole("button", { name: "Create account & start setup" }).click();
   await expect(page).toHaveURL(/\/studio\?welcome=verify-email$/);
   await expect(page.getByText("Account created. Check your inbox", { exact: false })).toBeVisible();
@@ -217,4 +221,86 @@ test("cancelled account replacement preserves both drafts and restore asks only 
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.getByRole("button", { name: "01 Your name", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveValue("Guest replacement");
+});
+
+test("account deletion confirms identity, removes all hosted data and this device draft, and isolates others", async ({ page, request }) => {
+  const owner = await account(request, "delete-me@example.com"), other = await account(request, "keep-me@example.com");
+  const body = { handle: "delete-me", snapshot: blank("Delete Me"), assets: {}, revision: 0 };
+  expect((await request.post("/api/publish", { headers: owner.headers, data: body })).status()).toBe(200);
+  expect((await request.post("/api/publish", { headers: other.headers, data: { ...body, handle:"keep-me" } })).status()).toBe(200);
+  const png=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==","base64");
+  const uploaded=await request.post("/api/publish/image",{headers:owner.headers,data:png}); expect(uploaded.status()).toBe(200);
+  const id=(await uploaded.json()).id, assetRef=db.collection("publishers").doc(owner.uid).collection("assets").doc(id), url=(await assetRef.get()).data()!.url;
+  expect((await request.get(url)).status()).toBe(200);
+  expect((await request.delete("/api/account")).status()).toBe(401);
+  expect((await request.delete("/api/account",{headers:owner.headers})).status()).toBe(400);
+  await assetRef.update({writingUntil:Date.now()+60000});
+  expect((await request.delete("/api/account",{headers:{...owner.headers,"X-Confirm-Delete":"delete-account"}})).status()).toBe(409);
+  expect((await request.get("/p/delete-me")).status()).toBe(200);
+  await assetRef.update({writingUntil:0});
+  await page.goto("/login"); await page.getByLabel("Email address",{exact:true}).fill("delete-me@example.com"); await page.getByLabel("Password",{exact:true}).fill("qa-password-only"); await page.getByRole("button",{name:"Sign in",exact:true}).click();
+  await page.getByRole("textbox",{name:"Your name",exact:true}).fill("Private draft to remove");
+  await page.getByRole("button",{name:"09 Publish",exact:true}).click();
+  await page.getByRole("button",{name:"Delete account",exact:true}).click();
+  await expect(page.getByRole("dialog")).toBeVisible(); await page.getByRole("button",{name:"Keep my account"}).click();
+  await expect(page.getByRole("dialog")).not.toBeVisible(); expect((await request.get("/p/delete-me")).status()).toBe(200);
+  await page.getByRole("button",{name:"Delete account",exact:true}).click();
+  await page.getByLabel("Confirm your password").fill("wrong-password"); await page.getByRole("button",{name:"Permanently delete account"}).click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText("password is incorrect");
+  await page.getByLabel("Confirm your password").fill("qa-password-only"); await expect(page.getByRole("dialog").getByRole("alert")).toHaveCount(0);
+  for(const width of [320,768,1440]) { await page.setViewportSize({width,height:900}); expect((await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21aa"]).analyze()).violations).toEqual([]); await page.getByLabel("Confirm your password").focus(); await page.screenshot({path:`.qa/screenshots/fixes-delete-${width}.png`}); }
+  let lostResponse = false;
+  await page.route("**/api/account", async route => {
+    if (lostResponse) return route.continue();
+    lostResponse = true;
+    await route.fulfill({status:503,json:{error:"Deletion request interrupted. Retry to finish."}});
+  });
+  await page.getByRole("button",{name:"Permanently delete account"}).click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText("Retry to finish");
+  await page.getByRole("button",{name:"Permanently delete account"}).click();
+  await expect(page).toHaveURL(/\/login\?deleted=1/); await expect(page.getByText("Your account, website, and uploaded images have been deleted.")).toBeVisible();
+  await expect(auth.getUser(owner.uid)).rejects.toMatchObject({code:"auth/user-not-found"});
+  expect((await db.collection("publishers").doc(owner.uid).get()).exists).toBe(false); expect((await assetRef.get()).exists).toBe(false);
+  expect((await request.get("/p/delete-me")).status()).toBe(404); expect((await request.get(url)).ok()).toBe(false);
+  expect((await getStorage(app).bucket("demo-portfolio.firebasestorage.app").getFiles({prefix:`portfolios/${owner.uid}/`}))[0]).toHaveLength(0);
+  expect((await request.get("/p/keep-me")).status()).toBe(200); expect((await auth.getUser(other.uid)).email).toBe("keep-me@example.com");
+  expect((await request.post("/api/publish", {headers:owner.headers,data:body})).status()).toBe(401);
+  expect(await page.evaluate(uid=>new Promise(resolve=>{const req=indexedDB.open("portfolio-browser-studio"); req.onsuccess=()=>{const db=req.result;const get=db.transaction("drafts").objectStore("drafts").get(uid);get.onsuccess=()=>{resolve(get.result??null);db.close();};};}),owner.uid)).toBeNull();
+  expect(await page.evaluate(()=>localStorage.getItem("portfolio-active-draft"))).toBeNull();
+});
+
+test("chunked images cross the old limit, preserve bytes, and enforce ownership and 500 MB boundary", async ({ request }) => {
+  const owner=await account(request,"large-image@example.com"), other=await account(request,"other-image@example.com");
+  const cap=500*1024*1024;
+  const boundary=await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:cap}}); expect(boundary.status()).toBe(200);
+  expect((await request.delete(`/api/publish/image/chunks?id=${(await boundary.json()).id}`,{headers:owner.headers})).status()).toBe(200);
+  expect((await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:cap+1}})).status()).toBe(413);
+  const image=Buffer.alloc(9*1024*1024,73); Buffer.from([137,80,78,71,13,10,26,10]).copy(image);
+  const started=await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:image.length}}); const {id}=await started.json(); const path=`/api/publish/image/chunks?id=${id}`;
+  expect((await request.put(path+"&part=0",{headers:other.headers,data:image.subarray(0,8*1024*1024)})).status()).toBe(409);
+  expect((await request.put(path+"&part=0",{headers:owner.headers,data:image.subarray(0,8*1024*1024)})).status()).toBe(200);
+  expect((await request.put(path+"&part=1",{headers:owner.headers,data:image.subarray(8*1024*1024)})).status()).toBe(200);
+  const completed=await request.patch(path,{headers:owner.headers}); expect(await completed.text()).toContain(id); expect(completed.status()).toBe(200);
+  const asset=(await db.collection("publishers").doc(owner.uid).collection("assets").doc(id).get()).data()!;
+  expect(asset.size).toBe(image.length); expect(await (await request.get(asset.url)).body()).toEqual(image);
+  const snapshot=blank("Large image"); snapshot.profile.headshotImage="/images/large.png";
+  expect((await request.post("/api/publish",{headers:owner.headers,data:{handle:"large-image",snapshot,revision:0,assets:{"/images/large.png":id}}})).status()).toBe(200);
+  const unverified=await account(request,"delete-unverified@example.com",false);
+  expect((await request.delete("/api/account",{headers:{...unverified.headers,"X-Confirm-Delete":"delete-account"}})).status()).toBe(200);
+});
+
+test("an upload started before deletion cannot recreate the account's image library", async ({ request }) => {
+  const owner=await account(request,"upload-delete-race@example.com");
+  let finishBody!: () => void;
+  const response = new Promise<number>((resolve,reject)=>{
+    const req=http.request("http://127.0.0.1:3102/api/publish/image",{method:"POST",headers:{...owner.headers,"Content-Type":"image/png","Transfer-Encoding":"chunked"}},res=>{res.resume();res.on("end",()=>resolve(res.statusCode!));});
+    req.on("error",reject); req.write(Buffer.from([137,80,78,71,13,10,26,10])); finishBody=()=>req.end(Buffer.alloc(1024));
+  });
+  // Allow authentication to finish while the request body is deliberately incomplete.
+  await new Promise(resolve=>setTimeout(resolve,500));
+  try { expect((await request.delete("/api/account",{headers:{...owner.headers,"X-Confirm-Delete":"delete-account"}})).status()).toBe(200); }
+  finally { finishBody(); }
+  expect([401,409]).toContain(await response);
+  expect((await db.collection("publishers").doc(owner.uid).get()).exists).toBe(false);
+  expect((await getStorage(app).bucket("demo-portfolio.firebasestorage.app").getFiles({prefix:`portfolios/${owner.uid}/`}))[0]).toHaveLength(0);
 });

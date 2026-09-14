@@ -1,6 +1,7 @@
+import { getAuth } from "firebase-admin/auth";
 import { revalidateTag } from "next/cache";
-import { publishFailure, publishingDB, publishUser, PublishError, readLimitedJSON, readPublication } from "@/lib/firebase-server";
-import { imageReferences, validateSnapshot, validHandle } from "@/lib/portfolio-snapshot";
+import { firebaseAdmin, publishFailure, publishingDB, publishUser, PublishError, readLimitedJSON, readPublication } from "@/lib/firebase-server";
+import { MAX_LIBRARY_BYTES, imageReferences, validateSnapshot, validHandle } from "@/lib/portfolio-snapshot";
 import { readManifest } from "@/lib/content";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,10 +34,12 @@ export async function POST(request: Request) {
       if (!record.exists || !record.data()?.ready) throw new PublishError("An image is missing. Please publish again.");
       assets[src] = record.data()!.url; bytes += record.data()!.size;
     }
-    if (bytes > 40 * 1024 * 1024) throw new PublishError("Published images must total less than 40 MB. Use smaller crops or fewer images.");
+    if (bytes > MAX_LIBRARY_BYTES) throw new PublishError("Published images must total no more than 1 GB.");
     const publishedAt = new Date().toISOString();
     const revision = await db.runTransaction(async tx => {
       const [owner, existing] = await Promise.all([tx.get(publisher), tx.get(target)]);
+      await getAuth(firebaseAdmin()).getUser(user.uid).catch(() => { throw new PublishError("Your account is no longer available. Sign in again.", 401); });
+      if (owner.data()?.deleting) throw new PublishError("Account deletion is in progress.", 409);
       if (owner.data()?.handle && owner.data()!.handle !== handle) throw new PublishError("Your portfolio address stays the same when you publish updates.", 409);
       if (existing.exists && existing.data()!.uid !== user.uid) throw new PublishError("That address is already taken. Choose another.", 409);
       if ((existing.data()?.revision || 0) !== body.revision) throw new PublishError("A newer version was published from another tab or device. Download your draft backup, then restore the published version before updating.", 409);

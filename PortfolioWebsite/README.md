@@ -68,7 +68,7 @@ Onboarding covers name, headshot, biography, education, tools, experience, first
 
 - **Profile:** change your name, biography, headshot, education, tools, and experience. Education includes an optional description.
 - **Tools:** search a large catalog of common software, filter by category, and add each tool individually. Type a custom name and press Enter to add your own.
-- **Photos:** selecting an upload opens a crop editor. Drag or resize the frame, choose an aspect ratio, or set the exact left/top/width/height in pixels. Click **Use this crop** to save. Existing images have a Crop button. PNG/JPG/WebP uploads up to 5 MB are supported; crops are saved as WebP. The original file is not overwritten.
+- **Photos:** selecting an upload opens a crop editor. Drag or resize the frame, choose an aspect ratio, or set the exact left/top/width/height in pixels. Click **Use this crop** to save. Existing images have a Crop button. PNG/JPG/WebP uploads up to 500 MB are supported; crops are saved as WebP. The original file is not overwritten.
 - **Projects:** Add, Edit, or Delete projects. Each needs a title, date, description, unique slug, thumbnail, and 1–6 supporting images. Each supporting photo has an optional description displayed beneath it. Gallery images retain the crop's aspect ratio.
 - **Preview:** inspect saved content across the full site. Unsaved recovery drafts do not appear in Preview. Save profile changes explicitly from the dashboard.
 
@@ -117,3 +117,13 @@ npm.cmd run check
 Checks include lint, TypeScript, a production build, and Chromium browser scenarios for account isolation, empty signup, onboarding, editing, validation, crops, captions, dev reset, responsive layout, accessibility, and hydration console errors. Tests use disposable accounts/content under `.qa/` on ports 3100/3101 and do not modify the owner's content. Screenshots are in `.qa/screenshots/`.
 
 `AGENTS.md` specifies exactly one final critic/review pass for this change set. `CRITIC-REPORT.md` records the actual evidence, scores, and remaining feedback.
+
+### Account deletion and upload limits
+
+Hosted accounts can permanently delete themselves from **Studio → Publish → Delete account**. The confirmation identifies the signed-in email, requires the current password, and offers **Keep my account**. The server derives ownership from the verified token and requires authentication within the last five minutes. It removes the published pages, the account's complete Storage prefix (including unused/partial images), publisher subcollections, and Firebase Auth identity. Other accounts and the repository owner's content are untouched. Active image writes delay deletion; a deletion marker blocks publishing while cleanup is pending. Partial failures tell the user to retry, rather than claiming success.
+
+The device draft is removed from IndexedDB after server deletion; a local tombstone prevents another open tab from saving it again. Downloaded backups and offline copies on other devices cannot be erased remotely. Published images now use `private, no-store` caching; copies cached before this change may survive until their original cache expiry.
+
+PNG/JPG/WebP source images and saved crops accept up to **500 MiB** (shown as 500 MB in the UI). Publishing uses 8 MiB chunks above that size, with authenticated, account-scoped staging and streamed assembly, so large images do not require a single large hosting request. The hosted library/published-image budget is 1 GiB; the local serialized draft budget is 768 MiB to allow base64 overhead. Device memory, canvas decoding limits, and available browser storage still apply. Large JSON backups also depend on the browser's string/JSON limits.
+
+Validation/action feedback clears when the user edits a form or changes sections/steps. Unsaved-storage warnings remain until a save succeeds. Verification-email guidance includes checking spam.

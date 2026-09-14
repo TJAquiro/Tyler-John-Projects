@@ -3,12 +3,13 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { isAuthenticated, editingEnabled, sameOrigin } from "@/lib/auth";
+import { MAX_IMAGE_BYTES } from "@/lib/portfolio-snapshot";
 export async function POST(request: Request) {
   if (!(await isAuthenticated())) return NextResponse.json({ error: "Please sign in again before uploading." }, { status: 401 });
   if (!sameOrigin(request) || !editingEnabled()) return NextResponse.json({ error: "Upload images in your local studio." }, { status: 403 });
   try {
     const form = await request.formData(), file = form.get("file");
-    if (!(file instanceof File) || !file.size || file.size > 5 * 1024 * 1024) return NextResponse.json({ error: "Choose an image between 1 byte and 5 MB." }, { status: 400 });
+    if (!(file instanceof File) || !file.size || file.size > MAX_IMAGE_BYTES) return NextResponse.json({ error: "Choose an image between 1 byte and 500 MB." }, { status: 400 });
     const bytes = Buffer.from(await file.arrayBuffer());
     // Inspect signatures, not filenames. SVG uploads can contain scripts.
     const extension = bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) ? "png"
