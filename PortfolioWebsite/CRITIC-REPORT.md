@@ -1,3 +1,36 @@
+# Current review — Firebase post-launch repairs, September 13, 2026
+
+**Repairs are local, not deployed.** The owner declined Firebase login on this computer and asked to continue the remaining tests. No production account, email, publication, or restore mutations were performed.
+
+Exactly **one independent final critic pass** followed implementation checks and screenshot inspection. No further implementation or critic iteration followed it. [Full independent review](docs/REPAIR-2026-09-13-CRITIC.md) · [Initial defects and reproduction steps](docs/REPAIR-2026-09-13-INITIAL.md) · [Verification evidence](docs/REPAIR-2026-09-13-EVIDENCE.md).
+
+| Criterion | Initial baseline | Final / 10 |
+| --- | ---: | ---: |
+| Usability | 8.0 | 8.3 |
+| User flow | 7.8 | 8.1 |
+| Aesthetics | 8.3 | 8.3 |
+| Clarity | 8.0 | 8.2 |
+| Layout | 8.1 | 8.3 |
+| Professional finish | 7.8 | 8.0 |
+| **Overall arithmetic mean** | **8.0** | **8.2** |
+
+Initial scores are the preceding deployment review's baseline, not a second initial critique. Final mean: 49.2 / 6 = 8.2. An 8 denotes strong professional work; 10 denotes exceptional agency quality.
+
+Resolved: work now precedes the complete biography; singular project count is correct; mobile setup retains all nine buttons with less overhead and moves backup help below the editor; root-homepage versus `/p/` publishing is explained; blocked storage shows recovery guidance without silently saving an empty replacement; cancelled account replacement does not claim success; restore confirms once; autosaves capture their account namespace, and account switching saves with revision checks before activation.
+
+Verification: `npm.cmd run check` passed lint, TypeScript, an isolated production build, and **17 browser scenarios (2.7m)**. `npm.cmd run test:firebase` passed **3 scenarios (55.7s)** against `demo-portfolio`. Both exited 0. Logs: `.qa/repair-final-check.log` and `.qa/repair-final-firebase.log`. Early test-selector mistakes were corrected and are disclosed in the evidence document. All **10 owner content files are byte-identical** to the starting hashes; credentials were not modified.
+
+Rendered owner-content preview and live read-only baseline: home, About, project, and studio at 375/768/1440px had no settled axe violations, broken images, overflow, or captured page exceptions. Screenshots: `.qa/screenshots/repair-{before,after}-{home,about,project,studio}-{375,768,1440}.png`; isolated production studio: `local-studio-{375,768,1440}.png`; emulator publishing: `firebase-{public,published}-{375,768,1440}.png`. Owner preview screenshots include a development-only Next.js indicator. The critic lists the exact screenshots inspected.
+
+Remaining feedback, with no further iteration:
+
+- **Partial storage commit:** if `localStorage.setItem` alone fails after the destination IndexedDB save, the account draft has been saved/replaced but the previous draft stays active in the UI and an error is shown. This inspection finding was not runtime reproduced; the two-store activation edge needs a future regression and recovery treatment.
+- Unfinished project navigation can reach Publish before the completion error; mobile publishing repeats headings and places the share link below the first viewport.
+- A single project leaves an empty second grid column, and tablet About columns remain narrow.
+- Production email delivery, real-account publishing/restoration, runtime IAM, and deployment of these repairs remain unverified. Existing expected-404 `NoFallbackError` and emulator metadata warnings remain in passing logs. Chromium/axe coverage is not a Safari/Firefox or complete assistive-technology audit.
+
+---
+
 # Repository recovery — September 13, 2026
 
 The subsequent Git synchronization request restored local Git metadata from the matching GitHub main commit (`1409742`). The damaged metadata is preserved outside the repository at `/home/tjaquiro/Desktop/Tyler-John-Projects-recovery-20260913-161614/`. Working files and owner content were preserved. Git integrity and change inspection now work; corruption limitations below describe the earlier deployment review. No application behavior/layout changes or additional critic pass were performed for this recovery. Existing final scores remain unchanged.

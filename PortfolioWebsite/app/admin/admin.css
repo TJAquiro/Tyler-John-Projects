@@ -22,6 +22,11 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .wizard-tab.active { border-color: var(--ink); color: var(--ink); font-weight: 700; }
 .setup-step { display: flex; align-items: center; gap: .9rem; width: 100%; min-height: 44px; padding: .7rem .9rem; border: 1px solid transparent; border-radius: .6rem; text-align: left; font-size: .8rem; color: var(--moss); }
 .setup-step.active { background: #e5e9de; border-color: #cbd4c2; color: var(--ink); font-weight: 700; }
+.browser-studio .setup-step { gap: .4rem; font-size: .875rem; }
+@media (max-width: 639px) {
+  .browser-studio .setup-step { flex-direction: row; align-items: center; padding: .5rem .25rem; }
+  .browser-studio .setup-step .mono { font-size: .625rem; }
+}
 .notice { padding: 1rem 1.25rem; border: 1px solid #b4c5af; background: #eaf0e5; border-radius: .75rem; color: #344d35; font-size: .875rem; line-height: 1.7; }
 @media (max-width: 639px) { .image-picker { flex-direction: column; } .image-picker > div { width: 100%; } .setup-step { padding: .5rem; flex-direction: column; gap: .25rem; align-items: flex-start; font-size: .7rem; } .wizard-tab { gap: .4rem; font-size: .8rem; } }
 

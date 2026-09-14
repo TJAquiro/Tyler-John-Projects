@@ -8,10 +8,10 @@ import { Field } from "./StudioFields";
 
 export function PublishPanel({ draft, busy: saving, flush, connect, openAccount, onPublished, restore, signedOut, onBusy }: {
   draft: BrowserDraft; busy: boolean; flush: () => Promise<void>;
-  connect: (uid: string) => Promise<void>; openAccount: (uid: string) => Promise<void>;
+  connect: (uid: string) => Promise<boolean>; openAccount: (uid: string) => Promise<boolean>;
   onPublished: (publication: BrowserDraft["publication"]) => Promise<void>;
-  restore: (publication: Publication, images: Record<string, string>, uid: string) => Promise<void>;
-  signedOut: () => Promise<void>;
+  restore: (publication: Publication, images: Record<string, string>, uid: string) => Promise<boolean>;
+  signedOut: () => Promise<boolean>;
   onBusy: (busy: boolean) => void;
 }) {
   const [auth, setAuth] = useState<Auth | null>(null), [user, setUser] = useState<User | null>(null), [ready, setReady] = useState(false);
@@ -27,7 +27,7 @@ export function PublishPanel({ draft, busy: saving, flush, connect, openAccount,
     }).catch(() => { if (active) { setError("Could not connect to publishing. Reload this page to retry. Your device draft is safe."); setReady(true); } });
     return () => { active = false; stop?.(); };
   }, []);
-  async function action(task: () => Promise<void>) {
+  async function action(task: () => Promise<unknown>) {
     setBusy(true); onBusy(true); setError(""); setStatus("");
     try { await task(); } catch (e) { const message = e instanceof Error ? e.message : "Could not finish. Please retry."; setError(message.includes("auth/invalid-credential") ? "The email or password is incorrect." : message); }
     finally { setBusy(false); onBusy(false); }
@@ -71,7 +71,7 @@ export function PublishPanel({ draft, busy: saving, flush, connect, openAccount,
       if (!response.ok) throw new Error("An image could not be restored. Your local draft has not been replaced. Retry when connected.");
       images[path] = await fileData(await response.blob());
     }
-    await restore(publication, images, user.uid); setHandle(publication.handle); setStatus("Published version restored on this device.");
+    if (await restore(publication, images, user.uid)) { setHandle(publication.handle); setStatus("Published version restored on this device."); }
   }
   const locked = busy || saving;
   const link = draft.publication && typeof window !== "undefined" ? `${window.location.origin}/p/${draft.publication.handle}` : "";
@@ -79,7 +79,7 @@ export function PublishPanel({ draft, busy: saving, flush, connect, openAccount,
     {!ready ? <p role="status">Connecting to publishing…</p> : !auth ? <div className="notice"><p>Online publishing is not connected yet.</p><p className="mt-2">Keep creating and previewing your portfolio. Download a backup to keep a portable copy until publishing is available.</p></div> : !user ? <form onSubmit={login} className="space-y-5"><p className="text-sm text-moss">Sign in to own your link and update it later. Creating and previewing a draft never requires an account.</p><div className="flex gap-2"><button type="button" className={mode === "signin" ? "section-tab active" : "section-tab"} aria-pressed={mode === "signin"} onClick={() => setMode("signin")}>Sign in</button><button type="button" className={mode === "signup" ? "section-tab active" : "section-tab"} aria-pressed={mode === "signup"} onClick={() => setMode("signup")}>Create account</button></div><Field label="Email address" type="email" value={email} onChange={setEmail} required /><label className="studio-field">Password<input className="admin-input" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={10} maxLength={200} required value={password} onChange={e => setPassword(e.target.value)} /></label><p className="text-sm text-moss">Use at least 10 characters.</p><div className="flex flex-wrap gap-3"><button type="submit" className="btn-primary" disabled={locked}>{busy ? "Please wait…" : mode === "signup" ? "Create publishing account" : "Sign in to publish"}</button><button type="button" className="btn-text" disabled={locked || !email} onClick={() => void action(async () => { await sendPasswordResetEmail(auth, email); setStatus("If an account exists for that email, a password reset link has been sent."); })}>Reset password</button></div></form> : <>
       <div className="notice flex flex-wrap items-center justify-between gap-3"><span className="break-all">Signed in as {user.email}</span><button className="btn-text" disabled={locked} onClick={() => void action(async () => { await flush(); await signOut(auth); await signedOut(); })}>Sign out</button></div>
       {!user.emailVerified && <div className="space-y-3"><p>Verify your email before publishing.</p><div className="flex flex-wrap gap-3"><button className="btn-secondary" disabled={locked} onClick={() => void action(async () => { await sendEmailVerification(user); setStatus("Verification email sent. Check your inbox."); })}>Send verification email</button><button className="btn-secondary" disabled={locked} onClick={() => void action(async () => { await reload(user); await user.getIdToken(true); setUser(user); setStatus(user.emailVerified ? "Email verified. You can publish." : "Your email is not verified yet. Open the email link, then check again."); })}>Check verification</button></div></div>}
-      {draft.ownerUid !== user.uid ? <div className="space-y-3"><p>Choose the draft to use with this account. Drafts saved for other accounts stay separate on this device.</p><div className="flex flex-wrap gap-3">{!draft.ownerUid && <button className="btn-primary" disabled={locked} onClick={() => void action(async () => { await connect(user.uid); setStatus("This draft is now saved for your account on this device."); })}>Use this device draft</button>}<button className="btn-secondary" disabled={locked} onClick={() => void action(() => openAccount(user.uid))}>Open my account draft</button></div></div> : <div className="space-y-4">
+      {draft.ownerUid !== user.uid ? <div className="space-y-3"><p>Choose the draft to use with this account. Drafts saved for other accounts stay separate on this device.</p><div className="flex flex-wrap gap-3">{!draft.ownerUid && <button className="btn-primary" disabled={locked} onClick={() => void action(async () => { if (await connect(user.uid)) setStatus("This draft is now saved for your account on this device."); })}>Use this device draft</button>}<button className="btn-secondary" disabled={locked} onClick={() => void action(() => openAccount(user.uid))}>Open my account draft</button></div></div> : <div className="space-y-4">
         {draft.publication ? <div className="rounded-xl border border-line p-5"><p className="eyebrow">Your published link</p><a className="mt-3 block break-all underline" href={link} target="_blank" rel="noopener noreferrer">{link}</a><p className="mt-2 text-sm text-moss">Last published {new Date(draft.publication.publishedAt).toLocaleString()}</p><button className="btn-secondary mt-4" disabled={locked} onClick={() => void action(async () => { await navigator.clipboard.writeText(link); setStatus("Link copied."); })}>Copy link</button></div> : <Field label="Portfolio address" value={handle} onChange={v => setHandle(v.toLowerCase())} maxLength={40} hint="3–40 lowercase letters, numbers, or hyphens. Your link will end in /p/your-address. This address stays fixed after publishing." />}
         <button className="btn-primary" disabled={locked || !user.emailVerified} onClick={() => void action(publish)}>{busy ? "Please wait…" : draft.publication ? "Publish updates" : "Publish portfolio"}</button>
       </div>}

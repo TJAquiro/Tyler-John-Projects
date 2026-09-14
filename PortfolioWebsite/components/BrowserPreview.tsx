@@ -11,8 +11,11 @@ export function BrowserPreview() {
   useEffect(() => {
     const search = new URLSearchParams(location.search);
     setView(search.get("view") || "/");
-    const key = sessionStorage.getItem("portfolio-preview-key") || "guest";
-    void readDraft(key).then(value => value ? setDraft(value) : setError("No saved draft was found on this device. Open the studio to create one.")).catch(e => setError(e.message));
+    let active = true;
+    void Promise.resolve().then(() => readDraft(sessionStorage.getItem("portfolio-preview-key") || "guest"))
+      .then(value => { if (active) { setDraft(value); setError(value ? "" : "No saved draft was found on this device. Open the studio to create one."); } })
+      .catch(() => { if (active) setError("Browser storage is unavailable. Enable site storage, then return to the studio to open your preview."); });
+    return () => { active = false; };
   }, [params]);
   const mapped = draft ? mapImages(draft, draft.images) : null;
   const project = mapped?.projects.find(p => view === `/projects/${p.slug}`);

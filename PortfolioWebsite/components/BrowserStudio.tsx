@@ -19,22 +19,32 @@ export function BrowserStudio() {
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [projectStep, setProjectStep] = useState(0);
   const current = useRef<BrowserDraft | null>(null), key = useRef("guest"), persisted = useRef<string | null>(null), queue = useRef(Promise.resolve()), saveError = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const storageReady = useRef(false);
   useEffect(() => {
     let active = true;
-    key.current = localStorage.getItem("portfolio-active-draft") || "guest";
-    void readDraft(key.current).then(value => { if (active) { persisted.current = value?.updatedAt || null; current.current = value || emptyDraft(); setDraft(current.current); setSaved(Boolean(value)); } }).catch(e => { if (active) { current.current = emptyDraft(); setDraft(current.current); setError(e.message); saveError.current = true; setStorageFailed(true); } });
+    void Promise.resolve().then(() => {
+      key.current = localStorage.getItem("portfolio-active-draft") || "guest";
+      return readDraft(key.current);
+    }).then(value => { if (active) { storageReady.current = true; persisted.current = value?.updatedAt || null; current.current = value || emptyDraft(); setDraft(current.current); setSaved(Boolean(value)); } }).catch(() => { if (active) { current.current = emptyDraft(); setDraft(current.current); setError("Browser storage is unavailable. Enable site storage, then reload to open your saved draft. Download a backup before leaving if you make changes here."); saveError.current = true; setStorageFailed(true); } });
     return () => { active = false; };
   }, []);
-  async function persist(value: BrowserDraft) {
+  async function persist(value: BrowserDraft, draftKey = key.current) {
     const next = queue.current.catch(() => {}).then(async () => {
-      try { await writeDraft(key.current, value, persisted.current); persisted.current = value.updatedAt; saveError.current = false; setStorageFailed(false); if (current.current === value) setSaved(true); }
+      // A delayed autosave must never write into a subsequently selected account.
+      if (draftKey !== key.current) return;
+      try {
+        if (!storageReady.current) throw new Error("Browser storage is unavailable. Enable site storage, then reload. Download a backup to keep your changes before leaving.");
+        await writeDraft(draftKey, value, persisted.current); persisted.current = value.updatedAt; saveError.current = false; setStorageFailed(false); if (current.current === value) setSaved(true);
+      }
       catch (e) { saveError.current = true; setStorageFailed(true); setSaved(false); setError(e instanceof Error ? e.message : "Could not save this draft."); throw e; }
     }); queue.current = next; return next;
   }
   useEffect(() => {
     if (!draft) return;
-    const timer = setTimeout(() => { void persist(draft).catch(() => {}); }, 300);
-    return () => clearTimeout(timer);
+    const draftKey = key.current;
+    saveTimer.current = setTimeout(() => { void persist(draft, draftKey).catch(() => {}); }, 300);
+    return () => clearTimeout(saveTimer.current);
     // persist reads mutable revision/key refs; only a new draft schedules a save.
   }, [draft]);
   useEffect(() => {
@@ -54,15 +64,21 @@ export function BrowserStudio() {
     try { await task(); } catch (e) { setError(e instanceof Error ? e.message : "Could not finish. Please retry."); }
     finally { setBusy(false); }
   }
-  async function switchDraft(nextKey: string, replacement?: BrowserDraft) {
+  async function switchDraft(nextKey: string, replacement?: BrowserDraft, confirmed = false) {
+    clearTimeout(saveTimer.current);
     await flush();
     const existing = await readDraft(nextKey);
-    if (replacement && existing && !window.confirm("Replace this account's device draft? Download a backup of that draft first if you need it.")) return;
-    key.current = nextKey; persisted.current = existing?.updatedAt || null;
+    if (replacement && existing && !confirmed && !window.confirm("Replace this account's device draft? Download a backup of that draft first if you need it.")) return false;
+    const source = replacement || existing || { ...emptyDraft(), ownerUid: nextKey === "guest" ? null : nextKey, section: 8 };
+    const value = { ...source, updatedAt: new Date(Math.max(Date.now(), Date.parse(source.updatedAt) + 1, existing ? Date.parse(existing.updatedAt) + 1 : 0)).toISOString() };
+    const next = queue.current.catch(() => {}).then(() => writeDraft(nextKey, value, existing?.updatedAt || null));
+    queue.current = next;
+    await next;
     localStorage.setItem("portfolio-active-draft", nextKey);
-    const value = replacement || existing || { ...emptyDraft(), ownerUid: nextKey === "guest" ? null : nextKey, section: 8 };
-    current.current = value; setDraft(value); setSaved(false); setError("");
-    await persist(value);
+    key.current = nextKey; persisted.current = value.updatedAt;
+    current.current = value; setDraft(value); setSaved(true); setError(""); setStatus("");
+    saveError.current = false; setStorageFailed(false);
+    return true;
   }
   async function saveImage(file: File): Promise<string> {
     const path = `/images/${crypto.randomUUID()}.webp`;
@@ -86,7 +102,7 @@ export function BrowserStudio() {
   }
   async function restore(publication: Publication, images: Record<string, string>, uid: string) {
     const value = { ...emptyDraft(), profile: publication.profile, projects: publication.projects, images, ownerUid: uid, section: 8, publication: { handle: publication.handle, revision: publication.revision, publishedAt: publication.publishedAt } };
-    await switchDraft(uid, value);
+    return switchDraft(uid, value, true);
   }
   function newProject() {
     if (current.current!.projects.length >= MAX_PROJECTS) { setError(`You can add up to ${MAX_PROJECTS} projects.`); return; }
@@ -102,10 +118,10 @@ export function BrowserStudio() {
   }
   if (!draft) return <main id="main-content" className="mx-auto max-w-5xl p-8" role="status">Opening your device draft…</main>;
   const locked = busy || uploading;
-  return <LocalMediaContext.Provider value={{ images: draft.images, save: saveImage }}><header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 md:px-10"><Link className="display text-xl font-semibold" href="/">Portfolio studio<span className="text-coral">.</span></Link><div className="flex flex-wrap items-center gap-4"><span className="text-sm text-moss" role="status">{storageFailed ? "Not saved · download a backup" : saved ? "Saved on this device" : "Saving on this device…"}</span><button className="btn-secondary" disabled={locked} onClick={() => void act(async () => { if (!draft.profile.name.trim()) throw new Error("Add your name before opening the preview."); await flush(); sessionStorage.setItem("portfolio-preview-key", key.current); router.push("/studio/preview"); })}>Preview portfolio</button></div></header>
-  <main id="main-content" className="mx-auto max-w-6xl px-6 pb-20 md:px-10"><div className="mb-8 border-y border-line py-5"><p className="text-sm leading-6 text-moss">Your draft stays in this browser. Publish when you are ready to share. Clearing browser data removes unpublished work; download a backup to keep it.</p></div>
-    <div className="grid gap-8 lg:grid-cols-[210px_1fr]"><aside><nav aria-label="Portfolio setup" className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-1">{sections.map((label, i) => <button type="button" key={label} className={section === i ? "setup-step active" : "setup-step"} aria-current={section === i ? "step" : undefined} disabled={locked} onClick={() => { update({ section: i }); setError(""); }}><span className="mono text-xs">{String(i + 1).padStart(2, "0")}</span><span>{label}</span></button>)}</nav><details className="mt-3 space-y-3 border-t border-line pt-4"><summary className="cursor-pointer text-sm font-bold">Draft backups & storage</summary><button className="btn-text" onClick={download}>Download draft backup</button><label className="block text-sm font-bold">Import draft backup<input className="mt-2 block w-full text-sm" type="file" accept=".json,application/json" disabled={locked} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; void act(() => importFile(file)); }} /></label><button className="btn-text" disabled={locked} onClick={() => void act(async () => { const d = current.current!, refs = new Set([d.profile.headshotImage, d.profile.bannerImage, ...d.projects.flatMap(p => [p.thumbnail, ...p.images]), ...(d.projectDraft ? [d.projectDraft.thumbnail, ...d.projectDraft.images] : [])]); update({ images: Object.fromEntries(Object.entries(d.images).filter(([path]) => refs.has(path))) }); await flush(); setStatus("Unused images removed from this device draft."); })}>Remove unused draft images</button></details></aside>
-    <section className="min-w-0"><p className="eyebrow">Create · Preview · Publish</p><h1 ref={heading} tabIndex={-1} className="display mb-7 mt-3 text-4xl leading-tight outline-none sm:text-5xl">{prompts[section]}</h1>
+  return <LocalMediaContext.Provider value={{ images: draft.images, save: saveImage }}><header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4 md:px-10"><Link className="display text-xl font-semibold" href="/">Portfolio studio<span className="text-coral">.</span></Link><div className="flex flex-wrap items-center gap-4"><span className="text-sm text-moss" role="status">{storageFailed ? "Not saved · download a backup" : saved ? "Saved on this device" : "Saving on this device…"}</span><button className="btn-secondary" disabled={locked} onClick={() => void act(async () => { if (!draft.profile.name.trim()) throw new Error("Add your name before opening the preview."); await flush(); sessionStorage.setItem("portfolio-preview-key", key.current); router.push("/studio/preview"); })}>Preview portfolio</button></div></header>
+  <main id="main-content" className="browser-studio mx-auto max-w-6xl px-6 pb-20 md:px-10"><div className="mb-5 border-y border-line py-3"><p className="text-sm leading-6 text-moss">Your draft stays in this browser. Publish a separate portfolio at /p/your-address; this does not edit the site’s homepage.</p></div>
+    <div className="grid gap-5 lg:grid-cols-[210px_1fr] lg:gap-8"><aside className="contents lg:block"><nav aria-label="Portfolio setup" className="grid grid-cols-3 gap-1 sm:grid-cols-5 lg:grid-cols-1">{sections.map((label, i) => <button type="button" key={label} className={section === i ? "setup-step active" : "setup-step"} aria-current={section === i ? "step" : undefined} disabled={locked} onClick={() => { update({ section: i }); setError(""); }}><span className="mono text-xs">{String(i + 1).padStart(2, "0")}</span><span>{label}</span></button>)}</nav><details className="order-3 mt-3 space-y-3 border-t border-line pt-4 lg:order-none"><summary className="cursor-pointer text-sm font-bold">Draft backups & storage</summary><p className="text-sm leading-6 text-moss">Clearing browser data removes unpublished work. Download a backup to keep your content and images. Import a studio backup here, or sign in under Publish and restore your last published version. The site’s homepage is a separate copy updated through deployment.</p><button className="btn-text" onClick={download}>Download draft backup</button><label className="block text-sm font-bold">Import draft backup<input className="mt-2 block w-full text-sm" type="file" accept=".json,application/json" disabled={locked} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; void act(() => importFile(file)); }} /></label><button className="btn-text" disabled={locked} onClick={() => void act(async () => { const d = current.current!, refs = new Set([d.profile.headshotImage, d.profile.bannerImage, ...d.projects.flatMap(p => [p.thumbnail, ...p.images]), ...(d.projectDraft ? [d.projectDraft.thumbnail, ...d.projectDraft.images] : [])]); update({ images: Object.fromEntries(Object.entries(d.images).filter(([path]) => refs.has(path))) }); await flush(); setStatus("Unused images removed from this device draft."); })}>Remove unused draft images</button></details></aside>
+    <section className="order-2 min-w-0 lg:order-none"><p className="eyebrow">Create · Preview · Publish</p><h1 ref={heading} tabIndex={-1} className="display mb-5 mt-2 text-4xl leading-tight outline-none sm:text-5xl">{prompts[section]}</h1>
     {error && <p className="form-error mb-5" role="alert">{error}</p>}{status && <p className="notice mb-5" role="status">{status}</p>}
     <div className="studio-panel">
       {section < 7 && <fieldset disabled={locked}><ProfileFields profile={draft.profile} section={section} onChange={profile => update({ profile })} onBusy={setUploading} /></fieldset>}
