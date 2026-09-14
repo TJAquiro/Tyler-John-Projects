@@ -135,9 +135,9 @@ test("dashboard profile CRUD and project create/edit/delete work; production sta
   const updated = read("projects.json").find((p: { id: string }) => p.id === created.id);
   await page.goto("/admin/preview?view=" + encodeURIComponent("/projects/" + updated.slug));
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Revised Browser Project");
-  expect((await page.request.get("/projects/" + updated.slug)).status()).toBe(404);
+  expect((await page.request.get("/u/qa-portfolio/projects/" + updated.slug)).status()).toBe(404);
   await page.request.put("/api/content", { data: { profile: { ...originalProfile, name: "Unpublished Name" } } });
-  await page.goto("/"); await expect(page.getByRole("banner")).toContainText(originalProfile.name);
+  await page.goto("/u/qa-portfolio"); await expect(page.getByRole("banner")).toContainText(originalProfile.name);
   await page.goto("/admin/preview"); await expect(page.getByRole("banner")).toContainText("Unpublished Name");
   await page.goto("/admin/dashboard");
   const article = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Revised Browser Project" }) });
@@ -155,7 +155,7 @@ test("responsive pages, navigation, image loading, and accessibility", async ({ 
   await login(page);
   for (const width of [375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const [name, route] of Object.entries({ home: "/", about: "/about", project: "/projects/" + originalProjects[0].slug, dashboard: "/admin/dashboard", onboarding: "/admin/onboarding", "new-project": "/admin/projects/new" })) {
+    for (const [name, route] of Object.entries({ home: "/u/qa-portfolio", about: "/u/qa-portfolio/about", project: "/u/qa-portfolio/projects/" + originalProjects[0].slug, dashboard: "/admin/dashboard", onboarding: "/admin/onboarding", "new-project": "/admin/projects/new" })) {
       await page.goto(route); await page.locator("h1").waitFor(); await page.evaluate(() => document.fonts.ready);
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.locator("img").evaluateAll(images => images.forEach(img => img.setAttribute("loading", "eager")));
@@ -167,8 +167,8 @@ test("responsive pages, navigation, image loading, and accessibility", async ({ 
     }
   }
   await page.goto("/u/qa-portfolio"); await expect(page.getByRole("banner")).toContainText(originalProfile.name); await expect(page.getByRole("navigation").getByRole("link", { name: "About" })).toHaveAttribute("href", "/u/qa-portfolio/about"); await page.getByRole("navigation").getByRole("link", { name: "About" }).click(); await expect(page).toHaveURL("/u/qa-portfolio/about");
-  await page.goto("/"); await page.keyboard.press("Tab"); await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
-  await page.getByRole("navigation").getByRole("link", { name: "About" }).click(); await expect(page).toHaveURL("/about");
+  await page.goto("/u/qa-portfolio"); await page.keyboard.press("Tab"); await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
+  await page.getByRole("navigation").getByRole("link", { name: "About" }).click(); await expect(page).toHaveURL("/u/qa-portfolio/about");
   expect(errors).toEqual([]);
 });
 

@@ -1,3 +1,11 @@
+# Portfolio studio
+
+The homepage at `/` introduces the free portfolio service. `/signup` and `/login` use Firebase Authentication and open an account-scoped device draft at `/studio`. New accounts start blank; returning accounts resume their saved draft. Email verification is required to publish, not to edit. Direct guest editing at `/studio` remains available.
+
+The landing page uses clearly labeled showcase content. Saved owner files and credentials are preserved but no longer render at `/`, `/about`, or `/projects/[slug]`. Individual portfolios remain under `/p/[handle]` (hosted) and `/u/[handle]` (legacy snapshots).
+
+`GET /api/public-stats` exposes only the published-creator count, cached for five minutes and invalidated on a first publication. Missing Firebase configuration or a failed query returns an unavailable state, never a fabricated count. The current publishing rules allow one portfolio per creator.
+
 # Design portfolio studio
 
 Live on Firebase: [Portfolio Website](https://portfolio-website--portfolio-website-6b3a5.us-central1.hosted.app/) · [Online studio](https://portfolio-website--portfolio-website-6b3a5.us-central1.hosted.app/studio). See [deployment evidence and limitations](docs/DEPLOYMENT-2026-09-13.md).

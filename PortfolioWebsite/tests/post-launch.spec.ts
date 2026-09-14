@@ -21,7 +21,7 @@ test("blocked storage shows recovery guidance instead of crashing studio and pre
 
 test("projects precede the complete biography and mobile studio keeps the first field in view", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 960 });
-  await page.goto("/");
+  await page.goto("/u/qa-portfolio");
   const work = page.getByRole("region", { name: "Projects", exact: true });
   const biography = page.getByRole("region", { name: "Behind the work", exact: true });
   await expect(work).toBeVisible(); await expect(biography).toBeVisible();

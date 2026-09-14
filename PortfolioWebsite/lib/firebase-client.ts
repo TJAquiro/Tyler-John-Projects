@@ -11,7 +11,7 @@ export function publishingAuth(): Promise<Auth | null> {
     const auth = getAuth(existing || initializeApp(data.config, "portfolio-browser"));
     if (!existing && data.authEmulator && ["127.0.0.1", "localhost"].includes(location.hostname)) connectAuthEmulator(auth, data.authEmulator, { disableWarnings: true });
     return auth;
-  })().catch(error => { pending = undefined; throw error; });
+  })().then(auth => { if (!auth) pending = undefined; return auth; }).catch(error => { pending = undefined; throw error; });
   return pending;
 }
 export async function publishingFetch(path: string, init: RequestInit = {}) {

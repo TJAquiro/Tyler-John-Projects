@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { publishFailure, publishingDB, publishUser, PublishError, readLimitedJSON, readPublication } from "@/lib/firebase-server";
 import { imageReferences, validateSnapshot, validHandle } from "@/lib/portfolio-snapshot";
 import { readManifest } from "@/lib/content";
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
       tx.set(publisher, { handle, lastPublish: Date.now() }, { merge: true });
       return next;
     });
+    if (revision === 1) revalidateTag("published-creator-count");
     return Response.json({ handle, revision, publishedAt, path: `/p/${handle}` });
   } catch (error) { return publishFailure(error); }
 }
