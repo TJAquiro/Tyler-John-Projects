@@ -7,8 +7,8 @@ export function imageMime(data: Buffer) {
   return data.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) ? "image/png" : data[0] === 255 && data[1] === 216 && data[2] === 255 ? "image/jpeg" : data.toString("ascii", 0, 4) === "RIFF" && data.toString("ascii", 8, 12) === "WEBP" ? "image/webp" : null;
 }
 export const uploadId = () => randomBytes(32).toString("hex");
-export async function reserveImage(uid: string, id: string, size: number, chunked = false) {
-  const db = publishingDB(), owner = db.collection("publishers").doc(uid), asset = owner.collection("assets").doc(id);
+export async function reserveImage(uid: string, id: string, size: number, chunked = false, privateDraft = false) {
+  const db = publishingDB(), owner = db.collection("publishers").doc(uid), asset = owner.collection(privateDraft ? "draftAssets" : "assets").doc(id);
   return db.runTransaction(async tx => {
     const [current, account] = await Promise.all([tx.get(asset), tx.get(owner)]);
     // Read Auth after the transaction reads: a concurrent deletion changes the
@@ -26,17 +26,17 @@ export async function reserveImage(uid: string, id: string, size: number, chunke
     return false;
   });
 }
-export async function finishImage(uid: string, id: string, size: number, mime: string) {
+export async function finishImage(uid: string, id: string, size: number, mime: string, privateDraft = false) {
   const db = publishingDB(), owner = db.collection("publishers").doc(uid);
-  const record = await owner.collection("assets").doc(id).get();
-  const bucket = publishingBucket(), object = bucket.file(`portfolios/${uid}/${id}`), token = record.data()?.downloadToken || randomUUID();
-  await object.setMetadata({ contentType: mime, cacheControl: "private, no-store", metadata: { firebaseStorageDownloadTokens: token } });
+  const record = await owner.collection(privateDraft ? "draftAssets" : "assets").doc(id).get();
+  const bucket = publishingBucket(), object = bucket.file(`portfolios/${uid}/${privateDraft ? "draft/" : ""}${id}`), token = record.data()?.downloadToken || randomUUID();
+  await object.setMetadata({ contentType: mime, cacheControl: "private, no-store", metadata: privateDraft ? {} : { firebaseStorageDownloadTokens: token } });
   const base = process.env.FIREBASE_STORAGE_EMULATOR_HOST ? `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}/v0` : "https://firebasestorage.googleapis.com/v0";
   const url = `${base}/b/${bucket.name}/o/${encodeURIComponent(object.name)}?alt=media&token=${token}`;
   await db.runTransaction(async tx => {
     const account = await tx.get(owner);
     if (!account.exists || account.data()?.deleting) throw new PublishError("Account deletion is in progress.", 409);
-    tx.set(owner.collection("assets").doc(id), { size, ready: true, url, writingUntil: 0, createdAt: new Date().toISOString() });
+    tx.set(owner.collection(privateDraft ? "draftAssets" : "assets").doc(id), { size, ready: true, ...(privateDraft ? {} : { url }), writingUntil: 0, createdAt: new Date().toISOString() });
   });
 }
 export async function limitedBytes(request: Request, limit: number) {

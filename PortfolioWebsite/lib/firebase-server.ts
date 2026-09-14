@@ -42,3 +42,9 @@ export async function readLimitedJSON(request: Request, limit = 500000): Promise
   while (true) { const part = await reader.read(); if (part.done) break; size += part.value.byteLength; if (size > limit) { await reader.cancel(); throw new PublishError("This request is too large.", 413); } chunks.push(part.value); }
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch { throw new PublishError("The portfolio request could not be read."); }
 }
+
+export function draftFailure(error: unknown) {
+  if (error instanceof PublishError) return Response.json({ error: error.message }, { status: error.status, headers: { "Cache-Control": "private, no-store" } });
+  console.error("Account draft request failed", error instanceof Error ? error.name : "Unknown error");
+  return Response.json({ error: "Account storage is temporarily unavailable. Your device draft is unchanged. Please retry." }, { status: 503, headers: { "Cache-Control": "private, no-store" } });
+}

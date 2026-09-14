@@ -138,3 +138,16 @@ Inspected screenshots under .qa/screenshots include:
 - The automated suite also captures public/editor pages at 375, 768, and 1440 pixels.
 
 The requested single review cycle is complete. No further critic iteration is running.
+
+
+## Account autosave and recovery — September 14, 2026 (in progress)
+
+Initial code-based assessment: usability 4, user flow 3, aesthetics 8, clarity 4, layout 8, professional finish 4; mean 5.2/10. Final review pending.
+
+Concrete defects recorded before implementation:
+- Sign in through /login in a clean browser after publishing: HostedAccountForm creates an empty IndexedDB draft rather than loading server content; the user starts setup again.
+- Edit an unpublished biography or unfinished project, then sign in on another device: only IndexedDB holds the edits, so the account cannot recover them.
+- Remove the publishers/{uid}.handle mapping in an isolated fixture while retaining its publishedPortfolios record: /api/publish GET returns null although /p/{handle} remains live. This is a reproducible failure path, not a confirmed diagnosis of the reported live account.
+- Open /studio directly with an outdated active-draft pointer: draft selection occurs before Firebase authentication resolves.
+
+The source brief’s original local-file workflow is superseded for /studio by the user’s explicit cloud-autosave request. Legacy owner files and credentials must remain untouched. Login error privacy remains unchanged.

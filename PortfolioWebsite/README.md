@@ -10,9 +10,9 @@ The landing page uses clearly labeled showcase content. Saved owner files and cr
 
 Live on Firebase: [Portfolio Website](https://portfolio-website--portfolio-website-6b3a5.us-central1.hosted.app/) · [Online studio](https://portfolio-website--portfolio-website-6b3a5.us-central1.hosted.app/studio). See [deployment evidence and limitations](docs/DEPLOYMENT-2026-09-13.md).
 
-## Browser drafts and online publishing
+## Account drafts and online publishing
 
-Open **/studio** for the new workflow: create without signing in, save drafts and cropped images on your device, preview privately, download/import backups, then sign in and Publish for a shareable `/p/your-address` link. Further edits stay private until **Publish updates**. Restore your last published version on a new device.
+Open **/studio** to create a portfolio, preview privately, and Publish a shareable `/p/your-address` link. Signed-in drafts, unfinished edits, and images save automatically to your account and reopen when you return—even on another device. Further edits stay private until **Publish updates**. Guest drafts and offline changes remain on the device until synced; wait for **Saved to your account** before clearing browser data. Conflicting device versions are preserved for an explicit choice. Backups and manual restore remain available.
 
 Firebase App Hosting, Authentication, Firestore, and Storage support publishing. Without Firebase configuration the local studio and backups work; the Publish section explains that online publishing is not connected. See [Firebase setup, limits, and verification](docs/FIREBASE-HOSTING.md). Nothing is deployed by installing or running this project.
 

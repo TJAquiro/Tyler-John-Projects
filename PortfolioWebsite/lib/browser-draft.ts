@@ -7,10 +7,11 @@ export type BrowserDraft = {
   format: "portfolio-draft"; version: 1; profile: Profile; projects: Project[];
   images: Record<string, string>; section: number; projectDraft: Project | null;
   publication: Pick<Publication, "handle" | "revision" | "publishedAt"> | null;
-  ownerUid: string | null; updatedAt: string;
+  ownerUid: string | null; updatedAt: string; projectStep?: number; requestedHandle?: string;
+  cloud?: { revision: number; syncedUpdatedAt: string; assets: Record<string, { id: string; hash: string }> };
 };
 export function emptyDraft(): BrowserDraft {
-  return { format: "portfolio-draft", version: 1, profile: { name: "", headshotImage: "", biography: "", tagline: "", bannerImage: "", education: [], tools: [], jobs: [] }, projects: [], images: {}, section: 0, projectDraft: null, publication: null, ownerUid: null, updatedAt: new Date().toISOString() };
+  return { format: "portfolio-draft", version: 1, profile: { name: "", headshotImage: "", biography: "", tagline: "", bannerImage: "", education: [], tools: [], jobs: [] }, projects: [], images: {}, section: 0, projectStep: 0, requestedHandle: "", projectDraft: null, publication: null, ownerUid: null, updatedAt: new Date().toISOString() };
 }
 function database(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -57,7 +58,7 @@ export function parseBackup(text: string): BrowserDraft {
   for (const project of [...raw.projects, ...(raw.projectDraft ? [raw.projectDraft] : [])]) {
     if (!strings(project, ["id", "title", "description", "thumbnail", "date", "link", "slug"]) || !Array.isArray(project.images) || project.images.length > 6 || !Array.isArray(project.technologies) || !project.technologies.every((s: unknown) => typeof s === "string")) throw new Error("The backup contains an invalid project.");
     if (project.imageDescriptions && (typeof project.imageDescriptions !== "object" || !Object.values(project.imageDescriptions).every(v => typeof v === "string"))) throw new Error("The backup contains invalid captions.");
-    if (project.link && !/^https?:\/\//i.test(project.link)) throw new Error("The backup contains an unsafe project link.");
+    if (project.link && !/^https?:\/\//i.test(project.link) && !(project === raw.projectDraft && (!/^[a-z][a-z0-9+.-]*:/i.test(project.link) || /^https?:/i.test(project.link)))) throw new Error("The backup contains an unsafe project link.");
     if (project.featured !== undefined && typeof project.featured !== "boolean") throw new Error("The backup contains an invalid featured project.");
   }
   for (const [key, data] of Object.entries(raw.images)) {
@@ -68,7 +69,8 @@ export function parseBackup(text: string): BrowserDraft {
   if (raw.projectDraft) refs.push(raw.projectDraft.thumbnail, ...raw.projectDraft.images);
   refs.filter(Boolean).forEach(src => { imagePath(src); if (!raw.images[src]) throw new Error("The backup is missing an image."); });
   if (p.tagline !== undefined && typeof p.tagline !== "string") throw new Error("The backup headline is invalid.");
-  return { ...emptyDraft(), profile: p, projects: raw.projects, images: raw.images, section: Number.isInteger(raw.section) ? Math.max(0, Math.min(8, raw.section)) : 0, projectDraft: raw.projectDraft || null };
+  if (raw.requestedHandle !== undefined && (typeof raw.requestedHandle !== "string" || raw.requestedHandle.length > 40)) throw new Error("The draft address is invalid.");
+  return { ...emptyDraft(), projectStep: Number.isInteger(raw.projectStep) ? Math.max(0, Math.min(2, raw.projectStep)) : 0, requestedHandle: raw.requestedHandle || "", profile: p, projects: raw.projects, images: raw.images, section: Number.isInteger(raw.section) ? Math.max(0, Math.min(8, raw.section)) : 0, projectDraft: raw.projectDraft || null };
 }
 export function backupBlob(draft: BrowserDraft): Blob {
   // Avoid concatenating the whole base64 library into one engine-limited string.
@@ -85,6 +87,8 @@ export async function deleteDraft(uid: string): Promise<void> {
   try { await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(["drafts", "deletedAccounts"], "readwrite");
     tx.objectStore("drafts").delete(uid);
+    const cursor = tx.objectStore("drafts").openCursor();
+    cursor.onsuccess = () => { const row = cursor.result; if (row) { if (String(row.key).startsWith(`${uid}:recovery:`)) row.delete(); row.continue(); } };
     // A minimal local tombstone prevents another open tab from resurrecting this draft.
     tx.objectStore("deletedAccounts").put(true, uid);
     tx.oncomplete = () => resolve(); tx.onerror = tx.onabort = () => reject(tx.error);
@@ -92,4 +96,14 @@ export async function deleteDraft(uid: string): Promise<void> {
   if (localStorage.getItem("portfolio-active-draft") === uid) localStorage.removeItem("portfolio-active-draft");
   if (sessionStorage.getItem("portfolio-preview-key") === uid) sessionStorage.removeItem("portfolio-preview-key");
   const channel = new BroadcastChannel("portfolio-account-deletion"); channel.postMessage(uid); channel.close();
+}
+
+export async function draftRecoveries(uid: string): Promise<BrowserDraft[]> {
+  const db = await database();
+  try { return await new Promise((resolve, reject) => {
+    const tx = db.transaction("drafts"), store = tx.objectStore("drafts"), results: BrowserDraft[] = [];
+    const cursor = store.openCursor();
+    cursor.onsuccess = () => { const row = cursor.result; if (!row) { resolve(results); return; } if (String(row.key).startsWith(`${uid}:recovery:`)) results.push(row.value); row.continue(); };
+    cursor.onerror = () => reject(cursor.error);
+  }); } finally { db.close(); }
 }

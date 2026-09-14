@@ -1,6 +1,7 @@
+import { accountPublication } from "@/lib/account-publication";
 import { getAuth } from "firebase-admin/auth";
 import { revalidateTag } from "next/cache";
-import { firebaseAdmin, publishFailure, publishingDB, publishUser, PublishError, readLimitedJSON, readPublication } from "@/lib/firebase-server";
+import { firebaseAdmin, publishFailure, publishingDB, publishUser, PublishError, readLimitedJSON } from "@/lib/firebase-server";
 import { MAX_LIBRARY_BYTES, imageReferences, validateSnapshot, validHandle } from "@/lib/portfolio-snapshot";
 import { readManifest } from "@/lib/content";
 export const runtime = "nodejs";
@@ -9,8 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const user = await publishUser(request, false);
-    const record = await publishingDB().collection("publishers").doc(user.uid).get();
-    const publication = record.data()?.handle ? await readPublication(record.data()!.handle) : null;
+    const publication = await accountPublication(user.uid);
     return Response.json({ publication }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return publishFailure(error); }
 }

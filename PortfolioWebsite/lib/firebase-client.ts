@@ -15,25 +15,33 @@ export function publishingAuth(): Promise<Auth | null> {
   })().then(auth => { if (!auth) pending = undefined; return auth; }).catch(error => { pending = undefined; throw error; });
   return pending;
 }
-export async function publishingFetch(path: string, init: RequestInit = {}) {
+export class PublishingRequestError extends Error { constructor(message: string, public status: number) { super(message); } }
+export async function accountFetch(path: string, init: RequestInit = {}, uid?: string) {
   const auth = await publishingAuth();
   if (!auth?.currentUser) throw new Error("Sign in to publish your portfolio.");
+  if (uid && auth.currentUser.uid !== uid) throw new Error("The signed-in account changed. Reopen your draft.");
   const headers = new Headers(init.headers); headers.set("Authorization", `Bearer ${await auth.currentUser.getIdToken()}`);
   const response = await fetch(path, { ...init, headers });
+  return response;
+}
+export async function publishingFetch(path: string, init: RequestInit = {}, uid?: string) {
+  const response = await accountFetch(path, init, uid);
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Could not finish. Please try again.");
+  if (!response.ok) throw new PublishingRequestError(data.error || "Could not finish. Please try again.", response.status);
   return data;
 }
-export async function uploadPublishingImage(file: Blob, progress: (percent: number) => void) {
+export async function uploadPublishingImage(file: Blob, progress: (percent: number) => void, draftUid?: string, signal?: AbortSignal) {
+  const root = draftUid ? "/api/draft/image" : "/api/publish/image";
+  const send = (path: string, init: RequestInit) => publishingFetch(path, { ...init, signal }, draftUid);
   if (file.size > MAX_IMAGE_BYTES) throw new Error("Choose an image no larger than 500 MB.");
-  if (file.size <= IMAGE_CHUNK_BYTES) return publishingFetch("/api/publish/image", { method: "POST", headers: { "Content-Type": file.type }, body: file });
-  const { id } = await publishingFetch("/api/publish/image/chunks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ size: file.size }) });
-  const path = `/api/publish/image/chunks?id=${id}`;
+  if (file.size <= IMAGE_CHUNK_BYTES) return send(root, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+  const { id } = await send(`${root}/chunks`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ size: file.size }) });
+  const path = `${root}/chunks?id=${id}`;
   try {
     for (let offset = 0, part = 0; offset < file.size; offset += IMAGE_CHUNK_BYTES, part++) {
-      await publishingFetch(`${path}&part=${part}`, { method: "PUT", body: file.slice(offset, offset + IMAGE_CHUNK_BYTES) });
+      await send(`${path}&part=${part}`, { method: "PUT", body: file.slice(offset, offset + IMAGE_CHUNK_BYTES) });
       progress(Math.round(Math.min(file.size, offset + IMAGE_CHUNK_BYTES) / file.size * 100));
     }
-    return await publishingFetch(path, { method: "PATCH" });
-  } catch (error) { await publishingFetch(path, { method: "DELETE" }).catch(() => {}); throw error; }
+    return await send(path, { method: "PATCH" });
+  } catch (error) { await send(path, { method: "DELETE" }).catch(() => {}); throw error; }
 }

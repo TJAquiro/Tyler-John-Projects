@@ -32,5 +32,5 @@ test("projects precede the complete biography and mobile studio keeps the first 
   const navigation = page.getByRole("navigation", { name: "Portfolio setup" });
   await expect(navigation.getByRole("button")).toHaveCount(9);
   for (const button of await navigation.getByRole("button").all()) await expect(button).toBeInViewport();
-  await expect(page.getByText(/this does not edit the site’s homepage/)).toBeVisible();
+  await expect(page.getByText(/Signed-in drafts save privately to your account/)).toBeVisible();
 });

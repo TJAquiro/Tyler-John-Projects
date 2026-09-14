@@ -28,11 +28,11 @@ export async function DELETE(request: Request) {
     // Keep a deletion marker until auth removal succeeds, so partial cleanup can be retried
     // and concurrent publish/upload transactions cannot recreate the website.
     await db.runTransaction(async tx => {
-      const [account, assets, sites] = await Promise.all([
-        tx.get(publisher), tx.get(publisher.collection("assets")),
+      const [account, assets, privateAssets, sites] = await Promise.all([
+        tx.get(publisher), tx.get(publisher.collection("assets")), tx.get(publisher.collection("draftAssets")),
         tx.get(db.collection("publishedPortfolios").where("uid", "==", user.uid))
       ]);
-      if (assets.docs.some(asset => (asset.data().writingUntil || 0) > Date.now())) throw new PublishError("An image upload is still running. Wait for it to finish, then retry deletion.", 409);
+      if ([...assets.docs, ...privateAssets.docs].some(asset => (asset.data().writingUntil || 0) > Date.now())) throw new PublishError("An image upload is still running. Wait for it to finish, then retry deletion.", 409);
       tx.set(publisher, { deleting: true, handle: account.data()?.handle || null }, { merge: true });
       sites.docs.forEach(site => tx.delete(site.ref));
     });

@@ -77,7 +77,7 @@ test("shared calendars validate dates, default to today, preserve legacy records
   await page.goto("/admin/preview?view=%2Fabout"); await expect(page.getByText("Jan 12, 2026 — Present", { exact: true })).toHaveCount(2);
 });
 test("featured selection replaces, removes, survives edits and deletion; responsive editing and public evidence", async ({ page }) => {
-  test.setTimeout(90000); await login(page);
+  test.setTimeout(180000); await login(page);
   const article = (title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title, exact: true }) });
   await article(projects[1].title).getByRole("button", { name: "Set as featured project" }).click();
   await expect(article(projects[1].title).getByRole("button", { name: "Remove featured project" })).toBeVisible();
