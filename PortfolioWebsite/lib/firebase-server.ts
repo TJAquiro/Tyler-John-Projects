@@ -29,7 +29,7 @@ export async function readPublication(handle: string): Promise<Publication | nul
   const doc = await publishingDB().collection("publishedPortfolios").doc(handle).get();
   if (!doc.exists) return null;
   const data = doc.data()!;
-  return { profile: data.profile, projects: data.projects, assets: data.assets, handle, revision: data.revision, publishedAt: data.publishedAt };
+  return { profile: data.profile, projects: data.projects, assets: data.assets, handle, revision: data.revision, publishedAt: data.publishedAt, ...(Number.isInteger(data.contentRevision) ? { contentRevision: data.contentRevision } : {}) };
 }
 export function publishFailure(error: unknown) {
   if (error instanceof PublishError) return Response.json({ error: error.message }, { status: error.status });

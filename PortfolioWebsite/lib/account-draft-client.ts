@@ -18,6 +18,9 @@ export function publicationMeta(p: Publication | null) { return p ? { handle: p.
 // Keep the revision the editable draft was based on; a later publication is not permission to overwrite it.
 export function publicationBase(base: BrowserDraft["publication"] | undefined, current: Publication | null) {
   if (!current) return null;
+  // A URL-only move may advance the revision without changing the public content.
+  // Reconcile that move while keeping stale content edits protected by their old base.
+  if (base && current.contentRevision && base.revision >= current.contentRevision && base.revision <= current.revision) return publicationMeta(current);
   return base?.handle === current.handle ? base : { ...publicationMeta(current)!, revision: 0 };
 }
 export async function hydrateCloud(result: AccountDraftResult, uid: string, signal?: AbortSignal): Promise<BrowserDraft> {

@@ -8,6 +8,7 @@ export type BrowserDraft = {
   images: Record<string, string>; section: number; projectDraft: Project | null;
   publication: Pick<Publication, "handle" | "revision" | "publishedAt"> | null;
   ownerUid: string | null; updatedAt: string; projectStep?: number; requestedHandle?: string;
+  feedback?: { touched: string[]; attempted: boolean };
   cloud?: { revision: number; syncedUpdatedAt: string; assets: Record<string, { id: string; hash: string }> };
 };
 export function emptyDraft(): BrowserDraft {
@@ -70,7 +71,9 @@ export function parseBackup(text: string): BrowserDraft {
   refs.filter(Boolean).forEach(src => { imagePath(src); if (!raw.images[src]) throw new Error("The backup is missing an image."); });
   if (p.tagline !== undefined && typeof p.tagline !== "string") throw new Error("The backup headline is invalid.");
   if (raw.requestedHandle !== undefined && (typeof raw.requestedHandle !== "string" || raw.requestedHandle.length > 40)) throw new Error("The draft address is invalid.");
-  return { ...emptyDraft(), projectStep: Number.isInteger(raw.projectStep) ? Math.max(0, Math.min(2, raw.projectStep)) : 0, requestedHandle: raw.requestedHandle || "", profile: p, projects: raw.projects, images: raw.images, section: Number.isInteger(raw.section) ? Math.max(0, Math.min(8, raw.section)) : 0, projectDraft: raw.projectDraft || null };
+  const feedback = raw.feedback;
+  if (feedback !== undefined && (!feedback || !Array.isArray(feedback.touched) || feedback.touched.length > 3000 || !feedback.touched.every((key: unknown) => typeof key === "string" && key.length <= 250) || typeof feedback.attempted !== "boolean")) throw new Error("The draft feedback metadata is invalid.");
+  return { ...emptyDraft(), feedback: feedback || { touched: [], attempted: false }, projectStep: Number.isInteger(raw.projectStep) ? Math.max(0, Math.min(2, raw.projectStep)) : 0, requestedHandle: raw.requestedHandle || "", profile: p, projects: raw.projects, images: raw.images, section: Number.isInteger(raw.section) ? Math.max(0, Math.min(8, raw.section)) : 0, projectDraft: raw.projectDraft || null };
 }
 export function backupBlob(draft: BrowserDraft): Blob {
   // Avoid concatenating the whole base64 library into one engine-limited string.

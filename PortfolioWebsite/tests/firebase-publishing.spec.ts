@@ -1,3 +1,5 @@
+import type { Snapshot } from "../lib/portfolio-snapshot";
+import type { Page } from "@playwright/test";
 import http from "node:http";
 import { spawn } from "node:child_process";
 import path from "node:path";
@@ -13,6 +15,198 @@ process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
 process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
 const app = initializeApp({ projectId: "demo-portfolio" }, "qa-publishing-tests"), auth = getAuth(app), db = getFirestore(app);
 const blank = (name: string) => ({ profile: { name, biography: "I make useful things.", headshotImage: "", education: [], tools: [], jobs: [] }, projects: [] });
+const fixturePNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==", "base64");
+function fixtureProject(src: string) { return { id: "required-project", title: "A considered project", slug: "considered-project", date: "2026-01-01", description: "Research and design for a useful experience.", thumbnail: src, images: [src], technologies: ["Figma", "Research"], link: "" }; }
+// Existing publishing scenarios now include the newly required completed project.
+async function publishRequest(request: APIRequestContext, options: { headers?: Record<string, string>; data: { handle: string; snapshot: Snapshot; assets: Record<string, string>; revision: number } }) {
+  if (options.data.snapshot.projects.length) return request.post("/api/publish", options);
+  const assets = { ...options.data.assets };
+  const src = Object.keys(assets)[0] || "/images/required-project.png";
+  if (!assets[src]) {
+    const upload = await request.post("/api/publish/image", { headers: options.headers, data: fixturePNG });
+    assets[src] = upload.ok() ? (await upload.json()).id : "a".repeat(64);
+  }
+  return request.post("/api/publish", { ...options, data: { ...options.data, assets, snapshot: { ...options.data.snapshot, projects: [fixtureProject(src)] } } });
+}
+async function addCompleteProject(page: Page) {
+  await page.getByRole("navigation", { name: "Portfolio setup" }).getByRole("button", { name: /Projects/ }).click();
+  await page.getByRole("button", { name: "Add project", exact: true }).click();
+  await page.getByLabel("Project title", { exact: true }).fill("A considered project");
+  await page.getByLabel("Project description", { exact: true }).fill("Research and design for a useful experience.");
+  await page.getByRole("button", { name: "Images", exact: true }).click();
+  const png = await page.evaluate(() => { const c = document.createElement("canvas"); c.width = 300; c.height = 200; const x = c.getContext("2d")!; x.fillStyle = "#355f52"; x.fillRect(0, 0, 300, 200); return c.toDataURL("image/png").split(",")[1]; });
+  await page.getByLabel("Upload thumbnail", { exact: true }).setInputFiles({ name: "project.png", mimeType: "image/png", buffer: Buffer.from(png, "base64") });
+  await page.getByRole("button", { name: "Use this crop" }).click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  // Leave complete edits open: publishing must commit this editor automatically.
+}
+
+test("URL ownership regression: missing indexes, atomic rename, retries, and released names", async ({ request }) => {
+  const owner = await account(request, "url-owner@example.com"), other = await account(request, "url-other@example.com");
+  const publish = (handle: string, user = owner, revision = 0) => publishRequest(request, { headers: user.headers, data: { handle, snapshot: blank(handle), assets: {}, revision } });
+  expect((await publish("url-original")).status()).toBe(200);
+  const before = (await db.collection("publishedPortfolios").doc("url-original").get()).data()!;
+  await db.collection("publishers").doc(owner.uid).delete();
+  expect((await publish("url-second")).status()).toBe(409);
+  expect((await db.collection("publishedPortfolios").where("uid", "==", owner.uid).get()).size).toBe(1);
+  expect((await publish("url-occupied", other)).status()).toBe(200);
+  const rename = (handle: string, currentHandle = "url-original", revision = 1) => request.patch("/api/publish", { headers: owner.headers, data: { handle, currentHandle, revision } });
+  expect((await rename("url-occupied")).status()).toBe(409);
+  expect((await request.get("/p/url-original")).status()).toBe(200);
+  expect((await rename("url-renamed")).status()).toBe(200);
+  expect((await rename("url-renamed")).status()).toBe(200);
+  const moved = (await db.collection("publishedPortfolios").doc("url-renamed").get()).data()!;
+  expect(moved.profile).toEqual(before.profile); expect(moved.projects).toEqual(before.projects); expect(moved.assets).toEqual(before.assets);
+  expect(moved.revision).toBe(2); expect(moved.contentRevision).toBe(1);
+  expect((await db.collection("publishers").doc(owner.uid).get()).data()?.handle).toBe("url-renamed");
+  for (const suffix of ["", "/about", "/projects/considered-project"]) expect((await request.get("/p/url-original" + suffix)).status()).toBe(404);
+  expect((await publish("url-original", owner, 1)).status()).toBe(409);
+  const newcomer = await account(request, "url-new@example.com");
+  expect((await publish("url-original", newcomer)).status()).toBe(200);
+  await db.collection("publishers").doc(owner.uid).set({ handle: "url-occupied", lastPublish: 0 }, { merge: true });
+  expect((await publish("url-renamed", owner, 2)).status()).toBe(200);
+  expect((await db.collection("publishers").doc(owner.uid).get()).data()?.handle).toBe("url-renamed");
+  await db.collection("publishedPortfolios").doc("url-duplicate").set({ ...moved, handle: "url-duplicate" });
+  expect((await rename("url-third", "url-renamed", 3)).status()).toBe(409);
+  expect((await publish("url-renamed", owner, 3)).status()).toBe(409);
+});
+
+test("URL races and deletion retries never take another account's reused name", async ({ request }) => {
+  const owner = await account(request, "reuse@example.com"), other = await account(request, "rival@example.com");
+  const publish = (handle: string, user = owner, revision = 0) => publishRequest(request, { headers: user.headers, data: { handle, snapshot: blank(user.uid), assets: {}, revision } });
+  await publish("race-original"); await publish("race-rival", other);
+  const rename = (user: typeof owner, currentHandle: string, handle: string, revision = 1) => request.patch("/api/publish", { headers: user.headers, data: { currentHandle, handle, revision } });
+  const race = await Promise.all([rename(owner, "race-original", "race-target"), rename(other, "race-rival", "race-target")]);
+  expect(race.map(r => r.status()).sort()).toEqual([200, 409]);
+  const current = (await (await request.get("/api/publish", { headers: owner.headers })).json()).publication;
+  await db.collection("publishers").doc(owner.uid).set({ lastPublish: 0 }, { merge: true });
+  const concurrent = await Promise.all([rename(owner, current.handle, "race-final", current.revision), publish(current.handle, owner, current.revision)]);
+  expect(concurrent.map(r => r.status()).sort()).toEqual([200, 409]);
+  expect((await db.collection("publishedPortfolios").where("uid", "==", owner.uid).get()).size).toBe(1);
+  const final = (await (await request.get("/api/publish", { headers: owner.headers })).json()).publication;
+  const deletion = () => request.delete("/api/account", { headers: { ...owner.headers, "X-Confirm-Delete": "delete-account" } });
+  const deleteRace = await Promise.all([deletion(), rename(owner, final.handle, "deleted-race", final.revision)]);
+  expect(deleteRace[0].status()).toBe(200);
+  expect([200, 401, 409]).toContain(deleteRace[1].status());
+  expect((await db.collection("publishedPortfolios").where("uid", "==", owner.uid).get()).size).toBe(0);
+  const recreated = await account(request, "reuse@example.com"); expect(recreated.uid).not.toBe(owner.uid);
+  expect((await publish(final.handle, recreated)).status()).toBe(200);
+  // The Auth emulator always checks account existence, even for verifyIdToken(false).
+  // A token from a fully removed account is rejected, and cannot affect its successor.
+  expect((await deletion()).status()).toBe(401);
+  expect((await db.collection("publishedPortfolios").doc(final.handle).get()).data()?.uid).toBe(recreated.uid);
+  expect((await request.get("/api/publish", { headers: recreated.headers })).status()).toBe(200);
+});
+
+test("partial account deletion cleanup is UID-scoped after another account claims its name", async ({ request }) => {
+  const owner = await account(request, "partial-delete@example.com"), other = await account(request, "claim-partial@example.com");
+  const data = { handle: "partial-reuse", snapshot: blank("Original"), assets: {}, revision: 0 };
+  expect((await publishRequest(request, { headers: owner.headers, data })).status()).toBe(200);
+  // Reproduce the persisted state after the first deletion transaction but before cleanup.
+  await db.runTransaction(async tx => {
+    tx.set(db.collection("publishers").doc(owner.uid), { deleting: true, handle: data.handle }, { merge: true });
+    tx.delete(db.collection("publishedPortfolios").doc(data.handle));
+  });
+  expect((await publishRequest(request, { headers: other.headers, data: { ...data, snapshot: blank("New owner") } })).status()).toBe(200);
+  expect((await request.delete("/api/account", { headers: { ...owner.headers, "X-Confirm-Delete": "delete-account" } })).status()).toBe(200);
+  const publication = (await (await request.get("/api/publish", { headers: other.headers })).json()).publication;
+  expect(publication.profile.name).toBe("New owner");
+  expect((await db.collection("publishedPortfolios").doc(data.handle).get()).data()?.uid).toBe(other.uid);
+});
+
+test("publication requirements reject missing biography and projects on the server", async ({ request }) => {
+  const owner = await account(request, "requirements@example.com");
+  const body = { handle: "requirements", snapshot: blank("Required name"), revision: 0, assets: {} };
+  const empty = await request.post("/api/publish", { headers: owner.headers, data: body });
+  expect(empty.status()).toBe(400); expect((await empty.json()).error).toContain("at least one completed project");
+  const biography = await publishRequest(request, { headers: owner.headers, data: { ...body, snapshot: { ...body.snapshot, profile: { ...body.snapshot.profile, biography: "  " } } } });
+  expect(biography.status()).toBe(400); expect((await biography.json()).error).toContain("Biography is required");
+  expect((await publishRequest(request, { headers: owner.headers, data: body })).status()).toBe(200);
+});
+
+test("draft indicators, actionable publishing errors, automatic project commit, and URL editor", async ({ page, request, browser }) => {
+  const owner = await account(request, "feedback@example.com");
+  await loginStudio(page, "feedback@example.com");
+  const nav = page.getByRole("navigation", { name: "Portfolio setup" });
+  await expect(nav.getByText("Needs attention")).toHaveCount(0);
+  await page.getByLabel("Your name", { exact: true }).focus(); await page.keyboard.press("Tab");
+  await expect(nav.getByRole("button", { name: /Your name/ })).toContainText("Needs attention");
+  await page.getByLabel("Your name", { exact: true }).fill("Case Study Designer");
+  await expect(nav.getByText("Needs attention")).toHaveCount(0);
+  await nav.getByRole("button", { name: /Homepage/ }).click();
+  await page.getByLabel("Homepage tagline").focus(); await page.keyboard.press("Tab");
+  await expect(nav.getByRole("button", { name: /Homepage/ })).not.toContainText("Needs attention");
+  await nav.getByRole("button", { name: /Education/ }).click(); await page.getByRole("button", { name: "+ Add education" }).click();
+  await page.getByLabel("Institution", { exact: true }).focus(); await page.keyboard.press("Tab");
+  await expect(nav.getByRole("button", { name: /Education/ })).toContainText("Needs attention");
+  await page.getByRole("button", { name: "Remove education 1" }).click();
+  await expect(nav.getByRole("button", { name: /Education/ })).not.toContainText("Needs attention");
+  await nav.getByRole("button", { name: /Publish/ }).click(); await page.getByLabel("Portfolio address", { exact: true }).fill("feedback-site");
+  let uploads = 0; page.on("request", req => { if (req.url().includes("/api/publish/image")) uploads++; });
+  await page.getByRole("button", { name: "Publish portfolio", exact: true }).click();
+  const errors = page.getByRole("region", { name: "A few things need attention before publishing" });
+  await expect(errors).toBeVisible(); expect(uploads).toBe(0);
+  await expect(nav.getByRole("button", { name: /Biography/ })).toContainText("Needs attention");
+  await expect(nav.getByRole("button", { name: /Projects/ })).toContainText("Needs attention");
+  await errors.getByRole("button", { name: /Biography:/ }).click();
+  await expect(page.getByLabel("Biography", { exact: true })).toBeFocused();
+  await page.getByLabel("Biography", { exact: true }).fill("I design clear, useful experiences.");
+  await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
+  await page.reload(); await expect(errors).toBeVisible();
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 960 });
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
+    await page.screenshot({ path: `.qa/screenshots/url-draft-errors-${width}.png`, fullPage: true });
+  }
+  await errors.getByRole("button", { name: /Add project:/ }).click(); await expect(page.getByLabel("Project title", { exact: true })).toBeFocused();
+  await nav.getByRole("button", { name: /Publish/ }).click(); await page.getByRole("button", { name: "Publish portfolio", exact: true }).click();
+  await errors.getByRole("button", { name: /Untitled project: Project title/ }).click();
+  await page.getByLabel("Project title", { exact: true }).fill("Project under construction");
+  await page.getByLabel("Project description", { exact: true }).fill("A complete study saved automatically at publication.");
+  await page.getByRole("button", { name: "Images", exact: true }).click();
+  const png = await page.evaluate(() => { const c = document.createElement("canvas"); c.width = 900; c.height = 600; const x = c.getContext("2d")!; x.fillStyle = "#335d51"; x.fillRect(0, 0, 900, 600); x.fillStyle = "#f8f5ec"; x.font = "48px serif"; x.fillText("A considered experience", 100, 300); return c.toDataURL("image/png").split(",")[1]; });
+  await page.getByLabel("Upload thumbnail", { exact: true }).setInputFiles({ name: "case-study.png", mimeType: "image/png", buffer: Buffer.from(png, "base64") });
+  await page.getByRole("button", { name: "Use this crop" }).click(); await expect(page.getByRole("dialog")).not.toBeVisible();
+  await page.getByRole("button", { name: "Review", exact: true }).click();
+  await page.getByRole("button", { name: "Add Figma", exact: true }).click();
+  await nav.getByRole("button", { name: /Publish/ }).click(); await page.getByRole("button", { name: "Publish portfolio", exact: true }).click();
+  await expect(page.getByRole("link", { name: /\/p\/feedback-site/ })).toBeVisible();
+  const saved = (await (await request.get("/api/draft", { headers: owner.headers })).json()).draft;
+  expect(saved.content.projectDraft).toBeNull(); expect(saved.content.projects).toHaveLength(1);
+  await nav.getByRole("button", { name: /Biography/ }).click(); await page.getByLabel("Biography", { exact: true }).fill("Private biography stays unpublished.");
+  await nav.getByRole("button", { name: /Publish/ }).click(); await page.getByRole("button", { name: "Edit URL", exact: true }).click();
+  await page.getByLabel("New portfolio address").fill("feedback-renamed");
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 960 });
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
+    await page.screenshot({ path: `.qa/screenshots/url-draft-rename-${width}.png`, fullPage: true });
+  }
+  // Lose the response after the transaction committed; retry must be safe.
+  await page.route("**/api/publish", async route => {
+    if (route.request().method() !== "PATCH") return route.continue();
+    await route.fetch(); await route.abort(); await page.unroute("**/api/publish");
+  });
+  await page.getByRole("button", { name: "Save URL", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(/fetch|network|Failed/i);
+  await page.getByRole("button", { name: "Save URL", exact: true }).click();
+  await expect(page.getByRole("link", { name: /\/p\/feedback-renamed/ })).toBeVisible();
+  expect((await request.get("/p/feedback-site")).status()).toBe(404);
+  const live = (await db.collection("publishedPortfolios").doc("feedback-renamed").get()).data()!;
+  expect(live.profile.biography).toBe("I design clear, useful experiences."); expect(live.feedback).toBeUndefined();
+  await page.reload(); await nav.getByRole("button", { name: /Biography/ }).click();
+  await expect(page.getByLabel("Biography", { exact: true })).toHaveValue("Private biography stays unpublished.");
+  const publicPage = await browser.newPage();
+  await publicPage.goto("http://127.0.0.1:3102/p/feedback-renamed/projects/project-under-construction");
+  for (const width of [375, 768, 1440]) {
+    await publicPage.setViewportSize({ width, height: 960 });
+    const title = await publicPage.getByRole("heading", { level: 1 }).boundingBox(), scope = await publicPage.getByRole("heading", { name: "Scope & tools" }).boundingBox(), firstImage = await publicPage.locator("main figure img").first().boundingBox();
+    expect(scope!.y).toBeGreaterThan(title!.y + title!.height); expect(scope!.y + scope!.height).toBeLessThan(firstImage!.y);
+    expect((await new AxeBuilder({ page: publicPage }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
+    expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await publicPage.screenshot({ path: `.qa/screenshots/url-draft-case-study-${width}.png`, fullPage: true });
+  }
+  await publicPage.close();
+});
 async function account(request: APIRequestContext, email: string, verified = true) {
   const user = await auth.createUser({ email, password: "qa-password-only", emailVerified: verified });
   const response = await request.post("http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-test-key", { data: { email, password: "qa-password-only", returnSecureToken: true } });
@@ -25,14 +219,14 @@ test.beforeEach(async ({ request }) => {
 test("publishing enforces identity, verification, address ownership, revision checks, and database rules", async ({ request }) => {
   const first = await account(request, "first@example.com"), second = await account(request, "second@example.com"), unverified = await account(request, "unverified@example.com", false);
   const body = { handle: "shared-address", snapshot: blank("First Owner"), revision: 0, assets: {} };
-  expect((await request.post("/api/publish", { data: body })).status()).toBe(401);
-  expect((await request.post("/api/publish", { data: body, headers: { Authorization: "Bearer fake-token" } })).status()).toBe(401);
-  expect((await request.post("/api/publish", { data: body, headers: unverified.headers })).status()).toBe(403);
-  const results = await Promise.all([request.post("/api/publish", { data: body, headers: first.headers }), request.post("/api/publish", { data: { ...body, snapshot: blank("Second Owner") }, headers: second.headers })]);
+  expect((await publishRequest(request, { data: body })).status()).toBe(401);
+  expect((await publishRequest(request, { data: body, headers: { Authorization: "Bearer fake-token" } })).status()).toBe(401);
+  expect((await publishRequest(request, { data: body, headers: unverified.headers })).status()).toBe(403);
+  const results = await Promise.all([publishRequest(request, { data: body, headers: first.headers }), publishRequest(request, { data: { ...body, snapshot: blank("Second Owner") }, headers: second.headers })]);
   expect(results.map(r => r.status()).sort()).toEqual([200,409]);
   const winner = results[0].status() === 200 ? first : second, loser = winner === first ? second : first;
-  expect((await request.post("/api/publish", { data: body, headers: winner.headers })).status()).toBe(409);
-  expect((await request.post("/api/publish", { data: { ...body, revision: 1 }, headers: loser.headers })).status()).toBe(409);
+  expect((await publishRequest(request, { data: body, headers: winner.headers })).status()).toBe(409);
+  expect((await publishRequest(request, { data: { ...body, revision: 1 }, headers: loser.headers })).status()).toBe(409);
   expect((await request.get("/api/publish", { headers: loser.headers })).ok()).toBe(true);
   expect((await (await request.get("/api/publish", { headers: loser.headers })).json()).publication).toBeNull();
   const html = await (await request.get("/p/shared-address")).text();
@@ -42,7 +236,7 @@ test("publishing enforces identity, verification, address ownership, revision ch
   expect(direct.status()).toBe(403);
   const snapshot = blank("Image theft") as ReturnType<typeof blank>;
   snapshot.profile.headshotImage = "/images/stolen.webp";
-  expect((await request.post("/api/publish", { headers: loser.headers, data: { ...body, handle: "image-theft", snapshot, assets: { "/images/stolen.webp": "a".repeat(64) } } })).status()).toBe(400);
+  expect((await publishRequest(request, { headers: loser.headers, data: { ...body, handle: "image-theft", snapshot, assets: { "/images/stolen.webp": "a".repeat(64) } } })).status()).toBe(400);
   expect((await request.post("/api/publish/image", { headers: first.headers, data: "not-an-image" })).status()).toBe(400);
   expect((await request.post("/api/publish/image/chunks", { headers: first.headers, data: { size: 500 * 1024 * 1024 + 1 } })).status()).toBe(413);
   expect((await request.post("/api/auth/register", { data: { name: "No hosted files", email: "legacy@example.com", password: "qa-password-only", handle: "legacy" } })).status()).toBe(403);
@@ -124,6 +318,8 @@ test("landing signup starts blank, verifies, publishes, counts creators, and res
   await expect(page.getByRole("button", { name: "Publish portfolio", exact: true })).toBeDisabled();
   await auth.updateUser(owner.uid, { emailVerified: true });
   await page.getByRole("button", { name: "Check verification", exact: true }).click();
+  await addCompleteProject(page);
+  await page.getByRole("button", { name: "09 Publish", exact: true }).click();
   await page.getByLabel("Portfolio address", { exact: true }).fill("landing-creator");
   await page.getByRole("button", { name: "Publish portfolio", exact: true }).click();
   await expect(page.getByRole("link", { name: /\/p\/landing-creator/ })).toBeVisible();
@@ -147,7 +343,7 @@ test("landing signup starts blank, verifies, publishes, counts creators, and res
   await page.goto("/signup"); await expect(page).toHaveURL(/\/studio$/);
   await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveValue("Landing Creator");
   const second = await account(request, "second-landing@example.com");
-  expect((await request.post("/api/publish", { headers: second.headers, data: { handle: "second-landing", snapshot: blank("Another Creator"), assets: {}, revision: 0 } })).status()).toBe(200);
+  expect((await publishRequest(request, { headers: second.headers, data: { handle: "second-landing", snapshot: blank("Another Creator"), assets: {}, revision: 0 } })).status()).toBe(200);
   await expect.poll(async () => (await (await request.get("/api/public-stats")).json()).publishedCreators).toBe(2);
   for (const width of [375, 768, 1440]) {
     await page.setViewportSize({ width, height: 960 });
@@ -189,6 +385,10 @@ test("cancelled account replacement preserves both drafts and restore asks only 
   await page.getByLabel("Password", { exact: true }).fill("qa-password-only");
   await page.getByRole("button", { name: "Sign in to publish", exact: true }).click();
   await page.getByRole("button", { name: "Use this device draft" }).click();
+  await page.getByRole("button", { name: "03 Biography", exact: true }).click();
+  await page.getByLabel("Biography", { exact: true }).fill("My creative practice.");
+  await addCompleteProject(page);
+  await page.getByRole("button", { name: "09 Publish", exact: true }).click();
   await page.getByLabel("Portfolio address", { exact: true }).fill("cancel-study");
   await page.getByRole("button", { name: "Publish portfolio", exact: true }).click();
   await expect(page.getByRole("link", { name: /\/p\/cancel-study/ })).toBeVisible();
@@ -228,8 +428,8 @@ test("cancelled account replacement preserves both drafts and restore asks only 
 test("account deletion confirms identity, removes all hosted data and this device draft, and isolates others", async ({ page, request }) => {
   const owner = await account(request, "delete-me@example.com"), other = await account(request, "keep-me@example.com");
   const body = { handle: "delete-me", snapshot: blank("Delete Me"), assets: {}, revision: 0 };
-  expect((await request.post("/api/publish", { headers: owner.headers, data: body })).status()).toBe(200);
-  expect((await request.post("/api/publish", { headers: other.headers, data: { ...body, handle:"keep-me" } })).status()).toBe(200);
+  expect((await publishRequest(request, { headers: owner.headers, data: body })).status()).toBe(200);
+  expect((await publishRequest(request, { headers: other.headers, data: { ...body, handle:"keep-me" } })).status()).toBe(200);
   const png=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==","base64");
   const uploaded=await request.post("/api/publish/image",{headers:owner.headers,data:png}); expect(uploaded.status()).toBe(200);
   const id=(await uploaded.json()).id, assetRef=db.collection("publishers").doc(owner.uid).collection("assets").doc(id), url=(await assetRef.get()).data()!.url;
@@ -267,7 +467,7 @@ test("account deletion confirms identity, removes all hosted data and this devic
   expect((await request.get("/p/delete-me")).status()).toBe(404); expect((await request.get(url)).ok()).toBe(false);
   expect((await getStorage(app).bucket("demo-portfolio.firebasestorage.app").getFiles({prefix:`portfolios/${owner.uid}/`}))[0]).toHaveLength(0);
   expect((await request.get("/p/keep-me")).status()).toBe(200); expect((await auth.getUser(other.uid)).email).toBe("keep-me@example.com");
-  expect((await request.post("/api/publish", {headers:owner.headers,data:body})).status()).toBe(401);
+  expect((await publishRequest(request, {headers:owner.headers,data:body})).status()).toBe(401);
   expect(await page.evaluate(uid=>new Promise(resolve=>{const req=indexedDB.open("portfolio-browser-studio"); req.onsuccess=()=>{const db=req.result;const get=db.transaction("drafts").objectStore("drafts").get(uid);get.onsuccess=()=>{resolve(get.result??null);db.close();};};}),owner.uid)).toBeNull();
   expect(await page.evaluate(()=>localStorage.getItem("portfolio-active-draft"))).toBeNull();
 });
@@ -287,7 +487,7 @@ test("chunked images cross the old limit, preserve bytes, and enforce ownership 
   const asset=(await db.collection("publishers").doc(owner.uid).collection("assets").doc(id).get()).data()!;
   expect(asset.size).toBe(image.length); expect(await (await request.get(asset.url)).body()).toEqual(image);
   const snapshot=blank("Large image"); snapshot.profile.headshotImage="/images/large.png";
-  expect((await request.post("/api/publish",{headers:owner.headers,data:{handle:"large-image",snapshot,revision:0,assets:{"/images/large.png":id}}})).status()).toBe(200);
+  expect((await publishRequest(request,{headers:owner.headers,data:{handle:"large-image",snapshot,revision:0,assets:{"/images/large.png":id}}})).status()).toBe(200);
   const unverified=await account(request,"delete-unverified@example.com",false);
   expect((await request.delete("/api/account",{headers:{...unverified.headers,"X-Confirm-Delete":"delete-account"}})).status()).toBe(200);
 });
@@ -343,7 +543,7 @@ test("unverified account drafts save incomplete content and private images with 
   expect((await request.put("/api/draft", { headers: owner.headers, data: body })).status()).toBe(409);
   expect((await request.put("/api/draft", { headers: other.headers, data: body })).status()).toBe(400);
   const saved = await (await request.get("/api/draft", { headers: owner.headers })).json();
-  expect(saved.draft.content).toEqual(body.content); expect(saved.draft.revision).toBe(1); expect(saved.publication).toBeNull();
+  expect(saved.draft.content).toEqual({ ...body.content, feedback: { touched: [], attempted: false } }); expect(saved.draft.revision).toBe(1); expect(saved.publication).toBeNull();
   expect(JSON.stringify(saved.draft)).not.toContain("base64");
   expect((await request.put("/api/draft", { headers: owner.headers, data: { ...body, revision: 1, version: 2 } })).status()).toBe(400);
   expect((await request.put("/api/draft", { headers: owner.headers, data: { ...body, revision: 1, content: { ...body.content, projectDraft: { ...body.content.projectDraft, link: "javascript:alert(1)" } } } })).status()).toBe(400);
@@ -359,7 +559,7 @@ test("unverified account drafts save incomplete content and private images with 
 
 test("restore repairs missing and foreign mappings using UID and rejects ambiguous or dangling records", async ({ request }) => {
   const owner = await account(request, "restore-owner@example.com"), other = await account(request, "restore-other@example.com");
-  for (const [user, handle] of [[owner, "restore-owner"], [other, "restore-other"]] as const) expect((await request.post("/api/publish", { headers: user.headers, data: { handle, snapshot: blank(handle), assets: {}, revision: 0 } })).status()).toBe(200);
+  for (const [user, handle] of [[owner, "restore-owner"], [other, "restore-other"]] as const) expect((await publishRequest(request, { headers: user.headers, data: { handle, snapshot: blank(handle), assets: {}, revision: 0 } })).status()).toBe(200);
   const ownerRef = db.collection("publishers").doc(owner.uid);
   await ownerRef.delete();
   expect((await (await request.get("/api/publish", { headers: owner.headers })).json()).publication.handle).toBe("restore-owner");
@@ -446,10 +646,10 @@ test("offline edits retry and divergent devices preserve both versions with an e
 
 test("published-only accounts recover automatically and failed lookups never create a blank cloud draft", async ({ page, request }) => {
   const owner = await account(request, "published-only@example.com");
-  expect((await request.post("/api/publish", { headers: owner.headers, data: { handle:"published-only", snapshot:blank("Existing published work"), assets:{}, revision:0 } })).status()).toBe(200);
+  expect((await publishRequest(request, { headers: owner.headers, data: { handle:"published-only", snapshot:blank("Existing published work"), assets:{}, revision:0 } })).status()).toBe(200);
   await page.route("**/api/draft", route => route.fulfill({ status:503, json:{error:"Account lookup temporarily unavailable. Retry."} }));
   await loginStudio(page, "published-only@example.com");
-  await expect(page.getByRole("alert")).toContainText("temporarily unavailable");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("temporarily unavailable");
   await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveCount(0);
   expect((await db.collection("publishers").doc(owner.uid).collection("drafts").doc("current").get()).exists).toBe(false);
   await page.unroute("**/api/draft"); await page.getByRole("button", { name:"Retry opening portfolio" }).click();
@@ -473,12 +673,12 @@ test("legacy device edits migrate and image failure leaves restore untouched", a
   await expect(page.getByText("Saved to your account",{exact:true})).toBeVisible();
   const uploaded = await request.post("/api/publish/image",{headers:owner.headers,data:tinyPng}); const {id}=await uploaded.json();
   const snapshot=blank("Public snapshot");snapshot.profile.headshotImage="/images/published.png";
-  expect((await request.post("/api/publish",{headers:owner.headers,data:{handle:"migration",snapshot,revision:0,assets:{"/images/published.png":id}}})).status()).toBe(200);
+  expect((await publishRequest(request,{headers:owner.headers,data:{handle:"migration",snapshot,revision:0,assets:{"/images/published.png":id}}})).status()).toBe(200);
   await page.getByRole("button",{name:"09 Publish",exact:true}).click();
   page.on("dialog",d=>d.accept());
   await page.route("**/v0/b/**",route=>route.fulfill({status:503,body:"Image unavailable"}));
   await page.getByRole("button",{name:"Restore last published version",exact:true}).click();
-  await expect(page.getByRole("alert")).toContainText("image could not be restored");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("image could not be restored");
   await page.getByRole("button",{name:"01 Your name",exact:true}).click();
   await expect(page.getByRole("textbox",{name:"Your name",exact:true})).toHaveValue("Legacy device work");
   await expect(page.getByText("Saved to your account",{exact:true})).toBeVisible();
@@ -499,14 +699,18 @@ test("a replacement production server reads existing cloud drafts without seedin
 
 test("opening an old account draft does not silently adopt a newer publication revision", async ({ page, request }) => {
   const owner=await account(request,"publication-revision@example.com");
-  const first=await request.post("/api/publish",{headers:owner.headers,data:{handle:"publication-revision",snapshot:blank("First public version"),assets:{},revision:0}});
+  const first=await publishRequest(request,{headers:owner.headers,data:{handle:"publication-revision",snapshot:blank("First public version"),assets:{},revision:0}});
   const publication=await first.json();
-  expect((await request.put("/api/draft",{headers:owner.headers,data:{...draftBody("Private work based on version one"),publication:{handle:publication.handle,revision:publication.revision,publishedAt:publication.publishedAt}}})).status()).toBe(200);
+  const privateImage = await request.post("/api/draft/image", { headers: owner.headers, data: fixturePNG });
+  const privateAsset = (await privateImage.json()).id;
+  const privateDraft = draftBody("Private work based on version one");
+  const readyContent = { ...privateDraft.content, projects: [fixtureProject("/images/required-project.png")] };
+  expect((await request.put("/api/draft",{headers:owner.headers,data:{...privateDraft, content: readyContent, assets: { "/images/required-project.png": privateAsset },publication:{handle:publication.handle,revision:publication.revision,publishedAt:publication.publishedAt}}})).status()).toBe(200);
   await db.collection("publishers").doc(owner.uid).update({lastPublish:0});
-  expect((await request.post("/api/publish",{headers:owner.headers,data:{handle:"publication-revision",snapshot:blank("Newer public version"),assets:{},revision:1}})).status()).toBe(200);
+  expect((await publishRequest(request,{headers:owner.headers,data:{handle:"publication-revision",snapshot:blank("Newer public version"),assets:{},revision:1}})).status()).toBe(200);
   await loginStudio(page,"publication-revision@example.com");
   await page.getByRole("button",{name:"09 Publish",exact:true}).click();
   await page.getByRole("button",{name:"Publish updates",exact:true}).click();
-  await expect(page.getByRole("alert")).toContainText("A newer version was published");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("A newer version was published");
   expect((await db.collection("publishedPortfolios").doc("publication-revision").get()).data()?.profile.name).toBe("Newer public version");
 });

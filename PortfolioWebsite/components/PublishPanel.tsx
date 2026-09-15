@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { createUserWithEmailAndPassword, onAuthStateChanged, reload, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, type Auth, type User } from "firebase/auth";
 import { publishingAuth, publishingFetch, uploadPublishingImage } from "@/lib/firebase-client";
 import { fileData, type BrowserDraft } from "@/lib/browser-draft";
-import { imageReferences, validateSnapshot, validHandle, type Publication } from "@/lib/portfolio-snapshot";
+import { imageReferences, validHandle, type Publication } from "@/lib/portfolio-snapshot";
 import { DeleteAccount } from "./DeleteAccount";
 import { Field } from "./StudioFields";
 
-export function PublishPanel({ onHandle, draft, busy: saving, flush, connect, openAccount, onPublished, restore, signedOut, onBusy, deleteAccount }: {
+export function PublishPanel({ preparePublish, onHandle, draft, busy: saving, flush, connect, openAccount, onPublished, restore, signedOut, onBusy, deleteAccount }: {
+  preparePublish: () => Promise<BrowserDraft | null>;
   onHandle: (handle: string) => void;
   draft: BrowserDraft; busy: boolean; flush: () => Promise<void>;
   connect: (uid: string) => Promise<boolean>; openAccount: (uid: string) => Promise<boolean>;
@@ -20,6 +21,7 @@ export function PublishPanel({ onHandle, draft, busy: saving, flush, connect, op
   const [auth, setAuth] = useState<Auth | null>(null), [user, setUser] = useState<User | null>(null), [ready, setReady] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin"), [email, setEmail] = useState(""), [password, setPassword] = useState("");
   const handle = draft.publication?.handle || draft.requestedHandle || "";
+  const [editingURL, setEditingURL] = useState(false), [newHandle, setNewHandle] = useState("");
   const [busy, setBusy] = useState(false), [status, setStatus] = useState(""), [error, setError] = useState("");
   useEffect(() => {
     let stop: (() => void) | undefined, active = true;
@@ -45,22 +47,32 @@ export function PublishPanel({ onHandle, draft, busy: saving, flush, connect, op
     });
   }
   async function publish() {
-    await flush();
     if (!user || draft.ownerUid !== user.uid) throw new Error("Choose which draft to use with this account first.");
-    if (draft.projectDraft) throw new Error("Finish or discard your project draft in Projects before publishing.");
-    const address = validHandle(draft.publication?.handle || handle);
-    const snapshot = validateSnapshot(draft);
+    const latest = await preparePublish();
+    if (!latest) return;
+    const address = validHandle(latest.publication?.handle || latest.requestedHandle || "");
+    const snapshot = { profile: latest.profile, projects: latest.projects };
     const refs = imageReferences(snapshot), assets: Record<string, string> = {};
     for (const [index, path] of refs.entries()) {
-      if (!draft.images[path]) throw new Error("An image is missing on this device. Restore your published version or choose the image again.");
+      if (!latest.images[path]) throw new Error("An image is missing on this device. Restore your published version or choose the image again.");
       setStatus(`Uploading image ${index + 1} of ${refs.length}…`);
-      const file = await (await fetch(draft.images[path])).blob();
+      const file = await (await fetch(latest.images[path])).blob();
       const result = await uploadPublishingImage(file, percent => setStatus(`Uploading image ${index + 1} of ${refs.length}: ${percent}%`)); assets[path] = result.id;
     }
     setStatus("Publishing your portfolio…");
-    const result = await publishingFetch("/api/publish", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ handle: address, snapshot, assets, revision: draft.publication?.revision || 0 }) });
+    const result = await publishingFetch("/api/publish", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ handle: address, snapshot, assets, revision: latest.publication?.revision || 0 }) });
     await onPublished({ handle: result.handle, revision: result.revision, publishedAt: result.publishedAt });
     setStatus("Your portfolio is published. Copy the link to share it.");
+  }
+  async function saveURL() {
+    const publication = draft.publication;
+    if (!publication || !user) return;
+    const handle = validHandle(newHandle);
+    await flush();
+    const result = await publishingFetch("/api/publish", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentHandle: publication.handle, revision: publication.revision, handle }) }, user.uid);
+    await onPublished({ handle: result.handle, revision: result.revision, publishedAt: result.publishedAt });
+    setEditingURL(false);
+    setStatus("Website URL saved. The old address is no longer your website. Your unpublished edits are still private.");
   }
   async function restoreOnline() {
     if (!user) return;
@@ -84,12 +96,12 @@ export function PublishPanel({ onHandle, draft, busy: saving, flush, connect, op
       <div className="notice flex flex-wrap items-center justify-between gap-3"><span className="break-all">Signed in as {user.email}</span><button className="btn-text" disabled={locked} onClick={() => void action(async () => { await flush(); await signOut(auth); await signedOut(); })}>Sign out</button></div>
       {!user.emailVerified && <div className="space-y-3"><p>Verify your email before publishing (check your spam folder too).</p><div className="flex flex-wrap gap-3"><button className="btn-secondary" disabled={locked} onClick={() => void action(async () => { await sendEmailVerification(user); setStatus("Verification email sent. Check your inbox (check your spam folder too)."); })}>Send verification email</button><button className="btn-secondary" disabled={locked} onClick={() => void action(async () => { await reload(user); await user.getIdToken(true); setUser(user); setStatus(user.emailVerified ? "Email verified. You can publish." : "Your email is not verified yet. Open the email link, then check again."); })}>Check verification</button></div></div>}
       {draft.ownerUid !== user.uid ? <div className="space-y-3"><p>Choose the draft to use with this account. Drafts saved for other accounts stay separate on this device.</p><div className="flex flex-wrap gap-3">{!draft.ownerUid && <button className="btn-primary" disabled={locked} onClick={() => void action(async () => { if (await connect(user.uid)) setStatus("This draft is now linked to your account. Check the save status before leaving."); })}>Use this device draft</button>}<button className="btn-secondary" disabled={locked} onClick={() => void action(() => openAccount(user.uid))}>Open my account draft</button></div></div> : <div className="space-y-4">
-        {draft.publication ? <div className="rounded-xl border border-line p-5"><p className="eyebrow">Your published link</p><a className="mt-3 block break-all underline" href={link} target="_blank" rel="noopener noreferrer">{link}</a><p className="mt-2 text-sm text-moss">Last published {new Date(draft.publication.publishedAt).toLocaleString()}</p><button className="btn-secondary mt-4" disabled={locked} onClick={() => void action(async () => { await navigator.clipboard.writeText(link); setStatus("Link copied."); })}>Copy link</button></div> : <Field label="Portfolio address" value={handle} onChange={v => onHandle(v.toLowerCase())} maxLength={40} hint="3–40 lowercase letters, numbers, or hyphens. Your link will end in /p/your-address. This address stays fixed after publishing." />}
+        {draft.publication ? <div className="rounded-xl border border-line p-5"><p className="eyebrow">Your published link</p><a className="mt-3 block break-all underline" href={link} target="_blank" rel="noopener noreferrer">{link}</a><p className="mt-2 text-sm text-moss">Last published {new Date(draft.publication.publishedAt).toLocaleString()}</p><button className="btn-secondary mt-4" disabled={locked} onClick={() => void action(async () => { await navigator.clipboard.writeText(link); setStatus("Link copied."); })}>Copy link</button> <button type="button" className="btn-text ml-4 mt-4" disabled={locked} onClick={() => { setNewHandle(draft.publication!.handle); setEditingURL(true); setError(""); setStatus(""); }}>Edit URL</button>{editingURL && <div className="mt-5 space-y-4 border-t border-line pt-5"><Field label="New portfolio address" value={newHandle} onChange={value => setNewHandle(value.toLowerCase())} maxLength={40} required hint="3 to 40 lowercase letters, numbers, and single hyphens." />{error && <p role="alert" className="form-error">{error}</p>}<p className="break-all text-sm text-moss">New URL: {typeof window !== "undefined" ? window.location.origin : ""}/p/{newHandle}</p><p className="text-sm leading-6">Saving moves your live website immediately and removes its old address. Unpublished content stays private. Someone else can claim the old address.</p><div className="flex flex-wrap gap-3"><button type="button" className="btn-primary" disabled={locked || newHandle === draft.publication.handle} onClick={() => void action(saveURL)}>Save URL</button><button type="button" className="btn-secondary" disabled={locked} onClick={() => { setEditingURL(false); setError(""); }}>Cancel</button></div></div>}</div> : <Field label="Portfolio address" required value={handle} onChange={v => onHandle(v.toLowerCase())} maxLength={40} hint="3–40 lowercase letters, numbers, or hyphens. Your link will end in /p/your-address. You can change this address after publishing." />}
         <button className="btn-primary" disabled={locked || !user.emailVerified} onClick={() => void action(publish)}>{busy ? "Please wait…" : draft.publication ? "Publish updates" : "Publish portfolio"}</button>
       </div>}
       <div className="border-t border-line pt-5"><button className="btn-text" disabled={locked} onClick={() => void action(restoreOnline)}>Restore last published version</button><p className="mt-2 text-sm leading-6 text-moss">Revert your editable draft to the last version visitors can see. Your current draft is kept as a recovery backup on this device.</p></div>
       <DeleteAccount user={user} disabled={locked} remove={deleteAccount} onBusy={onBusy} />
     </>}
-    {status && <p role="status" className="notice">{status}</p>}{error && <p role="alert" className="form-error">{error}</p>}
+    {status && <p role="status" className="notice">{status}</p>}{error && !editingURL && <p role="alert" className="form-error">{error}</p>}
   </section>;
 }

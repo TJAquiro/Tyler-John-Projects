@@ -18,6 +18,6 @@ export async function accountPublication(uid: string): Promise<Publication | nul
     const doc = sites.docs[0], data = doc.data();
     if (!data.profile || !Array.isArray(data.projects) || !data.assets || !Number.isInteger(data.revision)) throw new PublishError("Your published portfolio could not be read. Your draft has not been replaced.", 409);
     if (account.data()?.handle !== doc.id) tx.set(owner, { handle: doc.id }, { merge: true });
-    return { profile: data.profile, projects: data.projects, assets: data.assets, handle: doc.id, revision: data.revision, publishedAt: data.publishedAt };
+    return { profile: data.profile, projects: data.projects, assets: data.assets, handle: doc.id, revision: data.revision, publishedAt: data.publishedAt, ...(Number.isInteger(data.contentRevision) ? { contentRevision: data.contentRevision } : {}) };
   });
 }

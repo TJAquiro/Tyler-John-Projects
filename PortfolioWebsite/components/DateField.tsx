@@ -1,15 +1,18 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
+import { AttentionIcon, useDraftFeedback } from "./DraftFeedback";
 import { createPortal } from "react-dom";
 import { dateISO, formatDate, inputDate, months, todayISO } from "@/lib/dates";
 
 export function DateField({ label, value, onChange, required = false, allowPresent = false }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; allowPresent?: boolean }) {
+  const feedback = useDraftFeedback(label);
   const id = useId(), [open, setOpen] = useState(false), [touched, setTouched] = useState(false);
   const current = allowPresent && value === "Present";
   const invalid = touched && !!value && !current && !dateISO(value);
-  return <div className="studio-field"><label htmlFor={id}>{label}{required && <span aria-hidden="true"> *</span>}</label><small id={id + "-hint"}>MM/DD/YYYY · Type a date or open the calendar.</small>
-    <div className="date-input-row flex flex-wrap items-center gap-2"><input id={id} className="admin-input" placeholder="MM/DD/YYYY" inputMode="numeric" maxLength={30} required={required} disabled={current} value={current ? "" : inputDate(value)} aria-describedby={id + "-hint"} aria-invalid={invalid || undefined} onChange={e => { setTouched(true); onChange(e.target.value); }} onBlur={() => { if (dateISO(value)) onChange(dateISO(value)!); }} /><button type="button" className="btn-secondary mt-2 !rounded-xl !px-3" disabled={current} aria-label={`Open calendar for ${label.toLowerCase()}`} onClick={() => setOpen(true)}>Calendar</button></div>
-    {invalid && <small className="!text-[#8e302b]" role="alert">Enter a real date as MM/DD/YYYY.</small>}
+  return <div className="studio-field" data-feedback-key={feedback.key} onBlur={feedback.touch}><label htmlFor={id}>{label} {feedback.issue && <AttentionIcon />}{required && <span aria-hidden="true"> *</span>}</label><small id={id + "-hint"}>MM/DD/YYYY · Type a date or open the calendar.</small>
+    <div className="date-input-row flex flex-wrap items-center gap-2"><input id={id} aria-label={label} className="admin-input" placeholder="MM/DD/YYYY" inputMode="numeric" maxLength={30} required={required} disabled={current} value={current ? "" : inputDate(value)} aria-describedby={[id + "-hint", feedback.issue ? feedback.errorId : ""].filter(Boolean).join(" ")} aria-invalid={invalid || !!feedback.issue || undefined} onChange={e => { setTouched(true); onChange(e.target.value); }} onBlur={() => { if (dateISO(value)) onChange(dateISO(value)!); }} /><button type="button" className="btn-secondary mt-2 !rounded-xl !px-3" disabled={current} aria-label={`Open calendar for ${label.toLowerCase()}`} onClick={() => setOpen(true)}>Calendar</button></div>
+    {feedback.issue && <small id={feedback.errorId} className="!text-[#8e302b]">{feedback.issue.message}</small>}
+    {invalid && !feedback.issue && <small className="!text-[#8e302b]" role="alert">Enter a real date as MM/DD/YYYY.</small>}
     {!touched && value && !current && !dateISO(value) && <small>Existing date: {value}. Choose an exact date to use the new format.</small>}
     {allowPresent && <label className="mt-3 flex items-center gap-2 font-normal"><input type="checkbox" checked={current} onChange={e => { setTouched(true); onChange(e.target.checked ? "Present" : todayISO()); }} />Ongoing (Present)</label>}
     {open && <Calendar label={label} value={value} onSelect={next => { setTouched(true); onChange(next); setOpen(false); }} onClose={() => setOpen(false)} />}

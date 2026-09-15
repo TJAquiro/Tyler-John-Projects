@@ -2,7 +2,7 @@ import type { Profile, Project } from "./types";
 import { imagePath, validateProfile, validateProject } from "./validation";
 
 export type Snapshot = { profile: Profile; projects: Project[] };
-export type Publication = Snapshot & { handle: string; revision: number; publishedAt: string; assets: Record<string, string> };
+export type Publication = Snapshot & { handle: string; revision: number; publishedAt: string; assets: Record<string, string>; contentRevision?: number };
 export const MAX_PROJECTS = 20;
 export const MAX_IMAGE_BYTES = 500 * 1024 * 1024;
 export const IMAGE_CHUNK_BYTES = 8 * 1024 * 1024;
