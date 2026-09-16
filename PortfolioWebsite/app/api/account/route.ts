@@ -24,16 +24,18 @@ export async function DELETE(request: Request) {
     }
     if (!user.auth_time || Date.now() / 1000 - user.auth_time > 300) throw new PublishError("Confirm your password again before deleting your account.", 401);
     if (request.headers.get("x-confirm-delete") !== "delete-account") throw new PublishError("Confirm account deletion first.");
-    const db = publishingDB(), publisher = db.collection("publishers").doc(user.uid);
+    const db = publishingDB(), publisher = db.collection("publishers").doc(user.uid), serviceQuota = db.collection("serviceState").doc("imageQuota");
     // Keep a deletion marker until auth removal succeeds, so partial cleanup can be retried
     // and concurrent publish/upload transactions cannot recreate the website.
     await db.runTransaction(async tx => {
-      const [account, assets, privateAssets, sites] = await Promise.all([
+      const [account, assets, privateAssets, sites, global] = await Promise.all([
         tx.get(publisher), tx.get(publisher.collection("assets")), tx.get(publisher.collection("draftAssets")),
-        tx.get(db.collection("publishedPortfolios").where("uid", "==", user.uid))
+        tx.get(db.collection("publishedPortfolios").where("uid", "==", user.uid)), tx.get(serviceQuota)
       ]);
       if ([...assets.docs, ...privateAssets.docs].some(asset => (asset.data().writingUntil || 0) > Date.now())) throw new PublishError("An image upload is still running. Wait for it to finish, then retry deletion.", 409);
-      tx.set(publisher, { deleting: true, handle: account.data()?.handle || null }, { merge: true });
+      const released = account.data()?.quotaReleased ? 0 : [...assets.docs, ...privateAssets.docs].reduce((total, asset) => total + Number(asset.data().size || 0), 0);
+      tx.set(publisher, { deleting: true, quotaReleased: true, handle: account.data()?.handle || null }, { merge: true });
+      tx.set(serviceQuota, { storageBytes: Math.max(0, Number(global.data()?.storageBytes || 0) - released) }, { merge: true });
       sites.docs.forEach(site => tx.delete(site.ref));
     });
     revalidateTag("published-creator-count");

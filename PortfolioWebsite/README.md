@@ -1,6 +1,6 @@
 # Portfolio studio
 
-The homepage at `/` introduces the free portfolio service. `/signup` and `/login` use Firebase Authentication and open an account-scoped device draft at `/studio`. New accounts start blank; returning accounts resume their saved draft. Email verification is required to publish, not to edit. Direct guest editing at `/studio` remains available.
+The homepage at `/` introduces the free portfolio service. `/signup` and `/login` use Firebase Authentication and open an account-scoped device draft at `/studio`. New accounts start blank; returning accounts resume their saved draft. Email verification is required to sync images to cloud storage and publish, not to edit or save text-only drafts. Direct guest editing at `/studio` remains available.
 
 The landing page uses clearly labeled showcase content. Saved owner files and credentials are preserved but no longer render at `/`, `/about`, or `/projects/[slug]`. Individual portfolios remain under `/p/[handle]` (hosted) and `/u/[handle]` (legacy snapshots).
 
@@ -12,7 +12,7 @@ Live on Firebase: [Portfolio Website](https://portfolio-website--portfolio-websi
 
 ## Account drafts and online publishing
 
-Open **/studio** to create a portfolio, preview privately, and Publish a shareable `/p/your-address` link. Signed-in drafts, unfinished edits, and images save automatically to your account and reopen when you return—even on another device. Further edits stay private until **Publish updates**. Guest drafts and offline changes remain on the device until synced; wait for **Saved to your account** before clearing browser data. Conflicting device versions are preserved for an explicit choice. Backups and manual restore remain available.
+Open **/studio** to create a portfolio, preview privately, and Publish a shareable `/p/your-address` link. Signed-in text drafts and unfinished edits save automatically to your account; images join cloud sync after email verification and otherwise remain in the device draft. Further edits stay private until **Publish updates**. Guest drafts and offline changes remain on the device until synced; wait for **Saved to your account** before clearing browser data. Conflicting device versions are preserved for an explicit choice. Backups and manual restore remain available.
 
 Firebase App Hosting, Authentication, Firestore, and Storage support publishing. Without Firebase configuration the local studio and backups work; the Publish section explains that online publishing is not connected. See [Firebase setup, limits, and verification](docs/FIREBASE-HOSTING.md). Nothing is deployed by installing or running this project.
 
@@ -52,11 +52,11 @@ npm.cmd run dev -- --hostname 127.0.0.1
 
 Open http://localhost:3000. Leave the terminal open; press Ctrl+C to stop. Use `npm` instead of `npm.cmd` on macOS/Linux.
 
-On a fresh copy, copy `.env.example` to `.env.local` and set a long random `SESSION_SECRET`. This computer already has one. `ADMIN_PASSWORD` is no longer used: create an account and choose your own password.
+On a fresh copy, copy `.env.example` to `.env.local` and set separate long random values for `SESSION_SECRET` and `PORTFOLIO_ADMIN_TOKEN`. The admin token is required for local account creation and installation-wide development actions; it must not be reused as an account password or committed. `ADMIN_PASSWORD` is no longer used.
 
 ## Accounts and first setup
 
-Visit http://localhost:3000/admin/register. Choose your name, email, portfolio address, and password. Account creation signs you in and opens onboarding immediately. New accounts have no sample projects, tools, jobs, or education.
+Visit http://localhost:3000/admin/register. Choose your name, email, portfolio address, password, and enter the configured local admin token. Account creation signs you in and opens onboarding immediately. New accounts have no sample projects, tools, jobs, or education.
 
 Each account owns separate content and browser recovery drafts. Use the email and password you chose at `/admin/login`. Passwords are salted and hashed with scrypt; they are never stored as plaintext. These are local accounts on this computer, with no email delivery or hosted password-recovery service.
 
@@ -76,7 +76,7 @@ Your public portfolio address is `/u/your-handle`, with About and individual pro
 
 ## Dev tools
 
-Run the development server, sign in, and choose **Dev tools** in the studio navigation (`/admin/dev`). These tools are unavailable in production or on Vercel.
+Run the development server on loopback, sign in as the installation owner, and choose **Dev tools** in the studio navigation (`/admin/dev`). Enter `PORTFOLIO_ADMIN_TOKEN` before an action. These tools reject missing origins, non-owner accounts, and non-local requests, and are unavailable in production or on Vercel.
 
 - **Open showcase profile:** opens a separate fictional Alex Morgan account with a complete profile, education, experience, software, and three illustrated projects with photo captions. It does not overwrite your own account and never loads automatically.
 - **Reset all accounts and projects:** type `RESET ALL` to clear every local account, profile, project, and setup record, including the original portfolio. All sessions become invalid. Uploaded image files are retained. The tool creates a data backup under `.local-backups/` first.

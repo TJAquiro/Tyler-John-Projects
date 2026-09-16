@@ -2,19 +2,19 @@
 import { pipeline } from "node:stream/promises";
 import { draftFailure, publishingDB, publishingBucket, publishUser, PublishError, readLimitedJSON } from "@/lib/firebase-server";
 import { MAX_IMAGE_BYTES, IMAGE_CHUNK_BYTES } from "@/lib/portfolio-snapshot";
-import { finishImage, imageMime, limitedBytes, reserveImage, uploadId } from "@/lib/publishing-images";
+import { finishImage, imageMime, limitedBytes, releaseImageReservation, reserveImage, uploadId, withUploadAdmission } from "@/lib/publishing-images";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 export async function POST(request: Request) {
   try {
-    const user = await publishUser(request, false), body = await readLimitedJSON(request, 1000) as { size: number };
+    const user = await publishUser(request), body = await readLimitedJSON(request, 1000) as { size: number };
     if (!Number.isInteger(body?.size) || body.size < 1 || body.size > MAX_IMAGE_BYTES) throw new PublishError("Choose an image between 1 byte and 500 MB.", 413);
     const id = uploadId(); await reserveImage(user.uid, id, body.size, true, true);
     return Response.json({ id });
   } catch (error) { return draftFailure(error); }
 }
 async function session(request: Request) {
-  const user = await publishUser(request, false), params = new URL(request.url).searchParams, id = params.get("id") || "";
+  const user = await publishUser(request), params = new URL(request.url).searchParams, id = params.get("id") || "";
   if (!/^[a-f0-9]{64}$/.test(id)) throw new PublishError("Invalid upload.");
   const db = publishingDB(), owner = db.collection("publishers").doc(user.uid), ref = owner.collection("draftAssets").doc(id);
   const size = await db.runTransaction(async tx => {
@@ -33,11 +33,14 @@ export async function PUT(request: Request) {
     upload = await session(request);
     const indexText = upload.params.get("part") || "", index = Number(indexText);
     if (!/^\d+$/.test(indexText) || !Number.isInteger(index) || index < 0 || index >= Math.ceil(upload.size / IMAGE_CHUNK_BYTES)) throw new PublishError("Invalid image chunk.");
-    const expected = Math.min(IMAGE_CHUNK_BYTES, upload.size - index * IMAGE_CHUNK_BYTES), data = await limitedBytes(request, expected);
-    if (data.length !== expected) throw new PublishError("The image chunk is incomplete. Retry publishing.");
-    if (index === 0 && !imageMime(data)) throw new PublishError("Choose a PNG, JPG, or WebP image.");
-    await publishingBucket().file(upload.prefix + index).save(data, { resumable: false });
-    return Response.json({ uploaded: index });
+    const expected = Math.min(IMAGE_CHUNK_BYTES, upload.size - index * IMAGE_CHUNK_BYTES);
+    return await withUploadAdmission(upload.uid, expected, async () => {
+      const data = await limitedBytes(request, expected);
+      if (data.length !== expected) throw new PublishError("The image chunk is incomplete. Retry publishing.");
+      if (index === 0 && !imageMime(data)) throw new PublishError("Choose a PNG, JPG, or WebP image.");
+      await publishingBucket().file(upload!.prefix + index).save(data, { resumable: false });
+      return Response.json({ uploaded: index });
+    });
   } catch (error) { return draftFailure(error); }
   finally { if (upload) await upload.ref.update({ writingUntil: 0 }); }
 }
@@ -69,8 +72,7 @@ export async function DELETE(request: Request) {
     upload = await session(request);
     await publishingBucket().deleteFiles({ prefix: upload.prefix });
     await publishingBucket().file(`portfolios/${upload.uid}/draft/${upload.id}`).delete({ ignoreNotFound: true });
-    const db = publishingDB(), owner = upload.ref.parent.parent!;
-    await db.runTransaction(async tx => { const account = await tx.get(owner); tx.update(owner, { storageBytes: Math.max(0, (account.data()?.storageBytes || 0) - upload!.size) }); tx.delete(upload!.ref); });
+    await releaseImageReservation(upload.uid, upload.id, true);
     upload = undefined;
     return Response.json({ cancelled: true });
   } catch (error) { return draftFailure(error); }

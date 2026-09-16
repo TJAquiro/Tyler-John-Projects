@@ -14,11 +14,16 @@ test.beforeAll(async ({ request }) => {
 });
 async function register(page: Page, suffix: string) {
   await page.goto("/admin/register");
+  if (suffix === "new-account") for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 960 });
+    await page.screenshot({ path: `.qa/screenshots/security-register-${width}.png`, fullPage: true, animations: "disabled" });
+  }
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Test Designer");
   await page.getByRole("textbox", { name: "Email address", exact: true }).fill(suffix + "@example.com");
   await page.getByRole("textbox", { name: "Portfolio address", exact: true }).fill(suffix);
   await page.getByLabel("Password", { exact: true }).fill("my-strong-password");
   await page.getByLabel("Confirm password", { exact: true }).fill("my-strong-password");
+  await page.getByLabel("Local admin token").fill("qa-local-admin-token");
   await page.getByRole("button", { name: "Create account & start setup" }).click();
   await expect(page).toHaveURL(/\/admin\/onboarding/);
 }
@@ -35,12 +40,15 @@ test("accounts start empty, onboard immediately, sign in, and isolate content", 
   await page.getByRole("button", { name: "Sign in" }).click(); await expect(page).toHaveURL(/onboarding/);
   const other = await browser.newContext({ baseURL: "http://127.0.0.1:3101" });
   try {
-    const signup = await other.request.post("/api/auth/register", { data: { name: "Other Account", email: "other-account@example.com", handle: "other-account", password: "another-strong-password" } });
+    const denied = await other.request.post("/api/auth/register", { headers: { Origin: "http://127.0.0.1:3101" }, data: { name: "Denied", email: "denied@example.com", handle: "denied-account", password: "another-strong-password", importExisting: true } });
+    expect(denied.status()).toBe(403);
+    const signup = await other.request.post("/api/auth/register", { headers: { Origin: "http://127.0.0.1:3101" }, data: { name: "Other Account", email: "other-account@example.com", handle: "other-account", password: "another-strong-password", adminToken: "qa-local-admin-token" } });
     expect(signup.ok()).toBe(true);
     const otherData = await (await other.request.get("/api/content")).json();
     expect(otherData.profile.name).toBe("Other Account"); expect(otherData.projects).toEqual([]);
     expect((await other.request.delete("/api/content", { data: { id: "does-not-belong-to-me" } })).status()).toBe(404);
-    const duplicate = await other.request.post("/api/auth/register", { data: { name: "Duplicate", email: "new-account@example.com", handle: "duplicate", password: "another-strong-password" } });
+    expect((await other.request.post("/api/dev", { headers: { Origin: "http://127.0.0.1:3101" }, data: { action: "reset", confirmation: "RESET ALL", adminToken: "qa-local-admin-token" } })).status()).toBe(403);
+    const duplicate = await other.request.post("/api/auth/register", { headers: { Origin: "http://127.0.0.1:3101" }, data: { name: "Duplicate", email: "new-account@example.com", handle: "duplicate", password: "another-strong-password", adminToken: "qa-local-admin-token" } });
     expect(duplicate.status()).toBe(400);
   } finally { await other.close(); }
   expect((await (await page.request.get("/api/content")).json()).profile.name).toBe("Test Designer");
@@ -97,6 +105,7 @@ test("dev showcase is opt-in and reset clears accounts, projects, and sessions",
   await register(page, "dev-owner");
   const originalCookie = await page.context().cookies();
   await page.getByRole("link", { name: "Dev tools", exact: true }).click();
+  await page.getByLabel("Local admin token").fill("qa-local-admin-token");
   await page.getByRole("button", { name: "Open showcase profile" }).click();
   await expect(page).toHaveURL(/dashboard/);
   const showcase = await (await page.request.get("/api/content")).json();
@@ -105,6 +114,7 @@ test("dev showcase is opt-in and reset clears accounts, projects, and sessions",
   await page.setViewportSize({ width: 1440, height: 900 }); await page.locator("img").evaluateAll(images => images.forEach(img => img.setAttribute("loading", "eager")));
   await page.screenshot({ path: ".qa/screenshots/showcase-about-desktop.png", fullPage: true, animations: "disabled" });
   await page.goto("/admin/dev");
+  await page.getByLabel("Local admin token").fill("qa-local-admin-token");
   await expect(page.getByRole("button", { name: "Reset all accounts and projects" })).toBeDisabled();
   await page.getByLabel("Type RESET ALL to confirm").fill("RESET ALL");
   await page.getByRole("button", { name: "Reset all accounts and projects" }).click();

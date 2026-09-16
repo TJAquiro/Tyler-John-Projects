@@ -7,6 +7,10 @@ export const MAX_PROJECTS = 20;
 export const MAX_IMAGE_BYTES = 500 * 1024 * 1024;
 export const IMAGE_CHUNK_BYTES = 8 * 1024 * 1024;
 export const MAX_LIBRARY_BYTES = 1024 * 1024 * 1024;
+export const MAX_SERVICE_STORAGE_BYTES = 10 * 1024 * 1024 * 1024;
+export const MAX_SERVICE_DAILY_UPLOADS = 1000;
+export const MAX_IN_FLIGHT_UPLOAD_BYTES = 32 * 1024 * 1024;
+export const MAX_IN_FLIGHT_UPLOAD_REQUESTS = 4;
 // Includes base64 overhead for a 500 MB image and portfolio metadata.
 export const MAX_DRAFT_BYTES = 768 * 1024 * 1024;
 export function imageReferences(snapshot: Snapshot): string[] {

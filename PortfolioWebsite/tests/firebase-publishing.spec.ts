@@ -1,4 +1,4 @@
-import type { Snapshot } from "../lib/portfolio-snapshot";
+import { MAX_SERVICE_STORAGE_BYTES, type Snapshot } from "../lib/portfolio-snapshot";
 import type { Page } from "@playwright/test";
 import http from "node:http";
 import { spawn } from "node:child_process";
@@ -479,6 +479,7 @@ test("chunked images cross the old limit, preserve bytes, and enforce ownership 
   expect((await request.delete(`/api/publish/image/chunks?id=${(await boundary.json()).id}`,{headers:owner.headers})).status()).toBe(200);
   expect((await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:cap+1}})).status()).toBe(413);
   const image=Buffer.alloc(9*1024*1024,73); Buffer.from([137,80,78,71,13,10,26,10]).copy(image);
+  expect((await request.post("/api/publish/image", { headers: owner.headers, data: image })).status()).toBe(413);
   const started=await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:image.length}}); const {id}=await started.json(); const path=`/api/publish/image/chunks?id=${id}`;
   expect((await request.put(path+"&part=0",{headers:other.headers,data:image.subarray(0,8*1024*1024)})).status()).toBe(409);
   expect((await request.put(path+"&part=0",{headers:owner.headers,data:image.subarray(0,8*1024*1024)})).status()).toBe(200);
@@ -490,6 +491,22 @@ test("chunked images cross the old limit, preserve bytes, and enforce ownership 
   expect((await publishRequest(request,{headers:owner.headers,data:{handle:"large-image",snapshot,revision:0,assets:{"/images/large.png":id}}})).status()).toBe(200);
   const unverified=await account(request,"delete-unverified@example.com",false);
   expect((await request.delete("/api/account",{headers:{...unverified.headers,"X-Confirm-Delete":"delete-account"}})).status()).toBe(200);
+});
+
+test("global image quotas and admission leases bound cross-account resource use", async ({ request }) => {
+  const owner = await account(request, "global-limits@example.com");
+  const quota = db.collection("serviceState").doc("imageQuota");
+  await quota.set({ storageBytes: MAX_SERVICE_STORAGE_BYTES - 4, uploadDay: new Date().toISOString().slice(0, 10), uploads: 0 });
+  expect((await request.post("/api/publish/image/chunks", { headers: owner.headers, data: { size: 5 } })).status()).toBe(413);
+  const future = Date.now() + 60000;
+  await db.collection("serviceState").doc("uploadAdmission").set({ leases: {
+    a: { uid: "a", bytes: 1, expiresAt: future }, b: { uid: "b", bytes: 1, expiresAt: future },
+    c: { uid: "c", bytes: 1, expiresAt: future }, d: { uid: "d", bytes: 1, expiresAt: future }
+  } });
+  expect((await request.post("/api/publish/image", { headers: owner.headers, data: tinyPng })).status()).toBe(429);
+  await db.collection("serviceState").doc("uploadAdmission").set({ leases: { stale: { uid: "x", bytes: 8 * 1024 * 1024, expiresAt: Date.now() - 1 } } });
+  await quota.set({ storageBytes: 0, uploadDay: new Date().toISOString().slice(0, 10), uploads: 0 });
+  expect((await request.post("/api/publish/image", { headers: owner.headers, data: tinyPng })).status()).toBe(200);
 });
 
 test("an upload started before deletion cannot recreate the account's image library", async ({ request }) => {
@@ -518,9 +535,12 @@ async function loginStudio(page: import("@playwright/test").Page, email: string)
   await expect(page).toHaveURL(/\/studio$/);
 }
 
-test("unverified account drafts save incomplete content and private images with revisions and deletion protection", async ({ request }) => {
-  const owner = await account(request, "draft-owner@example.com", false), other = await account(request, "draft-other@example.com");
+test("drafts save incomplete content while cloud images require verification and remain private", async ({ request }) => {
+  const owner = await account(request, "draft-owner@example.com"), other = await account(request, "draft-other@example.com"), unverified = await account(request, "draft-unverified@example.com", false);
   expect((await request.put("/api/draft", { data: draftBody() })).status()).toBe(401);
+  expect((await request.put("/api/draft", { headers: unverified.headers, data: draftBody("Unverified text") })).status()).toBe(200);
+  expect((await request.post("/api/draft/image", { headers: unverified.headers, data: tinyPng })).status()).toBe(403);
+  expect((await request.post("/api/draft/image/chunks", { headers: unverified.headers, data: { size: tinyPng.length } })).status()).toBe(403);
   const image = await request.post("/api/draft/image", { headers: owner.headers, data: tinyPng }); expect(image.status()).toBe(200);
   const { id } = await image.json();
   expect((await request.get(`/api/draft/image?id=${id}`)).status()).toBe(401);
@@ -577,7 +597,7 @@ test("restore repairs missing and foreign mappings using UID and rejects ambiguo
 });
 
 test("account autosave resumes unpublished work and images on a new browser and after local storage is cleared", async ({ page, request, browser }) => {
-  const owner = await account(request, "autosave@example.com", false);
+  const owner = await account(request, "autosave@example.com");
   await loginStudio(page, "autosave@example.com");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Returning Designer");
   await page.getByRole("button", { name: "08 Projects", exact: true }).click();
