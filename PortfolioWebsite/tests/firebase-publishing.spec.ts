@@ -1,4 +1,4 @@
-import { MAX_SERVICE_STORAGE_BYTES, type Snapshot } from "../lib/portfolio-snapshot";
+import { IMAGE_CHUNK_BYTES, MAX_SERVICE_STORAGE_BYTES, type Snapshot } from "../lib/portfolio-snapshot";
 import type { Page } from "@playwright/test";
 import http from "node:http";
 import { spawn } from "node:child_process";
@@ -98,6 +98,20 @@ test("URL races and deletion retries never take another account's reused name", 
   expect((await request.get("/api/publish", { headers: recreated.headers })).status()).toBe(200);
 });
 
+test("simultaneous first publishes keep one website per account", async ({ request }) => {
+  const owner = await account(request, "same-owner-race@example.com");
+  const uploaded = await request.post("/api/publish/image", { headers: owner.headers, data: fixturePNG });
+  expect(uploaded.status()).toBe(200);
+  const id = (await uploaded.json()).id as string, src = "/images/required-project.png";
+  const data = { snapshot: { ...blank("One account"), projects: [fixtureProject(src)] }, assets: { [src]: id }, revision: 0 };
+  const attempts = await Promise.all([
+    request.post("/api/publish", { headers: owner.headers, data: { ...data, handle: "same-owner-first" } }),
+    request.post("/api/publish", { headers: owner.headers, data: { ...data, handle: "same-owner-second" } })
+  ]);
+  expect(attempts.map(response => response.status()).sort()).toEqual([200, 409]);
+  expect((await db.collection("publishedPortfolios").where("uid", "==", owner.uid).get()).size).toBe(1);
+});
+
 test("partial account deletion cleanup is UID-scoped after another account claims its name", async ({ request }) => {
   const owner = await account(request, "partial-delete@example.com"), other = await account(request, "claim-partial@example.com");
   const data = { handle: "partial-reuse", snapshot: blank("Original"), assets: {}, revision: 0 };
@@ -195,7 +209,8 @@ test("draft indicators, actionable publishing errors, automatic project commit, 
   expect(live.profile.biography).toBe("I design clear, useful experiences."); expect(live.feedback).toBeUndefined();
   await page.reload(); await nav.getByRole("button", { name: /Biography/ }).click();
   await expect(page.getByLabel("Biography", { exact: true })).toHaveValue("Private biography stays unpublished.");
-  const publicPage = await browser.newPage();
+  const publicContext = await browser.newContext();
+  const publicPage = await publicContext.newPage();
   await publicPage.goto("http://127.0.0.1:3102/p/feedback-renamed/projects/project-under-construction");
   for (const width of [375, 768, 1440]) {
     await publicPage.setViewportSize({ width, height: 960 });
@@ -205,7 +220,7 @@ test("draft indicators, actionable publishing errors, automatic project commit, 
     expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await publicPage.screenshot({ path: `.qa/screenshots/url-draft-case-study-${width}.png`, fullPage: true });
   }
-  await publicPage.close();
+  await publicContext.close();
 });
 async function account(request: APIRequestContext, email: string, verified = true) {
   const user = await auth.createUser({ email, password: "qa-password-only", emailVerified: verified });
@@ -238,6 +253,17 @@ test("publishing enforces identity, verification, address ownership, revision ch
   snapshot.profile.headshotImage = "/images/stolen.webp";
   expect((await publishRequest(request, { headers: loser.headers, data: { ...body, handle: "image-theft", snapshot, assets: { "/images/stolen.webp": "a".repeat(64) } } })).status()).toBe(400);
   expect((await request.post("/api/publish/image", { headers: first.headers, data: "not-an-image" })).status()).toBe(400);
+  const oversizedDirect = Buffer.alloc(IMAGE_CHUNK_BYTES + 1); fixturePNG.copy(oversizedDirect);
+  const oversizedResponse = await request.post("/api/publish/image", { headers: first.headers, data: oversizedDirect });
+  expect(oversizedResponse.status()).toBe(413);
+  expect((await oversizedResponse.json()).error).toContain("chunked upload");
+  const streamedStatus = await new Promise<number>((resolve, reject) => {
+    const req = http.request("http://127.0.0.1:3102/api/publish/image", { method: "POST", headers: { ...first.headers, "Content-Type": "image/png", "Transfer-Encoding": "chunked" } }, response => { response.resume(); response.on("end", () => resolve(response.statusCode!)); });
+    req.on("error", reject); req.write(fixturePNG);
+    for (let index = 0; index < 9; index++) req.write(Buffer.alloc(1024 * 1024));
+    req.end();
+  });
+  expect(streamedStatus).toBe(413);
   expect((await request.post("/api/publish/image/chunks", { headers: first.headers, data: { size: 500 * 1024 * 1024 + 1 } })).status()).toBe(413);
   expect((await request.post("/api/auth/register", { data: { name: "No hosted files", email: "legacy@example.com", password: "qa-password-only", handle: "legacy" } })).status()).toBe(403);
 });
@@ -476,13 +502,18 @@ test("chunked images cross the old limit, preserve bytes, and enforce ownership 
   const owner=await account(request,"large-image@example.com"), other=await account(request,"other-image@example.com");
   const cap=500*1024*1024;
   const boundary=await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:cap}}); expect(boundary.status()).toBe(200);
-  expect((await request.delete(`/api/publish/image/chunks?id=${(await boundary.json()).id}`,{headers:owner.headers})).status()).toBe(200);
+  const abandonedId=(await boundary.json()).id as string;
+  await db.collection("publishers").doc(owner.uid).collection("assets").doc(abandonedId).update({expiresAt:0});
+  const replacement=await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:cap}}); expect(replacement.status()).toBe(200);
+  expect((await db.collection("publishers").doc(owner.uid).collection("assets").doc(abandonedId).get()).exists).toBe(false);
+  expect((await request.delete(`/api/publish/image/chunks?id=${(await replacement.json()).id}`,{headers:owner.headers})).status()).toBe(200);
   expect((await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:cap+1}})).status()).toBe(413);
   const image=Buffer.alloc(9*1024*1024,73); Buffer.from([137,80,78,71,13,10,26,10]).copy(image);
   expect((await request.post("/api/publish/image", { headers: owner.headers, data: image })).status()).toBe(413);
   const started=await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:image.length}}); const {id}=await started.json(); const path=`/api/publish/image/chunks?id=${id}`;
   expect((await request.put(path+"&part=0",{headers:other.headers,data:image.subarray(0,8*1024*1024)})).status()).toBe(409);
   expect((await request.put(path+"&part=0",{headers:owner.headers,data:image.subarray(0,8*1024*1024)})).status()).toBe(200);
+  expect((await request.put(path+"&part=0",{headers:owner.headers,data:image.subarray(0,8*1024*1024)})).status()).toBe(409);
   expect((await request.put(path+"&part=1",{headers:owner.headers,data:image.subarray(8*1024*1024)})).status()).toBe(200);
   const completed=await request.patch(path,{headers:owner.headers}); expect(await completed.text()).toContain(id); expect(completed.status()).toBe(200);
   const asset=(await db.collection("publishers").doc(owner.uid).collection("assets").doc(id).get()).data()!;
@@ -686,7 +717,12 @@ test("legacy device edits migrate and image failure leaves restore untouched", a
   await page.goto("/studio");
   await page.evaluate(async uid => {
     const value = { format:"portfolio-draft", version:1, profile:{name:"Legacy device work",biography:"Unpublished notes",headshotImage:"",education:[],tools:[],jobs:[]}, projects:[], images:{}, section:0, projectDraft:null, publication:null, ownerUid:uid, updatedAt:new Date().toISOString() };
-    await new Promise<void>((resolve,reject) => { const r=indexedDB.open("portfolio-browser-studio"); r.onsuccess=()=>{const d=r.result,t=d.transaction("drafts","readwrite");t.objectStore("drafts").put(value,uid);t.oncomplete=()=>{d.close();resolve();};t.onerror=()=>reject(t.error);}; });
+    await new Promise<void>((resolve,reject) => {
+      const r=indexedDB.open("portfolio-browser-studio",2);
+      r.onupgradeneeded=()=>{for(const name of ["drafts","deletedAccounts"])if(!r.result.objectStoreNames.contains(name))r.result.createObjectStore(name);};
+      r.onerror=()=>reject(r.error);
+      r.onsuccess=()=>{const d=r.result;try{const t=d.transaction("drafts","readwrite");t.objectStore("drafts").put(value,uid);t.oncomplete=()=>{d.close();resolve();};t.onerror=t.onabort=()=>{d.close();reject(t.error);};}catch(error){d.close();reject(error);}};
+    });
   }, owner.uid);
   await loginStudio(page, "migration@example.com");
   await expect(page.getByRole("textbox", { name:"Your name",exact:true })).toHaveValue("Legacy device work");

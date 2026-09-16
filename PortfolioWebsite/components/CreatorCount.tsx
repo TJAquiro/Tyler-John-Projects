@@ -5,7 +5,9 @@ export function CreatorCount() {
   useEffect(() => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    void fetch("/api/public-stats", { signal: controller.signal }).then(async response => {
+    // The route keeps the database result briefly cached, but navigation must not
+    // reuse a browser response from before this visitor published a portfolio.
+    void fetch("/api/public-stats", { signal: controller.signal, cache: "no-store" }).then(async response => {
       if (!response.ok) throw new Error("Unavailable");
       const data = await response.json();
       setCount(Number.isSafeInteger(data.publishedCreators) && data.publishedCreators >= 0 ? data.publishedCreators : null);

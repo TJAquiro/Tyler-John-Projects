@@ -1,9 +1,10 @@
 import { getAuth } from "firebase-admin/auth";
 import { randomBytes, randomUUID } from "node:crypto";
 import { firebaseAdmin, publishingDB, publishingBucket, PublishError } from "./firebase-server";
-import { MAX_IN_FLIGHT_UPLOAD_BYTES, MAX_IN_FLIGHT_UPLOAD_REQUESTS, MAX_LIBRARY_BYTES, MAX_SERVICE_DAILY_UPLOADS, MAX_SERVICE_STORAGE_BYTES } from "./portfolio-snapshot";
+import { IMAGE_CHUNK_BYTES, MAX_IN_FLIGHT_UPLOAD_BYTES, MAX_IN_FLIGHT_UPLOAD_REQUESTS, MAX_LIBRARY_BYTES, MAX_SERVICE_DAILY_UPLOADS, MAX_SERVICE_STORAGE_BYTES } from "./portfolio-snapshot";
 
 const LEASE_MS = 6 * 60 * 1000;
+export const UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
 type UploadLease = { uid: string; bytes: number; expiresAt: number };
 
 export async function withUploadAdmission<T>(uid: string, requestedBytes: number, task: () => Promise<T>) {
@@ -30,7 +31,28 @@ export function imageMime(data: Buffer) {
   return data.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) ? "image/png" : data[0] === 255 && data[1] === 216 && data[2] === 255 ? "image/jpeg" : data.toString("ascii", 0, 4) === "RIFF" && data.toString("ascii", 8, 12) === "WEBP" ? "image/webp" : null;
 }
 export const uploadId = () => randomBytes(32).toString("hex");
+
+async function reapExpiredUploads(uid: string, privateDraft: boolean) {
+  const db = publishingDB(), owner = db.collection("publishers").doc(uid);
+  const collection = owner.collection(privateDraft ? "draftAssets" : "assets");
+  const expired = await collection.where("expiresAt", "<=", Date.now()).limit(20).get();
+  for (const candidate of expired.docs) {
+    const claimed = await db.runTransaction(async tx => {
+      const current = await tx.get(candidate.ref), data = current.data();
+      if (!current.exists || data?.ready || (data?.expiresAt ?? Infinity) > Date.now() || (data?.writingUntil || 0) > Date.now()) return false;
+      tx.update(candidate.ref, { expiring: true });
+      return true;
+    });
+    if (!claimed) continue;
+    const root = `portfolios/${uid}/${privateDraft ? "draft/" : ""}`;
+    await publishingBucket().deleteFiles({ prefix: `${root}chunks/${candidate.id}/` });
+    await publishingBucket().file(`${root}${candidate.id}`).delete({ ignoreNotFound: true });
+    await releaseImageReservation(uid, candidate.id, privateDraft);
+  }
+}
+
 export async function reserveImage(uid: string, id: string, size: number, chunked = false, privateDraft = false) {
+  await reapExpiredUploads(uid, privateDraft);
   const db = publishingDB(), owner = db.collection("publishers").doc(uid), asset = owner.collection(privateDraft ? "draftAssets" : "assets").doc(id), service = db.collection("serviceState").doc("imageQuota");
   return db.runTransaction(async tx => {
     const [current, account, global] = await Promise.all([tx.get(asset), tx.get(owner), tx.get(service)]);
@@ -50,7 +72,7 @@ export async function reserveImage(uid: string, id: string, size: number, chunke
     if (globalStorageBytes > MAX_SERVICE_STORAGE_BYTES) throw new PublishError("The service image capacity has been reached. Contact the site owner.", 413);
     tx.set(owner, { storageBytes, uploadDay: day, uploads: uploads + 1 }, { merge: true });
     tx.set(service, { storageBytes: globalStorageBytes, uploadDay: day, uploads: globalUploads + 1 }, { merge: true });
-    tx.set(asset, { downloadToken: current.data()?.downloadToken || randomUUID(), size, ready: false, chunked, writingUntil: chunked ? 0 : Date.now() + 360000, createdAt: new Date().toISOString() }, { merge: true });
+    tx.set(asset, { downloadToken: current.data()?.downloadToken || randomUUID(), size, ready: false, chunked, writingUntil: chunked ? 0 : Date.now() + 360000, expiresAt: Date.now() + UPLOAD_TTL_MS, ...(chunked ? { parts: {} } : {}), createdAt: new Date().toISOString() }, { merge: true });
     return false;
   });
 }
@@ -79,9 +101,10 @@ export async function finishImage(uid: string, id: string, size: number, mime: s
   });
 }
 export async function limitedBytes(request: Request, limit: number) {
-  if (Number(request.headers.get("content-length")) > limit) throw new PublishError("Each image must be no larger than 500 MB; upload large images in chunks.", 413);
+  const tooLarge = limit <= IMAGE_CHUNK_BYTES ? "This image is too large for a direct upload. Use the chunked upload for images above 8 MiB." : "The image upload exceeds its size limit.";
+  if (Number(request.headers.get("content-length")) > limit) throw new PublishError(tooLarge, 413);
   if (!request.body) throw new PublishError("Choose an image.");
   const reader = request.body.getReader(), chunks: Uint8Array[] = []; let size = 0;
-  while (true) { const part = await reader.read(); if (part.done) break; size += part.value.byteLength; if (size > limit) { await reader.cancel(); throw new PublishError("The image upload exceeds its size limit.", 413); } chunks.push(part.value); }
+  while (true) { const part = await reader.read(); if (part.done) break; size += part.value.byteLength; if (size > limit) { await reader.cancel(); throw new PublishError(tooLarge, 413); } chunks.push(part.value); }
   return Buffer.concat(chunks);
 }

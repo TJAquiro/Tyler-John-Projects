@@ -2,7 +2,7 @@
 import { pipeline } from "node:stream/promises";
 import { publishFailure, publishingDB, publishingBucket, publishUser, PublishError, readLimitedJSON } from "@/lib/firebase-server";
 import { MAX_IMAGE_BYTES, IMAGE_CHUNK_BYTES } from "@/lib/portfolio-snapshot";
-import { finishImage, imageMime, limitedBytes, releaseImageReservation, reserveImage, uploadId, withUploadAdmission } from "@/lib/publishing-images";
+import { finishImage, imageMime, limitedBytes, releaseImageReservation, reserveImage, uploadId, withUploadAdmission, UPLOAD_TTL_MS } from "@/lib/publishing-images";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 export async function POST(request: Request) {
@@ -13,32 +13,39 @@ export async function POST(request: Request) {
     return Response.json({ id });
   } catch (error) { return publishFailure(error); }
 }
-async function session(request: Request) {
+async function session(request: Request, options: { part?: number; allowExpired?: boolean } = {}) {
   const user = await publishUser(request), params = new URL(request.url).searchParams, id = params.get("id") || "";
   if (!/^[a-f0-9]{64}$/.test(id)) throw new PublishError("Invalid upload.");
   const db = publishingDB(), owner = db.collection("publishers").doc(user.uid), ref = owner.collection("assets").doc(id);
   const size = await db.runTransaction(async tx => {
     const [account, asset] = await Promise.all([tx.get(owner), tx.get(ref)]);
     if (!account.exists || account.data()?.deleting) throw new PublishError("Account deletion is in progress.", 409);
-    if (!asset.exists || !asset.data()?.chunked || asset.data()?.ready) throw new PublishError("This upload is no longer available.", 409);
-    if (asset.data()!.writingUntil > Date.now()) throw new PublishError("An upload request is still running. Retry shortly.", 409);
-    tx.update(ref, { writingUntil: Date.now() + 360000 });
-    return asset.data()!.size as number;
+    const data = asset.data();
+    if (!asset.exists || !data?.chunked || data.ready || data.expiring) throw new PublishError("This upload is no longer available.", 409);
+    if (!options.allowExpired && data.expiresAt <= Date.now()) throw new PublishError("This upload expired. Start the image upload again.", 409);
+    if (data.writingUntil > Date.now()) throw new PublishError("An upload request is still running. Retry shortly.", 409);
+    const size = data.size as number;
+    if (options.part !== undefined && (options.part < 0 || options.part >= Math.ceil(size / IMAGE_CHUNK_BYTES))) throw new PublishError("Invalid image chunk.");
+    if (options.part !== undefined && data.parts?.[String(options.part)]) throw new PublishError("This image chunk was already uploaded.", 409);
+    tx.update(ref, { writingUntil: Date.now() + 360000, expiresAt: Date.now() + UPLOAD_TTL_MS });
+    return size;
   });
   return { uid: user.uid, id, size, ref, prefix: `portfolios/${user.uid}/chunks/${id}/`, params };
 }
 export async function PUT(request: Request) {
   let upload: Awaited<ReturnType<typeof session>> | undefined;
   try {
-    upload = await session(request);
-    const indexText = upload.params.get("part") || "", index = Number(indexText);
-    if (!/^\d+$/.test(indexText) || !Number.isInteger(index) || index < 0 || index >= Math.ceil(upload.size / IMAGE_CHUNK_BYTES)) throw new PublishError("Invalid image chunk.");
+    const indexText = new URL(request.url).searchParams.get("part") || "", index = Number(indexText);
+    if (!/^\d+$/.test(indexText) || !Number.isInteger(index)) throw new PublishError("Invalid image chunk.");
+    upload = await session(request, { part: index });
     const expected = Math.min(IMAGE_CHUNK_BYTES, upload.size - index * IMAGE_CHUNK_BYTES);
     return await withUploadAdmission(upload.uid, expected, async () => {
       const data = await limitedBytes(request, expected);
       if (data.length !== expected) throw new PublishError("The image chunk is incomplete. Retry publishing.");
       if (index === 0 && !imageMime(data)) throw new PublishError("Choose a PNG, JPG, or WebP image.");
       await publishingBucket().file(upload!.prefix + index).save(data, { resumable: false });
+      await upload!.ref.update({ [`parts.${index}`]: true, writingUntil: 0, expiresAt: Date.now() + UPLOAD_TTL_MS });
+      upload = undefined;
       return Response.json({ uploaded: index });
     });
   } catch (error) { return publishFailure(error); }
@@ -50,6 +57,8 @@ export async function PATCH(request: Request) {
     upload = await session(request);
     const bucket = publishingBucket(), { uid, id, size, prefix } = upload;
     const count = Math.ceil(size / IMAGE_CHUNK_BYTES);
+    const record = await upload.ref.get(), uploadedParts = record.data()?.parts || {};
+    if (Array.from({ length: count }, (_, index) => uploadedParts[String(index)] === true).some(complete => !complete)) throw new PublishError("An image chunk is missing. Retry publishing.");
     for (let i = 0; i < count; i++) {
       const [metadata] = await bucket.file(prefix + i).getMetadata();
       if (Number(metadata.size) !== Math.min(IMAGE_CHUNK_BYTES, size - i * IMAGE_CHUNK_BYTES)) throw new PublishError("An image chunk is missing. Retry publishing.");
@@ -69,7 +78,7 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   let upload: Awaited<ReturnType<typeof session>> | undefined;
   try {
-    upload = await session(request);
+    upload = await session(request, { allowExpired: true });
     await publishingBucket().deleteFiles({ prefix: upload.prefix });
     await publishingBucket().file(`portfolios/${upload.uid}/${upload.id}`).delete({ ignoreNotFound: true });
     await releaseImageReservation(upload.uid, upload.id);

@@ -1,3 +1,37 @@
+# Security overhaul recovery and merge — September 16, 2026
+
+The interrupted security work was recovered, reconciled with remote commit `7d39345` (`Security overhaul`), and verified against isolated local fixtures and Firebase emulators. The user explicitly stopped the iteration loop after the second independent security critic, so no third critic or implementation iteration was run.
+
+| Security criterion | Iteration 1 | Final critic / 10 |
+| --- | ---: | ---: |
+| Authentication and authorization | 9.2 | 9.3 |
+| Tenant and ownership isolation | 9.3 | 9.5 |
+| Input and upload safety | 9.0 | 9.1 |
+| Concurrency and atomicity | 8.9 | 9.1 |
+| Recovery and resource lifecycle | 7.4 | 7.4 |
+| Verification coverage | 7.8 | 8.5 |
+| **Overall arithmetic mean** | **8.6** | **8.8** |
+
+Resolved findings include bounded direct-image streaming, same-account first-publish race coverage, expiring and reclaimed abandoned multipart reservations, rejection of replayed chunk parts, global and per-account quota reclamation, bounded active-write checks during account deletion, verified-email enforcement for cloud images, local-admin-token protection for account creation and installation-wide dev operations, loopback-only local mutation checks, and deterministic owner-role coverage in the browser suite. The merge-specific origin regression was corrected by comparing the browser Origin with the externally visible Host/protocol instead of Next.js's internal request URL.
+
+Verification evidence:
+
+- ESLint and TypeScript completed successfully after the merge.
+- The isolated Next.js production build completed successfully as part of the browser/Firebase harness startup.
+- The full browser run reported 22 passing scenarios and exposed four merge regressions. After correction, the five affected account/media and post-launch scenarios reported success; the dev-owner scenario was also rerun independently and reported success.
+- Six targeted Firebase security scenarios reported success: simultaneous first publish, identity/verification/ownership/revision enforcement, complete account deletion and isolation, chunk ownership and the 500 MiB boundary, global quota/admission leases, and private incomplete-draft behavior.
+- The production dependency audit reported zero vulnerabilities.
+- Registration screenshots were inspected at 375, 768, and 1440 pixels: `.qa/screenshots/security-register-{375,768,1440}.png`. The layout is readable and contained at all three widths. The small circular Next.js development indicator overlaps the form label at 375 pixels; it is development-only and is not part of production output.
+- Existing URL/draft screenshots at 375, 768, and 1440 pixels were also inspected. No owner content or credential files were intentionally modified.
+
+Remaining limitations, with no further iteration:
+
+- On this Windows host, Playwright reports every selected scenario result but remains open during post-run server/emulator teardown, so the completed runs were interrupted after their final reported test instead of producing a normal exit footer. This is a test-harness lifecycle limitation; the individual scenario results above are accurate, but a single clean `npm run check` exit was not obtained after the merge.
+- The final critic's main residual concern was lifecycle recovery under abandoned uploads and large account deletion workloads. Expiry/reaping and bounded active-write queries were implemented after that review, but they were not submitted to a third critic because the user explicitly stopped the loop.
+- Production Firebase IAM, email delivery, live-account mutation, and deployment were not exercised. All mutation tests used disposable fixtures/emulators.
+
+---
+
 # Current review — Firebase post-launch repairs, September 13, 2026
 
 **Repairs are local, not deployed.** The owner declined Firebase login on this computer and asked to continue the remaining tests. No production account, email, publication, or restore mutations were performed.

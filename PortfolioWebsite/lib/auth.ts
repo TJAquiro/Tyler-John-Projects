@@ -36,7 +36,11 @@ export function localMutationOrigin(request: Request) {
   if (!origin) return false;
   try {
     const source = new URL(origin), target = new URL(request.url);
-    return source.origin === target.origin && ["localhost", "127.0.0.1", "[::1]"].includes(source.hostname);
+    const requestHost = request.headers.get("host") || target.host;
+    const requestProtocol = request.headers.get("x-forwarded-proto") || target.protocol.replace(":", "");
+    return source.host === requestHost
+      && source.protocol === `${requestProtocol}:`
+      && ["localhost", "127.0.0.1", "[::1]"].includes(source.hostname);
   } catch { return false; }
 }
 export function localDevelopment(request?: Request) {

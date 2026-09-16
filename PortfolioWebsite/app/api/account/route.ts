@@ -28,12 +28,12 @@ export async function DELETE(request: Request) {
     // Keep a deletion marker until auth removal succeeds, so partial cleanup can be retried
     // and concurrent publish/upload transactions cannot recreate the website.
     await db.runTransaction(async tx => {
-      const [account, assets, privateAssets, sites, global] = await Promise.all([
-        tx.get(publisher), tx.get(publisher.collection("assets")), tx.get(publisher.collection("draftAssets")),
+      const [account, activeAsset, activePrivateAsset, sites, global] = await Promise.all([
+        tx.get(publisher), tx.get(publisher.collection("assets").where("writingUntil", ">", Date.now()).limit(1)), tx.get(publisher.collection("draftAssets").where("writingUntil", ">", Date.now()).limit(1)),
         tx.get(db.collection("publishedPortfolios").where("uid", "==", user.uid)), tx.get(serviceQuota)
       ]);
-      if ([...assets.docs, ...privateAssets.docs].some(asset => (asset.data().writingUntil || 0) > Date.now())) throw new PublishError("An image upload is still running. Wait for it to finish, then retry deletion.", 409);
-      const released = account.data()?.quotaReleased ? 0 : [...assets.docs, ...privateAssets.docs].reduce((total, asset) => total + Number(asset.data().size || 0), 0);
+      if (!activeAsset.empty || !activePrivateAsset.empty) throw new PublishError("An image upload is still running. Wait for it to finish, then retry deletion.", 409);
+      const released = account.data()?.quotaReleased ? 0 : Number(account.data()?.storageBytes || 0);
       tx.set(publisher, { deleting: true, quotaReleased: true, handle: account.data()?.handle || null }, { merge: true });
       tx.set(serviceQuota, { storageBytes: Math.max(0, Number(global.data()?.storageBytes || 0) - released) }, { merge: true });
       sites.docs.forEach(site => tx.delete(site.ref));

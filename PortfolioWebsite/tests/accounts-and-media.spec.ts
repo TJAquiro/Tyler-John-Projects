@@ -102,7 +102,16 @@ test("software, education descriptions, exact crop, photo caption, and responsiv
   if (/^\/images\/[a-f0-9-]+\.webp$/.test(src)) fs.unlinkSync(path.join(".qa/uploads", path.basename(src)));
 });
 test("dev showcase is opt-in and reset clears accounts, projects, and sessions", async ({ page, request }) => {
-  await register(page, "dev-owner");
+  const existingAccounts = JSON.parse(fs.readFileSync(".qa/dev-accounts/accounts.json", "utf8")) as Array<{ email: string; role?: string }>;
+  if (existingAccounts.length === 0) {
+    await register(page, "dev-owner");
+  } else {
+    await page.goto("/admin/login");
+    await page.getByLabel("Email address").fill(existingAccounts.find(account => account.role === "owner")?.email || existingAccounts[0].email);
+    await page.getByLabel("Password", { exact: true }).fill("my-strong-password");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/admin\/(?:onboarding|dashboard)/);
+  }
   const originalCookie = await page.context().cookies();
   await page.getByRole("link", { name: "Dev tools", exact: true }).click();
   await page.getByLabel("Local admin token").fill("qa-local-admin-token");
