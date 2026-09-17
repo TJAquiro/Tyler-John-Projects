@@ -7,7 +7,7 @@ import { MAX_PROJECTS } from "@/lib/portfolio-snapshot";
 import { AttentionIcon, FeedbackScope } from "./DraftFeedback";
 import { ProjectFields } from "./StudioFields";
 
-export const studioSections = ["Your name", "Headshot", "Biography", "Education", "Tools", "Experience", "Homepage", "Projects", "Publish"];
+const studioSections = ["Your name", "Headshot", "Biography", "Education", "Tools", "Experience", "Homepage", "Projects", "Publish"];
 
 export function StudioHeader({ storageFailed, signedIn, cloudStatus, saved, locked, preview }: { storageFailed: boolean; signedIn: boolean; cloudStatus: string; saved: boolean; locked: boolean; preview: () => void }) {
   return <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4 md:px-10"><Link className="display text-xl font-semibold" href="/">Portfolio studio<span className="text-coral">.</span></Link><div className="flex flex-wrap items-center gap-4"><span className="text-sm text-moss" role="status">{storageFailed ? "Not saved · download a backup" : signedIn ? cloudStatus || "Saved on this device—sync pending" : saved ? "Saved on this device" : "Saving on this device…"}</span><button className="btn-secondary" disabled={locked} onClick={preview}>Preview portfolio</button></div></header>;

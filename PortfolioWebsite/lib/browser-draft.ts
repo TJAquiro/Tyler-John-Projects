@@ -96,7 +96,6 @@ export async function deleteDraft(uid: string): Promise<void> {
     tx.objectStore("deletedAccounts").put(true, uid);
     tx.oncomplete = () => resolve(); tx.onerror = tx.onabort = () => reject(tx.error);
   }); } finally { db.close(); }
-  if (localStorage.getItem("portfolio-active-draft") === uid) localStorage.removeItem("portfolio-active-draft");
   if (sessionStorage.getItem("portfolio-preview-key") === uid) sessionStorage.removeItem("portfolio-preview-key");
   const channel = new BroadcastChannel("portfolio-account-deletion"); channel.postMessage(uid); channel.close();
 }

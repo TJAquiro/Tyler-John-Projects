@@ -23,8 +23,7 @@ export function HostedAccountForm({ mode }: { mode: "signup" | "login" }) {
   const [signedIn, setSignedIn] = useState<User | null>(null);
   const handling = useRef(false);
   useEffect(() => { if (new URLSearchParams(location.search).get("deleted") === "1") setStatus("Your account, website, and uploaded images have been deleted."); }, []);
-  const enterStudio = useCallback(async (user: User, welcome = "") => {
-    localStorage.setItem("portfolio-active-draft", user.uid);
+  const enterStudio = useCallback(async (welcome = "") => {
     router.replace(`/studio${welcome ? `?welcome=${welcome}` : ""}`);
   }, [router]);
   useEffect(() => {
@@ -39,7 +38,7 @@ export function HostedAccountForm({ mode }: { mode: "signup" | "login" }) {
         setSignedIn(user); setReady(true);
         if (user && !handling.current) {
           handling.current = true; setBusy(true);
-          void enterStudio(user).catch(e => { if (active) { setError(friendlyError(e)); setBusy(false); handling.current = false; } });
+          void enterStudio().catch(e => { if (active) { setError(friendlyError(e)); setBusy(false); handling.current = false; } });
         }
       });
     }).catch(() => { if (active) { setError("Could not connect to accounts. Check your connection and retry."); setReady(true); } });
@@ -59,7 +58,7 @@ export function HostedAccountForm({ mode }: { mode: "signup" | "login" }) {
         try { await sendEmailVerification(result.user); }
         catch { welcome = "verification-pending"; }
       }
-      await enterStudio(result.user, welcome);
+      await enterStudio(welcome);
     } catch (e) { setError(friendlyError(e)); setBusy(false); handling.current = false; }
   }
   async function resetPassword() {
@@ -70,7 +69,7 @@ export function HostedAccountForm({ mode }: { mode: "signup" | "login" }) {
   }
   return <main id="main-content" className="mx-auto max-w-lg px-6 py-10 sm:py-16"><Link className="display text-2xl" href="/">Portfolio studio<span className="text-accent">.</span></Link><p className="eyebrow mt-12">{signup ? "Your next chapter starts here" : "Welcome back"}</p><h1 className="display mt-4 text-5xl leading-tight">{signup ? "Make space for your work." : "Back to your story."}</h1><p className="mt-5 leading-7 text-moss">{signup ? "Create your free account. Then we’ll guide you through your profile and first project." : "Sign in to continue your portfolio and publish your latest work."}</p>
     <div className="studio-panel mt-8">
-      {!ready ? <p role="status">Connecting to accounts…</p> : !auth ? <div className="space-y-4"><p className="notice">Account creation and sign-in are temporarily unavailable. Please try again shortly.</p><button className="btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry connection</button><Link className="btn-text block" href="/studio">Explore the builder on this device</Link></div> : signedIn ? <div className="space-y-4"><p role="status">{busy ? "Opening your portfolio…" : "You’re signed in. Your account is ready."}</p>{!busy && <button className="btn-primary" onClick={() => { setBusy(true); void enterStudio(signedIn).catch(e => { setError(friendlyError(e)); setBusy(false); }); }}>Continue to your portfolio</button>}</div> : <form onChange={() => { setError(""); setStatus(""); }} onSubmit={submit} className="space-y-5"><fieldset disabled={busy} className="space-y-5"><label className="studio-field">Email address<input className="admin-input" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} /></label><label className="studio-field">Password<input className="admin-input" type="password" autoComplete={signup ? "new-password" : "current-password"} required minLength={signup ? 10 : undefined} maxLength={200} value={password} onChange={e => setPassword(e.target.value)} aria-describedby={signup ? "password-hint" : undefined} /></label>{signup && <><p id="password-hint" className="text-xs text-moss">Use at least 10 characters.</p><label className="studio-field">Confirm password<input className="admin-input" type="password" autoComplete="new-password" required maxLength={200} value={confirm} onChange={e => setConfirm(e.target.value)} /></label></>}</fieldset><button className="btn-primary w-full" disabled={busy} type="submit">{busy ? "Please wait…" : signup ? "Create account & start setup" : "Sign in"}</button>{!signup && <button className="btn-text" disabled={busy || !email.trim()} type="button" onClick={() => void resetPassword()}>Reset password</button>}</form>}
+      {!ready ? <p role="status">Connecting to accounts…</p> : !auth ? <div className="space-y-4"><p className="notice">Account creation and sign-in are temporarily unavailable. Please try again shortly.</p><button className="btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry connection</button><Link className="btn-text block" href="/studio">Explore the builder on this device</Link></div> : signedIn ? <div className="space-y-4"><p role="status">{busy ? "Opening your portfolio…" : "You’re signed in. Your account is ready."}</p>{!busy && <button className="btn-primary" onClick={() => { setBusy(true); void enterStudio().catch(e => { setError(friendlyError(e)); setBusy(false); }); }}>Continue to your portfolio</button>}</div> : <form onChange={() => { setError(""); setStatus(""); }} onSubmit={submit} className="space-y-5"><fieldset disabled={busy} className="space-y-5"><label className="studio-field">Email address<input className="admin-input" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} /></label><label className="studio-field">Password<input className="admin-input" type="password" autoComplete={signup ? "new-password" : "current-password"} required minLength={signup ? 10 : undefined} maxLength={200} value={password} onChange={e => setPassword(e.target.value)} aria-describedby={signup ? "password-hint" : undefined} /></label>{signup && <><p id="password-hint" className="text-xs text-moss">Use at least 10 characters.</p><label className="studio-field">Confirm password<input className="admin-input" type="password" autoComplete="new-password" required maxLength={200} value={confirm} onChange={e => setConfirm(e.target.value)} /></label></>}</fieldset><button className="btn-primary w-full" disabled={busy} type="submit">{busy ? "Please wait…" : signup ? "Create account & start setup" : "Sign in"}</button>{!signup && <button className="btn-text" disabled={busy || !email.trim()} type="button" onClick={() => void resetPassword()}>Reset password</button>}</form>}
       {error && <p className="form-error mt-5" role="alert">{error}</p>}{status && <p className="notice mt-5" role="status">{status}</p>}
     </div><p className="mt-6 text-sm leading-6">{signup ? "Already have an account?" : "New here?"} <Link className="btn-text" href={signup ? "/login" : "/signup"}>{signup ? "Sign in" : "Create your free account"}</Link></p><p className="mt-5 text-xs leading-6 text-moss">{signup ? "100% free. No credit card required. Verify your email before publishing (check your spam folder too); you can start creating right away." : "Your saved portfolio opens automatically. Signed-in edits save privately to your account until you publish."}</p>
   </main>;

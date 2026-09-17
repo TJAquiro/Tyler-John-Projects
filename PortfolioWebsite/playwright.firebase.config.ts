@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
-  outputDir: ".qa/firebase-test-results", testDir: "./tests", testMatch: "firebase-publishing.spec.ts", workers: 1, timeout: 120000,
+  outputDir: ".qa/firebase-test-results", testDir: "./tests", testMatch: "firebase/**/*.spec.ts", fullyParallel: false, workers: 1, timeout: 120000,
   expect: { timeout: 15000 }, reporter: [["list"]],
   use: { baseURL: "http://127.0.0.1:3102", browserName: "chromium", screenshot: "only-on-failure", trace: "retain-on-failure" },
   webServer: [

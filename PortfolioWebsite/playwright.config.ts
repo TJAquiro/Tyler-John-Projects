@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
-  testDir: "./tests", testIgnore: "firebase-publishing.spec.ts", workers: 1, fullyParallel: false, timeout: 120000,
+  testDir: "./tests", testIgnore: "firebase/**", workers: 1, fullyParallel: false, timeout: 120000,
   expect: { timeout: 15000 },
   reporter: [["list"], ["html", { open: "never" }]],
   use: { baseURL: "http://127.0.0.1:3100", browserName: "chromium", trace: "retain-on-failure", screenshot: "only-on-failure" },

@@ -1,7 +1,7 @@
 import { emptyDraft, parseBackup, type BrowserDraft } from "./browser-draft";
 import { imageReferences } from "./portfolio-snapshot";
 
-export type DraftContent = Pick<BrowserDraft, "profile" | "projects" | "section" | "projectDraft" | "projectStep" | "requestedHandle" | "feedback">;
+type DraftContent = Pick<BrowserDraft, "profile" | "projects" | "section" | "projectDraft" | "projectStep" | "requestedHandle" | "feedback">;
 export type CloudDraft = { version: 1; revision: number; savedAt: string; publication?: BrowserDraft["publication"]; content: DraftContent; assets: Record<string, string> };
 export function draftContent(draft: DraftContent): DraftContent {
   return { feedback: draft.feedback || { touched: [], attempted: false }, profile: draft.profile, projects: draft.projects, section: draft.section, projectDraft: draft.projectDraft, projectStep: draft.projectStep ?? 0, requestedHandle: draft.requestedHandle || "" };

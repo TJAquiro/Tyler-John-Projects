@@ -78,7 +78,6 @@ export function BrowserStudio() {
     const value = getDraft(), refs = new Set([value.profile.headshotImage, value.profile.bannerImage, ...value.projects.flatMap(p => [p.thumbnail, ...p.images]), ...(value.projectDraft ? [value.projectDraft.thumbnail, ...value.projectDraft.images] : [])]);
     update({ images: Object.fromEntries(Object.entries(value.images).filter(([path]) => refs.has(path))) }); await flush(); setStatus("Unused images removed from this device draft.");
   }
-
   if (!draft) return <main id="main-content" className="mx-auto max-w-5xl p-8">{openingError ? <><p role="alert" className="form-error">{openingError}</p><button className="btn-primary mt-4" onClick={() => void retryOpen()}>Retry opening portfolio</button></> : <p role="status">Opening your saved portfolio…</p>}</main>;
   const locked = busy || uploading || Boolean(conflict), allIssues = issuesFor(draft), visibleIssues = allIssues.filter(issue => draft.feedback?.attempted || draft.feedback?.touched.includes(issue.key));
 

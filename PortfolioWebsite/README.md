@@ -72,7 +72,7 @@ Onboarding covers name, headshot, biography, education, tools, experience, first
 - **Projects:** Add, Edit, or Delete projects. Each needs a title, date, description, unique slug, thumbnail, and 1–6 supporting images. Each supporting photo has an optional description displayed beneath it. Gallery images retain the crop's aspect ratio.
 - **Preview:** inspect saved content across the full site. Unsaved recovery drafts do not appear in Preview. Save profile changes explicitly from the dashboard.
 
-Your public portfolio address is `/u/your-handle`, with About and individual project pages underneath it. Private Preview works before deployment. The existing portfolio remains at `/`.
+Your public portfolio address is `/u/your-handle`, with About and individual project pages underneath it. Private Preview works before deployment. The original root content remains preserved in `content/profile.json` and `content/projects.json`; the service landing page now owns `/`.
 
 ## Dev tools
 

@@ -1,46 +1,14 @@
-import { IMAGE_CHUNK_BYTES, MAX_SERVICE_STORAGE_BYTES, type Snapshot } from "../lib/portfolio-snapshot";
-import type { Page } from "@playwright/test";
+import { IMAGE_CHUNK_BYTES, MAX_SERVICE_STORAGE_BYTES } from "../../lib/portfolio-snapshot";
 import http from "node:http";
 import { spawn } from "node:child_process";
 import path from "node:path";
-import { test, expect, type APIRequestContext } from "@playwright/test";
-import { initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
 import { getStorage } from "firebase-admin/storage";
-import { getFirestore } from "firebase-admin/firestore";
 import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
-process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
-process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
-process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
-const app = initializeApp({ projectId: "demo-portfolio" }, "qa-publishing-tests"), auth = getAuth(app), db = getFirestore(app);
-const blank = (name: string) => ({ profile: { name, biography: "I make useful things.", headshotImage: "", education: [], tools: [], jobs: [] }, projects: [] });
-const fixturePNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==", "base64");
-function fixtureProject(src: string) { return { id: "required-project", title: "A considered project", slug: "considered-project", date: "2026-01-01", description: "Research and design for a useful experience.", thumbnail: src, images: [src], technologies: ["Figma", "Research"], link: "" }; }
-// Existing publishing scenarios now include the newly required completed project.
-async function publishRequest(request: APIRequestContext, options: { headers?: Record<string, string>; data: { handle: string; snapshot: Snapshot; assets: Record<string, string>; revision: number } }) {
-  if (options.data.snapshot.projects.length) return request.post("/api/publish", options);
-  const assets = { ...options.data.assets };
-  const src = Object.keys(assets)[0] || "/images/required-project.png";
-  if (!assets[src]) {
-    const upload = await request.post("/api/publish/image", { headers: options.headers, data: fixturePNG });
-    assets[src] = upload.ok() ? (await upload.json()).id : "a".repeat(64);
-  }
-  return request.post("/api/publish", { ...options, data: { ...options.data, assets, snapshot: { ...options.data.snapshot, projects: [fixtureProject(src)] } } });
-}
-async function addCompleteProject(page: Page) {
-  await page.getByRole("navigation", { name: "Portfolio setup" }).getByRole("button", { name: /Projects/ }).click();
-  await page.getByRole("button", { name: "Add project", exact: true }).click();
-  await page.getByLabel("Project title", { exact: true }).fill("A considered project");
-  await page.getByLabel("Project description", { exact: true }).fill("Research and design for a useful experience.");
-  await page.getByRole("button", { name: "Images", exact: true }).click();
-  const png = await page.evaluate(() => { const c = document.createElement("canvas"); c.width = 300; c.height = 200; const x = c.getContext("2d")!; x.fillStyle = "#355f52"; x.fillRect(0, 0, 300, 200); return c.toDataURL("image/png").split(",")[1]; });
-  await page.getByLabel("Upload thumbnail", { exact: true }).setInputFiles({ name: "project.png", mimeType: "image/png", buffer: Buffer.from(png, "base64") });
-  await page.getByRole("button", { name: "Use this crop" }).click();
-  await expect(page.getByRole("dialog")).not.toBeVisible();
-  // Leave complete edits open: publishing must commit this editor automatically.
-}
+import { account, addCompleteProject, app, auth, blank, db, draftBody, expect, fixturePNG, fixtureProject, loginStudio, publishRequest, test } from "./fixtures";
 
+export function registerPublicationServerTests() {
+test.describe("publication ownership and server validation", () => {
 test("URL ownership regression: missing indexes, atomic rename, retries, and released names", async ({ request }) => {
   const owner = await account(request, "url-owner@example.com"), other = await account(request, "url-other@example.com");
   const publish = (handle: string, user = owner, revision = 0) => publishRequest(request, { headers: user.headers, data: { handle, snapshot: blank(handle), assets: {}, revision } });
@@ -138,6 +106,11 @@ test("publication requirements reject missing biography and projects on the serv
   expect((await publishRequest(request, { headers: owner.headers, data: body })).status()).toBe(200);
 });
 
+});
+}
+
+export function registerPublishingStudioTests() {
+test.describe("publishing studio workflow", () => {
 test("draft indicators, actionable publishing errors, automatic project commit, and URL editor", async ({ page, request, browser }) => {
   const owner = await account(request, "feedback@example.com");
   await loginStudio(page, "feedback@example.com");
@@ -221,15 +194,6 @@ test("draft indicators, actionable publishing errors, automatic project commit, 
     await publicPage.screenshot({ path: `.qa/screenshots/url-draft-case-study-${width}.png`, fullPage: true });
   }
   await publicContext.close();
-});
-async function account(request: APIRequestContext, email: string, verified = true) {
-  const user = await auth.createUser({ email, password: "qa-password-only", emailVerified: verified });
-  const response = await request.post("http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-test-key", { data: { email, password: "qa-password-only", returnSecureToken: true } });
-  const { idToken } = await response.json(); return { uid: user.uid, headers: { Authorization: `Bearer ${idToken}` } };
-}
-test.beforeEach(async ({ request }) => {
-  await request.delete("http://127.0.0.1:9099/emulator/v1/projects/demo-portfolio/accounts");
-  await request.delete("http://127.0.0.1:8080/emulator/v1/projects/demo-portfolio/databases/(default)/documents");
 });
 test("publishing enforces identity, verification, address ownership, revision checks, and database rules", async ({ request }) => {
   const first = await account(request, "first@example.com"), second = await account(request, "second@example.com"), unverified = await account(request, "unverified@example.com", false);
@@ -319,6 +283,11 @@ test("create locally, publish images, update the same link, restore on another d
   await secondDevice.close();
 });
 
+});
+}
+
+export function registerAccountLifecycleTests() {
+test.describe("hosted authentication and account lifecycle", () => {
 test("landing signup starts blank, verifies, publishes, counts creators, and resumes the correct draft", async ({ page, request }) => {
   await page.goto("/studio");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Guest draft to preserve");
@@ -336,7 +305,7 @@ test("landing signup starts blank, verifies, publishes, counts creators, and res
   await expect(page.getByText("Account created. Check your inbox", { exact: false })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveValue("");
   const owner = await auth.getUserByEmail("landing@example.com");
-  expect(await page.evaluate(() => localStorage.getItem("portfolio-active-draft"))).toBe(owner.uid);
+  expect(await page.evaluate(() => localStorage.getItem("portfolio-active-draft"))).toBeNull();
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Landing Creator");
   await page.getByRole("button", { name: "03 Biography", exact: true }).click();
   await page.getByLabel("Biography", { exact: true }).fill("A portfolio created from the landing page.");
@@ -498,6 +467,11 @@ test("account deletion confirms identity, removes all hosted data and this devic
   expect(await page.evaluate(()=>localStorage.getItem("portfolio-active-draft"))).toBeNull();
 });
 
+});
+}
+
+export function registerImageAndDraftApiTests() {
+test.describe("image uploads and draft API", () => {
 test("chunked images cross the old limit, preserve bytes, and enforce ownership and 500 MB boundary", async ({ request }) => {
   const owner=await account(request,"large-image@example.com"), other=await account(request,"other-image@example.com");
   const cap=500*1024*1024;
@@ -534,10 +508,10 @@ test("global image quotas and admission leases bound cross-account resource use"
     a: { uid: "a", bytes: 1, expiresAt: future }, b: { uid: "b", bytes: 1, expiresAt: future },
     c: { uid: "c", bytes: 1, expiresAt: future }, d: { uid: "d", bytes: 1, expiresAt: future }
   } });
-  expect((await request.post("/api/publish/image", { headers: owner.headers, data: tinyPng })).status()).toBe(429);
+  expect((await request.post("/api/publish/image", { headers: owner.headers, data: fixturePNG })).status()).toBe(429);
   await db.collection("serviceState").doc("uploadAdmission").set({ leases: { stale: { uid: "x", bytes: 8 * 1024 * 1024, expiresAt: Date.now() - 1 } } });
   await quota.set({ storageBytes: 0, uploadDay: new Date().toISOString().slice(0, 10), uploads: 0 });
-  expect((await request.post("/api/publish/image", { headers: owner.headers, data: tinyPng })).status()).toBe(200);
+  expect((await request.post("/api/publish/image", { headers: owner.headers, data: fixturePNG })).status()).toBe(200);
 });
 
 test("an upload started before deletion cannot recreate the account's image library", async ({ request }) => {
@@ -556,28 +530,18 @@ test("an upload started before deletion cannot recreate the account's image libr
   expect((await getStorage(app).bucket("demo-portfolio.firebasestorage.app").getFiles({prefix:`portfolios/${owner.uid}/`}))[0]).toHaveLength(0);
 });
 
-const draftBody = (name = "", revision = 0) => ({ version: 1, revision, content: { ...blank(name), section: 0, projectStep: 0, requestedHandle: "", projectDraft: null as null | { id: string; title: string; thumbnail: string; images: string[]; date: string; description: string; technologies: string[]; link: string; slug: string } }, assets: {} as Record<string, string> });
-const tinyPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==", "base64");
-async function loginStudio(page: import("@playwright/test").Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email address", { exact: true }).fill(email);
-  await page.getByLabel("Password", { exact: true }).fill("qa-password-only");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/studio$/);
-}
-
 test("drafts save incomplete content while cloud images require verification and remain private", async ({ request }) => {
   const owner = await account(request, "draft-owner@example.com"), other = await account(request, "draft-other@example.com"), unverified = await account(request, "draft-unverified@example.com", false);
   expect((await request.put("/api/draft", { data: draftBody() })).status()).toBe(401);
   expect((await request.put("/api/draft", { headers: unverified.headers, data: draftBody("Unverified text") })).status()).toBe(200);
-  expect((await request.post("/api/draft/image", { headers: unverified.headers, data: tinyPng })).status()).toBe(403);
-  expect((await request.post("/api/draft/image/chunks", { headers: unverified.headers, data: { size: tinyPng.length } })).status()).toBe(403);
-  const image = await request.post("/api/draft/image", { headers: owner.headers, data: tinyPng }); expect(image.status()).toBe(200);
+  expect((await request.post("/api/draft/image", { headers: unverified.headers, data: fixturePNG })).status()).toBe(403);
+  expect((await request.post("/api/draft/image/chunks", { headers: unverified.headers, data: { size: fixturePNG.length } })).status()).toBe(403);
+  const image = await request.post("/api/draft/image", { headers: owner.headers, data: fixturePNG }); expect(image.status()).toBe(200);
   const { id } = await image.json();
   expect((await request.get(`/api/draft/image?id=${id}`)).status()).toBe(401);
   expect((await request.get(`/api/draft/image?id=${id}`, { headers: other.headers })).status()).toBe(404);
-  expect(await (await request.get(`/api/draft/image?id=${id}`, { headers: owner.headers })).body()).toEqual(tinyPng);
-  const large = Buffer.alloc(9 * 1024 * 1024, 73); tinyPng.subarray(0, 8).copy(large);
+  expect(await (await request.get(`/api/draft/image?id=${id}`, { headers: owner.headers })).body()).toEqual(fixturePNG);
+  const large = Buffer.alloc(9 * 1024 * 1024, 73); fixturePNG.subarray(0, 8).copy(large);
   const started = await request.post("/api/draft/image/chunks", { headers: owner.headers, data: { size: large.length } }); expect(started.status()).toBe(200);
   const chunkPath = `/api/draft/image/chunks?id=${(await started.json()).id}`;
   expect((await request.put(chunkPath + "&part=0", { headers: other.headers, data: large.subarray(0, 8 * 1024 * 1024) })).status()).toBe(409);
@@ -625,6 +589,36 @@ test("restore repairs missing and foreign mappings using UID and rejects ambiguo
   expect((await request.get("/api/publish", { headers: owner.headers })).status()).toBe(409);
   const fresh = await account(request, "never-published@example.com");
   expect((await (await request.get("/api/publish", { headers: fresh.headers })).json()).publication).toBeNull();
+});
+
+});
+}
+
+export function registerDraftRecoveryTests() {
+test.describe("cloud draft recovery and conflicts", () => {
+test("account drafts open when the obsolete active-draft localStorage key throws", async ({ page, request }) => {
+  const owner = await account(request, "storage-pointer-failure@example.com");
+  expect((await request.put("/api/draft", { headers: owner.headers, data: draftBody("Pointer-free account draft") })).status()).toBe(200);
+  await page.addInitScript(() => {
+    const getItem = Storage.prototype.getItem;
+    const setItem = Storage.prototype.setItem;
+    const removeItem = Storage.prototype.removeItem;
+    Storage.prototype.getItem = function (key) {
+      if (key === "portfolio-active-draft") throw new Error("obsolete active-draft storage is unavailable");
+      return getItem.call(this, key);
+    };
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "portfolio-active-draft") throw new Error("obsolete active-draft storage is unavailable");
+      return setItem.call(this, key, value);
+    };
+    Storage.prototype.removeItem = function (key) {
+      if (key === "portfolio-active-draft") throw new Error("obsolete active-draft storage is unavailable");
+      return removeItem.call(this, key);
+    };
+  });
+  await loginStudio(page, "storage-pointer-failure@example.com");
+  await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveValue("Pointer-free account draft");
+  await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
 });
 
 test("account autosave resumes unpublished work and images on a new browser and after local storage is cleared", async ({ page, request, browser }) => {
@@ -727,7 +721,7 @@ test("legacy device edits migrate and image failure leaves restore untouched", a
   await loginStudio(page, "migration@example.com");
   await expect(page.getByRole("textbox", { name:"Your name",exact:true })).toHaveValue("Legacy device work");
   await expect(page.getByText("Saved to your account",{exact:true})).toBeVisible();
-  const uploaded = await request.post("/api/publish/image",{headers:owner.headers,data:tinyPng}); const {id}=await uploaded.json();
+  const uploaded = await request.post("/api/publish/image",{headers:owner.headers,data:fixturePNG}); const {id}=await uploaded.json();
   const snapshot=blank("Public snapshot");snapshot.profile.headshotImage="/images/published.png";
   expect((await publishRequest(request,{headers:owner.headers,data:{handle:"migration",snapshot,revision:0,assets:{"/images/published.png":id}}})).status()).toBe(200);
   await page.getByRole("button",{name:"09 Publish",exact:true}).click();
@@ -770,3 +764,5 @@ test("opening an old account draft does not silently adopt a newer publication r
   await expect(page.getByRole("main").getByRole("alert")).toContainText("A newer version was published");
   expect((await db.collection("publishedPortfolios").doc("publication-revision").get()).data()?.profile.name).toBe("Newer public version");
 });
+});
+}

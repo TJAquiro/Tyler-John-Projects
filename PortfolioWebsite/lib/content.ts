@@ -4,8 +4,8 @@ import { randomUUID } from "node:crypto";
 import type { Profile, Project } from "./types";
 export const contentRoot = process.env.PORTFOLIO_CONTENT_DIR || path.join(process.cwd(), "content");
 export type StudioState = { step: number; completed: boolean; projectDraft: Partial<Project> | null };
-export type PortfolioListing = { id: string; handle: string; name: string };
-export const defaultStudio: StudioState = { step: 0, completed: false, projectDraft: null };
+type PortfolioListing = { id: string; handle: string; name: string };
+const defaultStudio: StudioState = { step: 0, completed: false, projectDraft: null };
 export function portfolioDirectory(accountId?: string) {
   if (!accountId) return contentRoot;
   if (!/^[a-z0-9-]+$/.test(accountId)) throw new Error("Invalid portfolio.");

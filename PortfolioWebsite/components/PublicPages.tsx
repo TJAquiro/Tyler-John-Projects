@@ -7,7 +7,7 @@ const address = (path: string, preview: boolean, basePath = "") => basePath === 
 export function Biography({ children, className = "" }: { children: string; className?: string }) {
   return <div className={`markdown ${className}`}><ReactMarkdown skipHtml allowedElements={["p", "strong", "em", "ul", "ol", "li", "a", "blockquote", "br"]}>{children}</ReactMarkdown></div>;
 }
-export function PublicHeader({ profile, preview = false, current = "/", basePath = "" }: { profile: Profile; preview?: boolean; current?: string; basePath?: string }) {
+function PublicHeader({ profile, preview = false, current = "/", basePath = "" }: { profile: Profile; preview?: boolean; current?: string; basePath?: string }) {
   return <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 md:px-10"><Link href={address("/", preview, basePath)} className="display max-w-[65%] break-words text-xl font-semibold tracking-tight">{profile.name}<span className="text-coral">.</span></Link><nav aria-label="Portfolio navigation" className="flex items-center gap-6 text-sm font-medium"><Link className="public-nav" aria-current={current === "/" ? "page" : undefined} href={address("/", preview, basePath)}>Work</Link><Link className="public-nav" aria-current={current === "/about" ? "page" : undefined} href={address("/about", preview, basePath)}>About</Link></nav></header>;
 }
 function Footer({ profile, preview }: { profile: Profile; preview: boolean }) {

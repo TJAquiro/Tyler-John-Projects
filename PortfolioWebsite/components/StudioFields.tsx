@@ -27,7 +27,7 @@ export function Field({ label, value, onChange, required, multiline, hint, type 
 export function DraftNotice({ conflict, restore }: { conflict: boolean; restore: () => void }) {
   return conflict ? <div className="notice mb-5"><p>A newer saved version was loaded. Your older browser draft was kept separately.</p><button className="btn-text mt-2" type="button" onClick={restore}>Restore older draft</button></div> : null;
 }
-export function ImagePicker({ label, value, onChange, onBusy, required = false }: { label: string; value: string; onChange: (value: string) => void; onBusy?: (busy: boolean) => void; required?: boolean }) {
+function ImagePicker({ label, value, onChange, onBusy, required = false }: { label: string; value: string; onChange: (value: string) => void; onBusy?: (busy: boolean) => void; required?: boolean }) {
   const local = useLocalMedia(), feedback = useDraftFeedback(label === "New supporting image" ? "Supporting images" : label);
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [source, setSource] = useState<string | null>(null);
   const objectURL = useRef<string | null>(null);

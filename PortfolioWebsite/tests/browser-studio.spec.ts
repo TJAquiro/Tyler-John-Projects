@@ -41,6 +41,7 @@ test("device draft persists offline, crops locally, previews, and backs up witho
   const downloaded = await download; const backup = JSON.parse(fs.readFileSync((await downloaded.path())!, "utf8"));
   expect(backup.profile.name).toBe("Jamie Rivers"); expect(Object.values(backup.images)[0]).toMatch(/^data:image\/webp/);
   await page.getByRole("button", { name: "Preview portfolio" }).click();
+  await expect(page.getByText("Private preview · Unpublished draft", { exact: true })).toBeVisible();
   await expect(page.getByText("I design thoughtful experiences for people.")).toBeVisible();
   await page.getByRole("link", { name: "About", exact: true }).click();
   await expect(page.getByAltText("Jamie Rivers", { exact: true })).toBeVisible();
@@ -68,8 +69,18 @@ test("backup imports preserve unfinished work, reject unsafe data, and studio fi
   await page.getByRole("textbox", { name: "Project title", exact: true }).fill("Unfinished study");
   await expect(page.getByText("Saved on this device", { exact: true })).toBeVisible(); await page.reload();
   await expect(page.getByRole("textbox", { name: "Project title", exact: true })).toHaveValue("Unfinished study");
+  await page.getByRole("button", { name: "Review", exact: true }).click();
   fs.mkdirSync(".qa/screenshots", { recursive: true });
-  for (const width of [375,768,1440]) {
+  await page.setViewportSize({ width: 320, height: 960 });
+  await expect(page.getByRole("button", { name: "Continue to publishing", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Save project to draft" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Discard project draft" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: ".qa/screenshots/local-project-save-discard-320.png", fullPage: true });
+  await page.getByRole("button", { name: "Discard project draft" }).click();
+  await expect(page.getByRole("textbox", { name: "Project title", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Continue to publishing", exact: true })).toBeVisible();
+  for (const width of [320,375,768,1440]) {
     await page.setViewportSize({ width, height: 960 });
     await expect(page.getByRole("combobox", { name: "Portfolio section", exact: true })).toHaveCount(0);
     const navigation = page.getByRole("navigation", { name: "Portfolio setup" });

@@ -3,9 +3,9 @@ import { emptyDraft, fileData, type BrowserDraft } from "./browser-draft";
 import { draftContent, draftReferences, type CloudDraft } from "./cloud-draft";
 import { imageReferences, type Publication } from "./portfolio-snapshot";
 
-export type AccountDraftResult = { draft: CloudDraft | null; publication: Publication | null };
+type AccountDraftResult = { draft: CloudDraft | null; publication: Publication | null };
 export const loadAccountDraft = (uid: string, signal?: AbortSignal): Promise<AccountDraftResult> => publishingFetch("/api/draft", { cache: "no-store", signal }, uid);
-export async function publicationDraft(publication: Publication, uid: string, signal?: AbortSignal): Promise<BrowserDraft> {
+async function publicationDraft(publication: Publication, uid: string, signal?: AbortSignal): Promise<BrowserDraft> {
   const images: Record<string, string> = {};
   for (const path of imageReferences(publication)) {
     const response = await fetch(publication.assets[path], { signal });
@@ -36,7 +36,7 @@ export async function hydrateCloud(result: AccountDraftResult, uid: string, sign
   const value = { ...emptyDraft(), ...cloud.content, images, ownerUid: uid, publication: publicationBase(cloud.publication, result.publication) };
   return { ...value, cloud: { revision: cloud.revision, syncedUpdatedAt: value.updatedAt, assets } };
 }
-export async function imageHash(blob: Blob) {
+async function imageHash(blob: Blob) {
   return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await blob.arrayBuffer()))).map(n => n.toString(16).padStart(2,"0")).join("");
 }
 export async function saveAccountDraft(draft: BrowserDraft, uid: string, revision: number, stillActive: () => boolean, signal?: AbortSignal) {

@@ -12,7 +12,3 @@ export function useDraftFeedback(label: string) {
   const key = `${scope}:${label}`, issue = context?.issues.find(issue => issue.key === key);
   return { key, issue, errorId: `${id}-error`, touch: () => context?.touch(key) };
 }
-export function FeedbackMessage({ label }: { label: string }) {
-  const { issue, errorId } = useDraftFeedback(label);
-  return issue ? <p id={errorId} className="mt-2 text-sm text-[#8e302b]">{issue.message}</p> : null;
-}
