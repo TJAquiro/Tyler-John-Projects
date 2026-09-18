@@ -10,6 +10,8 @@ The cleanup started from commit `a8aebcf`, after the browser-studio session and 
 - Reproduction: open a private preview for a signed-in draft. Its banner said “Only saved on this device” even though signed-in text drafts can be saved to the account. The copy described one storage state as universal.
 - `portfolio-active-draft` was an obsolete `localStorage` pointer. Authentication already selects the account namespace in `useBrowserStudioSession`; the only production writes/reads left were the login redirect and account-deletion cleanup. The independent `sessionStorage` key `portfolio-preview-key` is still required to select the draft shown in Preview.
 - Existing browser coverage restored unfinished project data after reload but then navigated directly to Publish, encoding the bypass instead of detecting it. It also did not exercise this editor error at 320 px.
+- The blocked-storage regression replaced `Storage.prototype.getItem`, but the studio draft now persists through IndexedDB and preview alone reads its selection from session storage. The setup could therefore pass without reproducing a failed studio draft store.
+- Reproduction from the local DevTools trace: navigate to `/admin/dev` while its JavaScript bundle is still loading, immediately type the admin token, then select “Open showcase profile.” The server-rendered input accepted and displayed the token before React attached `onChange`, leaving component state empty and the action permanently disabled after hydration.
 
 ## Disposition and verification
 
@@ -18,6 +20,8 @@ The cleanup started from commit `a8aebcf`, after the browser-studio session and 
 - Preserved the complete-open-project publishing path. The project editor's forward action stays unavailable until Save or Discard, while sidebar navigation can still reach publication validation and automatically commit a complete editor. Browser coverage now locks down the Save/Discard choice and the re-enabled forward action after discard.
 - Reworded the preview banner to describe both guest and account drafts accurately: “Private preview · Unpublished draft.”
 - Added browser assertions for the corrected preview copy and project navigation behavior, plus a 320 px screenshot at `.qa/screenshots/local-project-save-discard-320.png`. Firebase coverage injects failures for every `portfolio-active-draft` storage method during sign-in and verifies that authentication still opens the exact account draft.
+- Updated the blocked-storage regression to make `IDBFactory.open` fail for the studio and session-storage reads fail for preview, so both recovery messages are exercised against their actual storage dependencies.
+- Kept local DevTools operator inputs and actions disabled until client hydration completes. This prevents pre-hydration token or reset-confirmation edits from appearing in the DOM without reaching the controlled React state.
 
 Verification in the integrated workspace:
 

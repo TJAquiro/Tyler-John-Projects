@@ -4,13 +4,15 @@
 
 The Firebase Playwright suite remains a single serial run because every scenario uses the same Auth, Firestore, and Storage emulator processes. `playwright.firebase.config.ts` keeps one worker, disables full parallelism explicitly, and limits discovery to `tests/firebase/**/*.spec.ts`. The spec also declares serial mode so a future config change cannot silently parallelize stateful scenarios.
 
-The 24 scenarios (23 preserved plus the active-draft storage regression) are registered from `tests/firebase/scenarios.ts` by separate behavior specs:
+The 24 scenarios (23 preserved plus the active-draft storage regression) are defined directly in five focused behavior specs:
 
 - publication ownership and server validation;
 - publishing studio workflow;
 - hosted authentication and account lifecycle;
 - image uploads and draft API behavior;
 - cloud draft recovery and conflicts.
+
+Each spec configures serial mode explicitly and owns its tests, imports, and behavior-group description. The former `tests/firebase/scenarios.ts` registration monolith was removed; test bodies, assertions, and ordering within every group remain unchanged.
 
 `tests/firebase/fixtures.ts` owns emulator setup, per-test Auth and Firestore clearing, account creation, sign-in, publication payloads, completed-project setup, and draft payloads. Moving the reset into an automatic Playwright fixture makes isolation apply before every scenario without relying on a hook declared midway through the old monolith. Storage is intentionally not globally cleared, matching the prior harness; generated Auth UIDs keep objects isolated, while deletion scenarios verify their own cleanup.
 

@@ -4,7 +4,12 @@ test("blocked storage shows recovery guidance instead of crashing studio and pre
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.addInitScript(() => {
-    Storage.prototype.getItem = () => { throw new DOMException("Storage denied", "SecurityError"); };
+    IDBFactory.prototype.open = () => { throw new DOMException("Storage denied", "SecurityError"); };
+    const getItem = Storage.prototype.getItem;
+    Storage.prototype.getItem = function (key) {
+      if (this === sessionStorage) throw new DOMException("Storage denied", "SecurityError");
+      return getItem.call(this, key);
+    };
   });
   await page.goto("/studio");
   await expect(page.getByRole("main").getByRole("alert")).toContainText("Browser storage is unavailable");
