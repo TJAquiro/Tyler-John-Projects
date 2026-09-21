@@ -1,0 +1,482 @@
+{
+  "date": "2026-09-21",
+  "commit": "6b96154",
+  "graphify_version": "0.9.64",
+  "model": "gpt-6-astra",
+  "reasoning": "medium",
+  "decision": "do not integrate",
+  "runs": [
+    {
+      "task": "architecture",
+      "arm": "baseline",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 100.9,
+      "usage": [
+        {
+          "input_tokens": 181430,
+          "cached_input_tokens": 142336,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2101,
+          "reasoning_output_tokens": 10
+        }
+      ],
+      "command_calls": 6,
+      "tokens": 183531,
+      "uncached_tokens": 41195,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use ordinary efficient rg/file discovery and targeted source reads. No knowledge graph is available.\nTask: Map the landing page, legacy local editor, browser studio, private preview, legacy public portfolios, and hosted published portfolios to their routes and storage sources. Explain when saved edits become publicly visible. Cite the relevant source files and line numbers.",
+      "answer": "Saved edits have two distinct publication paths: legacy filesystem edits require a new public build; browser/cloud drafts require an explicit publish operation.\n\n| Surface | Routes and storage source |\n|---|---|\n| Landing page | `/` renders `LandingPage`, whose example portfolio comes from hardcoded `lib/showcase.ts`, not an owner\u2019s saved portfolio. Its creator count separately reads published Firestore records. [app/page.tsx:1](app/page.tsx:1), [components/LandingPage.tsx:3](components/LandingPage.tsx:3), [components/LandingPage.tsx:24](components/LandingPage.tsx:24), [app/api/public-stats/route.ts:5](app/api/public-stats/route.ts:5) |\n| Legacy local editor | `/admin` authenticates and redirects to `/admin/onboarding` or `/admin/dashboard`. Project editing uses `/admin/projects/new` and `/admin/projects/[id]`. These pages load account-scoped filesystem content. [app/admin/page.tsx:4](app/admin/page.tsx:4), [app/admin/onboarding/page.tsx:8](app/admin/onboarding/page.tsx:8), [app/admin/dashboard/page.tsx:9](app/admin/dashboard/page.tsx:9), [app/admin/projects/[id]/page.tsx:7](app/admin/projects/[id]/page.tsx:7) |\n| Browser studio | `/studio` renders `BrowserStudio`. Drafts\u2014including images\u2014live in IndexedDB database `portfolio-browser-studio`, store `drafts`, keyed by guest/account identity. Account sessions also load cloud drafts and schedule synchronization after local persistence. Cloud content lives at Firestore `publishers/{uid}/drafts/current`; draft images use Firebase Storage. [app/studio/page.tsx:4](app/studio/page.tsx:4), [lib/browser-draft.ts:6](lib/browser-draft.ts:6), [lib/browser-draft.ts:17](lib/browser-draft.ts:17), [components/useBrowserStudioSession.ts:84](components/useBrowserStudioSession.ts:84), [components/useBrowserStudioSession.ts:171](components/useBrowserStudioSession.ts:171), [app/api/draft/route.ts:29](app/api/draft/route.ts:29), [lib/publishing-images.ts:93](lib/publishing-images.ts:93) |\n| Private previews | `/admin/preview?view=\u2026` authenticates and reads saved account filesystem content; supported views are `/`, `/about`, and `/projects/{slug}`. `/studio/preview?view=\u2026` instead reads the device\u2019s IndexedDB draft using sessionStorage\u2019s `portfolio-preview-key`, defaulting to `guest`, and maps draft images. This browser preview does not fetch the cloud draft directly. [app/admin/preview/page.tsx:7](app/admin/preview/page.tsx:7), [components/BrowserPreview.tsx:11](components/BrowserPreview.tsx:11), [components/BrowserPreview.tsx:29](components/BrowserPreview.tsx:29) |\n| Legacy public portfolios | `/u/{handle}`, `/u/{handle}/about`, `/u/{handle}/projects/{slug}` are static routes generated from the filesystem manifest and account content. Old `/about` and `/projects/{slug}` routes permanently redirect to `/`. [app/u/[handle]/[[...page]]/page.tsx:4](app/u/[handle]/[[...page]]/page.tsx:4), [app/u/[handle]/[[...page]]/page.tsx:15](app/u/[handle]/[[...page]]/page.tsx:15), [app/about/page.tsx:2](app/about/page.tsx:2), [app/projects/[slug]/page.tsx:2](app/projects/[slug]/page.tsx:2) |\n| Hosted published portfolios | `/p/{handle}`, `/p/{handle}/about`, `/p/{handle}/projects/{slug}` dynamically read Firestore `publishedPortfolios/{handle}` and map the snapshot\u2019s image references to its stored asset URLs. [app/p/[handle]/[[...page]]/page.tsx:5](app/p/[handle]/[[...page]]/page.tsx:5), [app/p/[handle]/[[...page]]/page.tsx:15](app/p/[handle]/[[...page]]/page.tsx:15), [lib/firebase-server.ts:27](lib/firebase-server.ts:27) |\n\nThe legacy storage root is `PORTFOLIO_CONTENT_DIR` or `<cwd>/content`; account files are `portfolios/{accountId}/{profile,projects,studio}.json`, with handle mapping in `portfolios/index.json`. Saving through `/api/content` writes those files, so the private preview sees saved changes immediately upon rendering. Existing production `/u` pages remain build snapshots; rebuilding and deploying makes those edits\u2014and newly generated routes\u2014public. [lib/content.ts:5](lib/content.ts:5), [lib/content.ts:15](lib/content.ts:15), [lib/content.ts:29](lib/content.ts:29), [app/api/content/route.ts:23](app/api/content/route.ts:23)\n\nBrowser autosave/cloud synchronization does **not** update the published snapshot. Successful `POST /api/publish` validates the submitted snapshot and transactionally writes `publishedPortfolios/{handle}`. Subsequent server renders of `/p` read that revision without a rebuild; later edits remain drafts until published again. [app/api/publish/route.ts:18](app/api/publish/route.ts:18), [app/api/publish/route.ts:40](app/api/publish/route.ts:40)\n\nThese are source-derived behaviors; deployment state and runtime behavior were not verified.",
+      "commands": [
+        "/bin/bash -lc \"rg --files -g '\"'!package-lock.json'\"' -g '\"'!pnpm-lock.yaml'\"' -g '\"'!*.svg'\"' -g '\"'!*.png'\"' -g '\"'!*.jpg'\"' -g '\"'!*.jpeg'\"' -g '\"'!*.webp'\"' -g '\"'!*.ico'\"' -g '\"'!*.woff*'\"' -g '\"'!*.json'\"' -g '\"'!CRITIC*'\"' -g '\"'!AGENTS.md'\"' -g '\"'!*.md'\"'\"",
+        "/bin/bash -lc \"rg -n '\"'^|.'\"' app/page.tsx app/admin/page.tsx app/studio/page.tsx app/admin/preview/page.tsx app/studio/preview/page.tsx app/about/page.tsx 'app/projects/[slug]/page.tsx' 'app/u/[handle]/[[...page]]/page.tsx' 'app/p/[handle]/[[...page]]/page.tsx' lib/content.ts\"",
+        "/bin/bash -lc \"rg -n 'getProfile|getProjects|requireAuth|AdminEditor|Onboarding' app/admin; rg -n 'export |localStorage|indexedDB|DB_|STORE|fetch|save|load' lib/browser-draft.ts lib/account-draft-client.ts components/useBrowserStudioSession.ts components/BrowserPreview.tsx; rg -n 'export |collection|doc\\\\(|publication|draft|transaction' lib/firebase-server.ts; rg -n 'fetch|/api|writeContent|VERCEL' app/api/content/route.ts components/AdminEditor.tsx; rg -n 'import|showcase|fetch|href' components/LandingPage.tsx lib/showcase.ts\"",
+        "/bin/bash -lc \"nl -ba components/BrowserPreview.tsx | head -45\nnl -ba lib/browser-draft.ts | head -44\nnl -ba lib/account-draft-client.ts | head -48\nnl -ba app/api/publish/route.ts | head -155\nnl -ba lib/firebase-server.ts | sed -n '16,33p'\nnl -ba lib/cloud-draft.ts | head -65\nnl -ba lib/auth.ts | head -65\"",
+        "/bin/bash -lc \"rg -n 'collection|tx.set|publishUser|bucket|file\\\\(' app/api/draft/route.ts lib/publishing-images.ts; rg -n 'publishingFetch|snapshot|publish|preview-key|flush|/studio/preview' components/PublishPanel.tsx components/BrowserStudio.tsx; nl -ba components/useBrowserStudioSession.ts | sed -n '78,92p;166,194p'; nl -ba app/api/publish/route.ts | sed -n '26,38p'; nl -ba app/api/content/route.ts | sed -n '1,18p;34,44p'; nl -ba lib/account-draft-client.ts | sed -n '48,59p'; nl -ba components/CreatorCount.tsx | head -24\"",
+        "/bin/bash -lc \"nl -ba components/PublishPanel.tsx | sed -n '25,57p'\nnl -ba components/useBrowserStudioSession.ts | sed -n '78,88p;168,193p'\nnl -ba app/api/publish/route.ts | sed -n '27,37p'\nnl -ba app/api/public-stats/route.ts | head -23\""
+      ]
+    },
+    {
+      "task": "architecture",
+      "arm": "graph",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 91.8,
+      "usage": [
+        {
+          "input_tokens": 202633,
+          "cached_input_tokens": 175360,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1901,
+          "reasoning_output_tokens": 22
+        }
+      ],
+      "command_calls": 7,
+      "tokens": 204534,
+      "uncached_tokens": 29174,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use the prebuilt Graphify graph first when it helps discovery. Run /home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"<focused question or symbols>\" --budget 1500 --graph graphify-out/graph.json. Query results are an index, not proof of implementation. Follow up only with relevant source excerpts. A direct source read is preferable for an already-known narrow lookup. Never read graph.json or GRAPH_REPORT.md directly. No reindexing or whole-corpus checks.\nTask: Map the landing page, legacy local editor, browser studio, private preview, legacy public portfolios, and hosted published portfolios to their routes and storage sources. Explain when saved edits become publicly visible. Cite the relevant source files and line numbers.",
+      "answer": "**Saving and publishing are separate:** legacy edits require a new build/deployment; browser-studio edits require an explicit publish operation.\n\n| Surface | Route and storage source |\n|---|---|\n| Landing page | `/` renders `LandingPage`. Its example portfolio comes from hard-coded `showcaseProfile` and `showcaseProjects`, not an owner\u2019s saved portfolio. See [app/page.tsx:1](app/page.tsx#L1), [components/LandingPage.tsx:3](components/LandingPage.tsx#L3), [lib/showcase.ts:2](lib/showcase.ts#L2). |\n| Legacy local editor | `/admin` requires authentication and redirects to `/admin/dashboard` or `/admin/onboarding`. The dashboard reads the authenticated account\u2019s profile, projects, and studio state. Storage is `${PORTFOLIO_CONTENT_DIR || cwd/content}/portfolios/<accountId>/{profile,projects,studio}.json`; writes replace JSON files through a temporary file. See [app/admin/page.tsx:4](app/admin/page.tsx#L4), [app/admin/dashboard/page.tsx:9](app/admin/dashboard/page.tsx#L9), [lib/content.ts:5](lib/content.ts#L5), [lib/content.ts:14](lib/content.ts#L14). |\n| Browser studio | `/studio` renders `BrowserStudio`. Device drafts use IndexedDB database `portfolio-browser-studio`, store `drafts`, keyed by `guest` or account UID. Connected account drafts also load/save through `/api/draft`, backed by Firestore `publishers/<uid>/drafts/current`. See [app/studio/page.tsx:2](app/studio/page.tsx#L2), [lib/browser-draft.ts:19](lib/browser-draft.ts#L19), [components/useBrowserStudioSession.ts:53](components/useBrowserStudioSession.ts#L53), [components/useBrowserStudioSession.ts:70](components/useBrowserStudioSession.ts#L70), [app/api/draft/route.ts:8](app/api/draft/route.ts#L8), [app/api/draft/route.ts:29](app/api/draft/route.ts#L29). |\n| Private previews | `/admin/preview?view=\u2026` authenticates and reads the account\u2019s saved local JSON; `view` selects `/`, `/about`, or `/projects/<slug>`. `/studio/preview?view=\u2026` reads the device\u2019s IndexedDB draft using sessionStorage\u2019s `portfolio-preview-key`, falling back to `guest`, and maps draft images for rendering. It does not fetch the published portfolio. See [app/admin/preview/page.tsx:7](app/admin/preview/page.tsx#L7), [app/studio/preview/page.tsx:3](app/studio/preview/page.tsx#L3), [components/BrowserPreview.tsx:11](components/BrowserPreview.tsx#L11), [components/BrowserPreview.tsx:29](components/BrowserPreview.tsx#L29). |\n| Legacy public portfolios | `/u/<handle>`, `/u/<handle>/about`, `/u/<handle>/projects/<slug>`. The manifest `content/portfolios/index.json` maps handles to account IDs; pages read those accounts\u2019 JSON. Routes are explicitly `force-static`, with `dynamicParams = false` and build-time route enumeration. See [lib/content.ts:29](lib/content.ts#L29), [app/u/[handle]/[[...page]]/page.tsx:4](app/u/[handle]/[[...page]]/page.tsx#L4). Old `/about` and `/projects/<slug>` redirect to `/`: [app/about/page.tsx:2](app/about/page.tsx#L2), [app/projects/[slug]/page.tsx:2](app/projects/[slug]/page.tsx#L2). |\n| Hosted published portfolios | `/p/<handle>` plus `/about` and `/projects/<slug>`. These are `force-dynamic`, reading Firestore `publishedPortfolios/<handle>` and mapping its published asset URLs. See [app/p/[handle]/[[...page]]/page.tsx:5](app/p/[handle]/[[...page]]/page.tsx#L5), [lib/firebase-server.ts:27](lib/firebase-server.ts#L27). |\n\nLegacy saves update local JSON and private preview; an existing public deployment changes only after rebuilding/deploying that content ([app/api/content/route.ts:28](app/api/content/route.ts#L28), [app/admin/dashboard/page.tsx:17](app/admin/dashboard/page.tsx#L17)).\n\nBrowser draft saves update separate draft storage, leaving the published snapshot unchanged. Explicit publishing posts to `/api/publish`; after validation and a successful transaction, it replaces `publishedPortfolios/<handle>`. Subsequent public requests read that snapshot without redeployment ([app/api/draft/route.ts:38](app/api/draft/route.ts#L38), [components/PublishPanel.tsx:63](components/PublishPanel.tsx#L63), [app/api/publish/route.ts:40](app/api/publish/route.ts#L40)).\n\nThese are source-level findings; live configuration and deployment behavior were not verified.",
+      "commands": [
+        "/bin/bash -lc '/home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"landing page legacy local editor browser studio private preview public portfolios hosted published portfolios routes storage\" --budget 1500 --graph graphify-out/graph.json'",
+        "/bin/bash -lc \"rg --files app lib | rg '(page.tsx|content|storage|portfolio|publish|firebase|browser|account)'\"",
+        "/bin/bash -lc \"for f in app/page.tsx app/admin/page.tsx app/admin/dashboard/page.tsx app/studio/page.tsx app/studio/preview/page.tsx app/admin/preview/page.tsx app/about/page.tsx app/projects/'[slug]'/page.tsx app/u/'[handle]'/'[[...page]]'/page.tsx app/p/'[handle]'/'[[...page]]'/page.tsx lib/content.ts; do echo \\\"\"'$f\"; nl -ba \"$f\" | head -110; done'",
+        "/bin/bash -c \"rg -n 'import|localStorage|indexedDB|load|save|draft|publication|firestore|published|setDoc|fetch|write' components/LandingPage.tsx components/BrowserPreview.tsx components/useBrowserStudioSession.ts lib/browser-draft.ts lib/account-draft-client.ts lib/firebase-server.ts app/api/publish/route.ts app/api/account/route.ts app/api/content/route.ts components/PublishPanel.tsx\"",
+        "/bin/bash -c 'for f in components/BrowserPreview.tsx components/useBrowserStudioSession.ts app/api/draft/route.ts app/api/content/route.ts lib/firebase-server.ts; do echo \"$f\"; nl -ba \"$f\" | head -85; done\nrg -n '\"'writeDraft|saveAccountDraft|guest|setTimeout' components/use*.ts\nrg -n 'showcaseProfile|showcaseProjects' components/LandingPage.tsx lib/showcase.ts\"",
+        "/bin/bash -c \"nl -ba app/api/content/route.ts | sed -n '1,36p'\nnl -ba app/api/draft/route.ts | sed -n '28,43p'\nnl -ba app/api/publish/route.ts | sed -n '16,56p'\nnl -ba components/useBrowserStudioSession.ts | sed -n '270,282p'\nnl -ba lib/showcase.ts | head -14\"",
+        "/bin/bash -c \"nl -ba app/api/publish/route.ts | sed -n '18,56p'\nnl -ba app/api/draft/route.ts | sed -n '37,43p'\nrg -n 'editingEnabled|VERCEL' lib/auth.ts\nrg -n 'preview-key|async function preview' components/useBrowserStudioSession.ts\""
+      ]
+    },
+    {
+      "task": "draft_persistence",
+      "arm": "baseline",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 58.9,
+      "usage": [
+        {
+          "input_tokens": 124643,
+          "cached_input_tokens": 96000,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1305,
+          "reasoning_output_tokens": 11
+        }
+      ],
+      "command_calls": 5,
+      "tokens": 125948,
+      "uncached_tokens": 29948,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use ordinary efficient rg/file discovery and targeted source reads. No knowledge graph is available.\nTask: Explain how the browser studio chooses guest versus account drafts, saves locally and to the cloud, and prevents stale tabs or conflicting devices from silently overwriting work. Include the recovery behavior when browser storage fails. Cite the relevant source files and line numbers.",
+      "answer": "The studio uses **IndexedDB drafts keyed by `\"guest\"` or account UID**, with separate local and cloud conflict checks.\n\n- **Choosing a draft.** Startup waits for Firebase authentication: signed-in users open their account draft; others load the guest draft or a blank one. A later sign-in preserves an in-progress guest draft instead of automatically replacing it. Sign-out switches back to guest after flushing local changes. [useBrowserStudioSession.ts:37\u201358](components/useBrowserStudioSession.ts#L37), [220\u2013227](components/useBrowserStudioSession.ts#L220). The Publish panel offers \u201cUse this device draft\u201d or \u201cOpen my account draft.\u201d Linking a guest draft checks for existing account work, asks before replacing it, and saves existing local/cloud versions as device recovery copies. [PublishPanel.tsx:98](components/PublishPanel.tsx#L98), [useBrowserStudioSession.ts:230\u2013242](components/useBrowserStudioSession.ts#L230).\n\n- **Choosing local versus cloud account content.** Opening reads both. Local content is dirty when its timestamp differs from its last synced timestamp\u2014or, without sync metadata, it contains work. Dirty local content with a different cloud revision triggers a choice; otherwise dirty local content or a matching-revision local copy is retained. Remaining cases hydrate cloud content, falling back to the publication or an empty account draft when no cloud draft exists. [useBrowserStudioSession.ts:84\u2013103](components/useBrowserStudioSession.ts#L84), [account-draft-client.ts:26\u201337](lib/account-draft-client.ts#L26).\n\n- **Saving.** Edits advance `updatedAt`; local autosave is debounced 300 ms and serialized. Successful local persistence schedules dirty account sync after 800 ms. Guest drafts never enter cloud sync. Cloud saves are serialized, reuse image assets with matching hashes, upload changed images, then PUT content, asset IDs, and the expected revision. The returned sync timestamp identifies the submitted snapshot, so edits made during upload remain dirty. [useBrowserStudioSession.ts:116\u2013131](components/useBrowserStudioSession.ts#L116), [171\u2013193](components/useBrowserStudioSession.ts#L171), [210\u2013217](components/useBrowserStudioSession.ts#L210), [account-draft-client.ts:42\u201354](lib/account-draft-client.ts#L42).\n\n- **Stale tabs and conflicting devices.** Each normal local write transaction compares the stored timestamp with the caller\u2019s last persisted timestamp. A mismatch aborts with instructions to download the current draft and reload; deleted-account tombstones also block writes. [browser-draft.ts:30\u201341](lib/browser-draft.ts#L30). Cloud PUT uses a Firestore transaction that rejects a mismatched revision with HTTP 409 and increments accepted revisions. [route.ts:29\u201343](app/api/draft/route.ts#L29). The client responds to 409 by stopping sync, fetching the other version, and presenting an explicit choice; editing controls lock. Resolution first archives the unchosen version locally, then installs the chosen version and resumes sync. Account changes abort/invalidate old requests. [useBrowserStudioSession.ts:29](components/useBrowserStudioSession.ts#L29), [132\u2013168](components/useBrowserStudioSession.ts#L132), [BrowserStudio.tsx:82\u201396](components/BrowserStudio.tsx#L82).\n\n- **Failure and recovery.** Local write failure retains in-memory edits, marks saving failed, and displays the error; unloading with failed, unpersisted, or unsynced work requests a browser warning. Backup download reads current memory, including images. Recognized startup storage failure creates a blank in-memory draft and instructs enabling storage, reloading, and downloading changes before leaving. **Account-opening failure behaves differently:** it attempts a cached account draft; without one, the UI offers retry rather than a guaranteed editable fallback. Cloud retries run on reconnect and every 15 seconds unless busy or conflicted. [useBrowserStudioSession.ts:59\u201363](components/useBrowserStudioSession.ts#L59), [106\u2013112](components/useBrowserStudioSession.ts#L106), [149\u2013155](components/useBrowserStudioSession.ts#L149), [171\u2013197](components/useBrowserStudioSession.ts#L171), [264\u2013275](components/useBrowserStudioSession.ts#L264), [BrowserStudio.tsx:81](components/BrowserStudio.tsx#L81).\n\nThese are source-derived behaviors; runtime behavior was not tested.",
+      "commands": [
+        "/bin/bash -lc \"rg -n 'guest|stale|conflict|localStorage' --glob '*.{ts,tsx,js}' --glob '\"'!package-lock.json'\"'\"",
+        "/bin/bash -lc \"nl -ba components/useBrowserStudioSession.ts | sed -n '1,245p'\"",
+        "/bin/bash -lc \"nl -ba lib/browser-draft.ts | sed -n '1,120p'; nl -ba lib/account-draft-client.ts | sed -n '1,170p'\"",
+        "/bin/bash -lc \"nl -ba app/api/draft/route.ts | sed -n '1,150p'; nl -ba components/BrowserStudio.tsx | sed -n '20,100p'; nl -ba components/useBrowserStudioSession.ts | sed -n '255,285p'\"",
+        "/bin/bash -lc \"rg -n 'switchDraft|useDraft|device draft|account draft' components/Publish* components/BrowserStudio.tsx; rg -n 'switchDraft|onAccount|device draft|account draft' components/*Publish*\""
+      ]
+    },
+    {
+      "task": "draft_persistence",
+      "arm": "graph",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 62.7,
+      "usage": [
+        {
+          "input_tokens": 144093,
+          "cached_input_tokens": 121344,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1388,
+          "reasoning_output_tokens": 70
+        }
+      ],
+      "command_calls": 5,
+      "tokens": 145481,
+      "uncached_tokens": 24137,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use the prebuilt Graphify graph first when it helps discovery. Run /home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"<focused question or symbols>\" --budget 1500 --graph graphify-out/graph.json. Query results are an index, not proof of implementation. Follow up only with relevant source excerpts. A direct source read is preferable for an already-known narrow lookup. Never read graph.json or GRAPH_REPORT.md directly. No reindexing or whole-corpus checks.\nTask: Explain how the browser studio chooses guest versus account drafts, saves locally and to the cloud, and prevents stale tabs or conflicting devices from silently overwriting work. Include the recovery behavior when browser storage fails. Cite the relevant source files and line numbers.",
+      "answer": "The studio uses separate browser drafts keyed by `\"guest\"` or the authenticated user\u2019s UID, with revision checks for both local and cloud saves.\n\n- **Choosing a draft.** Startup waits for authentication: signed-in users open their account draft; otherwise it loads the guest draft or creates an empty one. Signing in while a guest draft contains work preserves that draft instead of automatically switching. Signing out switches back to the guest draft. Account replacement requires confirmation when existing work is found and saves local/cloud predecessors as recovery copies. ([Session:43\u201358](components/useBrowserStudioSession.ts#L43), [220\u2013242](components/useBrowserStudioSession.ts#L220))\n\n- **Choosing local versus cloud account content.** A local draft is dirty when its timestamp differs from its last synced timestamp, or when it contains work without cloud metadata. Dirty local content plus a changed remote revision triggers a conflict. Otherwise, dirty local content or a matching cloud revision keeps the local draft; other cases hydrate the cloud draft. With no cloud draft, hydration restores the published portfolio or starts empty. Account-opening failure falls back to an available local copy and reports sync pending. ([Session:84\u2013112](components/useBrowserStudioSession.ts#L84), [hydration:26\u201337](lib/account-draft-client.ts#L26))\n\n- **Saving.** Edits advance `updatedAt`; a 300 ms debounce queues IndexedDB persistence. Successful local persistence schedules account sync after another 800 ms. Cloud operations are serialized and check account identity, session generation, readiness, and conflict state. Image hashes allow unchanged uploads to be reused; the client then PUTs content, asset IDs, and its expected revision. Returned sync metadata is saved locally without replacing newer in-memory edits. Autosave writes the private draft; publication uses a separate request. ([Session:116\u2013146](components/useBrowserStudioSession.ts#L116), [171\u2013213](components/useBrowserStudioSession.ts#L171), [cloud client:42\u201354](lib/account-draft-client.ts#L42), [publication:49\u201364](components/PublishPanel.tsx#L49))\n\n- **Stale tabs.** Within one IndexedDB read/write transaction, `writeDraft` compares the stored timestamp with the caller\u2019s expected timestamp. A mismatch aborts the write and tells the user to download this tab\u2019s draft, then reload the newer version. Deleted-account tombstones also reject writes. This is rejection and manual recovery, not automatic merging. ([Local storage:30\u201343](lib/browser-draft.ts#L30), [88\u2013100](lib/browser-draft.ts#L88))\n\n- **Conflicting devices.** The server checks the expected revision inside a Firestore transaction, returns HTTP 409 on mismatch, and increments the revision only on success. The client then disables cloud saving, fetches the remote version, and presents explicit account/device choices plus downloads. Resolution first stores the unchosen version under a recovery key; choosing local content rebases it onto the fetched revision before syncing. ([API:29\u201343](app/api/draft/route.ts#L29), [Session:135\u2013168](components/useBrowserStudioSession.ts#L135), [conflict UI:89](components/BrowserStudio.tsx#L89))\n\n- **Storage failure and recovery.** Guest startup storage failure opens an empty **in-memory** draft with a warning to enable storage and reload. Later persistence failures retain current edits, mark them unsaved, and expose the error. Backup download serializes current content and images without requiring a successful save; backups can subsequently be imported. Account-opening errors have their own local-fallback path. Online events and a 15-second timer retry account sync; unload warnings cover local errors, unpersisted edits, and pending cloud changes. ([Session:59\u201363](components/useBrowserStudioSession.ts#L59), [149\u2013155](components/useBrowserStudioSession.ts#L149), [171\u2013197](components/useBrowserStudioSession.ts#L171), [264\u2013275](components/useBrowserStudioSession.ts#L264))\n\n**Limitation:** these are source-level findings, not runtime verification. Cloud retries do not explicitly check the local-save error flag, so local storage failure alone does not guarantee that all cloud attempts stop.",
+      "commands": [
+        "/bin/bash -lc '/home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"browser studio guest account drafts local cloud save stale tabs conflicts storage recovery\" --budget 1500 --graph graphify-out/graph.json'",
+        "/bin/bash -lc \"nl -ba components/useBrowserStudioSession.ts | sed -n '1,240p'\"",
+        "/bin/bash -lc \"nl -ba components/useBrowserStudioSession.ts | sed -n '240,345p'; nl -ba lib/browser-draft.ts | sed -n '1,185p'; nl -ba lib/account-draft-client.ts | sed -n '1,215p'\"",
+        "/bin/bash -lc \"rg -n 'revision|transaction|409' app/api/draft/route.ts; rg -n 'storageFailed|conflict|recover|switchDraft|guest|reload' components/BrowserStudio.tsx components/BrowserStudioPanels.tsx components/PublishPanel.tsx; nl -ba app/api/draft/route.ts | sed -n '1,150p'\"",
+        "/bin/bash -lc \"nl -ba components/PublishPanel.tsx | sed -n '30,65p'; nl -ba components/PublishPanel.tsx | sed -n '88,100p'; nl -ba components/BrowserStudio.tsx | sed -n '74,99p'\""
+      ]
+    },
+    {
+      "task": "authentication",
+      "arm": "baseline",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 67.9,
+      "usage": [
+        {
+          "input_tokens": 140962,
+          "cached_input_tokens": 113792,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1428,
+          "reasoning_output_tokens": 32
+        }
+      ],
+      "command_calls": 6,
+      "tokens": 142390,
+      "uncached_tokens": 28598,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use ordinary efficient rg/file discovery and targeted source reads. No knowledge graph is available.\nTask: Compare authorization for legacy local editing APIs and hosted draft/publish APIs. Explain cookies versus Firebase tokens, origin/loopback restrictions, email verification, and the hosted-write boundary. Cite the relevant source files and line numbers.",
+      "answer": "The code implements two separate authorization systems: local filesystem editing uses signed session cookies; hosted drafts and publishing use Firebase bearer tokens.\n\n- **Legacy local authentication.** Login checks a local email/password record using `scrypt` and timing-safe hash comparison, without email verification (`lib/accounts.ts:36\u201340`). It sets `portfolio_session` with `HttpOnly`, `SameSite=Strict`, a seven-day lifetime, and `Secure` when the request URL is HTTPS (`app/api/auth/login/route.ts:5\u201311`; `lib/auth.ts:5\u20136`). The cookie contains account ID, expiry, random nonce, and an HMAC-SHA256 signature using `SESSION_SECRET`. Authentication validates its format, expiry, signature, and continued account existence (`lib/auth.ts:14\u201326`).\n\n- **Local editing authorization and origins.** Content reads require that cookie; content mutations, studio updates, and uploads additionally check `sameOrigin` and `editingEnabled` (`app/api/content/route.ts:5\u201314`; `app/api/studio/route.ts:5\u20138`; `app/api/upload/route.ts:7\u20139`). Crucially, `sameOrigin` **accepts a missing Origin header**. When present, it compares origin host against the Host header/request URL and compares protocols; it does **not** require loopback (`lib/auth.ts:30\u201332`). Content and studio writes select the account from the authenticated session (`app/api/content/route.ts:23\u201335`; `app/api/studio/route.ts:14\u201316`).\n\n- **Stricter local registration/dev restrictions.** Registration requires a configured session secret, editing enabled, the local admin token, and `localMutationOrigin` (`app/api/auth/register/route.ts:5\u201310`). That helper requires an Origin, matching host/protocol\u2014including `x-forwarded-proto` when supplied\u2014and an origin hostname of `localhost`, `127.0.0.1`, or `[::1]` (`lib/auth.ts:34\u201344`). These are header/URL checks, not socket-peer checks. Dev actions additionally require development mode, a permitted request host, an authenticated local operator, and the admin token (`app/api/dev/route.ts:9\u201315`; `lib/auth.ts:46\u201350`). **Caveat:** the dev helper splits Host on `:`, so its intended IPv6 `[::1]` allowance appears ineffective.\n\n- **Hosted authentication and email verification.** The client explicitly attaches `Authorization: Bearer <Firebase ID token>` (`lib/firebase-client.ts:19\u201324`). Server `publishUser` accepts only that header, invokes `verifyIdToken(token, true)` with revocation checking requested, and returns 401 for missing/invalid tokens. Its default requires `email_verified`, otherwise 403; local cookies cannot substitute (`lib/firebase-server.ts:18\u201325`). Draft GET/PUT and publication GET pass `false`, allowing authenticated unverified users; publish POST/PATCH use the verified default (`app/api/draft/route.ts:8\u201320`; `app/api/publish/route.ts:11\u201320,60\u201362`). **Draft image uploads still require verification:** both upload families use shared handlers calling the default; draft image GET permits unverified users (`lib/image-upload-routes.ts:25\u201328,51\u201355,73\u201375`; `app/api/draft/image/route.ts:8\u201315`).\n\n- **Hosted-write boundary.** `editingEnabled` disables legacy editing when `VERCEL === \"1\"`, `PORTFOLIO_DISABLE_LOCAL_EDITOR === \"1\"`, or `K_SERVICE` is set; even cookie authentication then returns null (`lib/auth.ts:9,20\u201322`). This is an environment gate, not universal hosting detection. Hosted draft/publish handlers have no corresponding origin/loopback or local-editor gate: they write through Firebase Admin to Firestore/Storage, subject to Firebase configuration and token checks (`lib/firebase-server.ts:8\u201324`; `lib/image-upload-routes.ts:28\u201338`). Draft paths derive from token UID; publishing checks asset ownership and prevents overwriting another UID\u2019s handle (`app/api/draft/route.ts:29\u201340`; `app/api/publish/route.ts:27\u201335,41\u201352`).\n\nThese are source-level findings; deployed configuration and runtime behavior were not verified.",
+      "commands": [
+        "/bin/bash -lc \"rg -n 'verifyIdToken|email_verified|loopback|same.origin|VERCEL|cookies\\\\(|Authorization|Bearer' --glob '\"'!package-lock.json'\"' --glob '\"'!*.md'\"' --glob '\"'!*.json'\"' .\"",
+        "/bin/bash -lc 'rg --files app/api lib | sort'",
+        "/bin/bash -lc 'nl -ba lib/auth.ts; nl -ba lib/firebase-server.ts; nl -ba lib/firebase-client.ts'",
+        "/bin/bash -lc 'for f in app/api/{content,upload,studio,dev,auth/login,auth/register,auth/logout,draft,publish}/route.ts; do echo \"$f\"; nl -ba \"$f\" | head -110; done'",
+        "/bin/bash -lc \"rg -n 'publishUser|verified|editingEnabled|writeContent|authenticateAccount|isLocalOperator' lib/image-upload-routes.ts lib/publishing-images.ts lib/content.ts lib/accounts.ts app/api/{draft,publish}/image app/api/account/route.ts; nl -ba lib/image-upload-routes.ts | head -85; nl -ba lib/accounts.ts | sed -n '65,105p'; nl -ba lib/content.ts | sed -n '1,85p'; for f in app/api/{draft,publish}/image/{route.ts,chunks/route.ts}; do echo \\\"\"'$f\"; nl -ba \"$f\"; done'",
+        "/bin/bash -lc \"nl -ba lib/accounts.ts | sed -n '30,48p'; rg --files -g '*middleware*' -g '*rules*'; nl -ba lib/image-upload-routes.ts | sed -n '83,92p;117,153p'\""
+      ]
+    },
+    {
+      "task": "authentication",
+      "arm": "graph",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 73.8,
+      "usage": [
+        {
+          "input_tokens": 132843,
+          "cached_input_tokens": 107776,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1660,
+          "reasoning_output_tokens": 10
+        }
+      ],
+      "command_calls": 5,
+      "tokens": 134503,
+      "uncached_tokens": 26727,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use the prebuilt Graphify graph first when it helps discovery. Run /home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"<focused question or symbols>\" --budget 1500 --graph graphify-out/graph.json. Query results are an index, not proof of implementation. Follow up only with relevant source excerpts. A direct source read is preferable for an already-known narrow lookup. Never read graph.json or GRAPH_REPORT.md directly. No reindexing or whole-corpus checks.\nTask: Compare authorization for legacy local editing APIs and hosted draft/publish APIs. Explain cookies versus Firebase tokens, origin/loopback restrictions, email verification, and the hosted-write boundary. Cite the relevant source files and line numbers.",
+      "answer": "The two API families use separate authorization systems: legacy editing trusts a signed local session cookie; hosted drafts and publishing require Firebase bearer tokens.\n\n- **Legacy cookie authentication.** Login checks local email/password credentials using scrypt and timing-safe comparison, without an email-verification requirement. It sets `portfolio_session` with `HttpOnly`, `SameSite=Strict`, a seven-day lifetime, and `Secure` when the request URL uses HTTPS. The session contains account ID, expiration, random nonce, and an HMAC-SHA256 signature using `SESSION_SECRET`; validation checks format, expiration, signature, and account existence. See [accounts.ts:36](lib/accounts.ts#L36), [login/route.ts:4](app/api/auth/login/route.ts#L4), and [auth.ts:5\u201326](lib/auth.ts#L5).\n\n- **Ordinary local edits do not enforce loopback.** Content mutations, studio updates, and uploads require local authentication plus `sameOrigin` and editing enabled. `sameOrigin` **accepts a missing Origin header**; otherwise it compares origin host/protocol against the request. It does not restrict the hostname to localhost. Content reads require the session but have no origin check. See [content/route.ts:5\u201314](app/api/content/route.ts#L5), [studio/route.ts:5\u20138](app/api/studio/route.ts#L5), [upload/route.ts:7\u20139](app/api/upload/route.ts#L7), and [auth.ts:30\u201332](lib/auth.ts#L30).\n\n- **Registration and dev tools have stronger local restrictions.** `localMutationOrigin` requires an Origin header, matching host/protocol, and a hostname of `localhost`, `127.0.0.1`, or `[::1]`; protocol matching honors `x-forwarded-proto`. Registration additionally requires configured sessions, editing enabled, and the local admin token. Dev tools require development mode, local host checking, an authenticated local operator, and that token. Operator eligibility includes owner, showcase account, or the first account. See [auth.ts:34\u201350](lib/auth.ts#L34), [register/route.ts:4\u201310](app/api/auth/register/route.ts#L4), [dev/route.ts:9\u201315](app/api/dev/route.ts#L9), and [accounts.ts:43\u201346](lib/accounts.ts#L43). Caveat: `localDevelopment` splits host on `:`, so its IPv6 loopback handling appears defective.\n\n- **Hosted authentication uses Firebase tokens, not the cookie.** The client explicitly supplies `Authorization: Bearer <ID token>`. Server `publishUser` requires that header and calls `verifyIdToken(token, true)` with revocation checking requested; missing/invalid tokens yield 401. These draft/publish handlers do not apply the local origin or loopback checks. See [firebase-client.ts:19\u201324](lib/firebase-client.ts#L19) and [firebase-server.ts:18\u201325](lib/firebase-server.ts#L18).\n\n- **Email verification varies by operation.** Draft GET/PUT, draft-image GET, and publication GET pass `false` to `publishUser`, allowing authenticated unverified accounts. Publishing POST and URL-changing PATCH require `email_verified`, otherwise 403. **Draft image uploads also require verification**, because their shared upload handlers use the default verified check. See [draft/route.ts:8\u201319](app/api/draft/route.ts#L8), [draft/image/route.ts:8\u201315](app/api/draft/image/route.ts#L8), [publish/route.ts:11\u201320](app/api/publish/route.ts#L11), [publish/route.ts:60\u201362](app/api/publish/route.ts#L60), and [image-upload-routes.ts:25\u201328](lib/image-upload-routes.ts#L25).\n\n- **Hosted-write boundary.** Local editing is disabled when `VERCEL === \"1\"`, `PORTFOLIO_DISABLE_LOCAL_EDITOR === \"1\"`, or `K_SERVICE` is present; session lookup then returns null. This is an environment gate, not universal hosting detection. Hosted Firebase writes remain available: drafts are scoped to token UID, and publishing checks asset ownership and existing publication ownership. Direct client Firestore/Storage access is denied by checked-in rules. See [auth.ts:9\u201322](lib/auth.ts#L9), [draft/route.ts:29\u201340](app/api/draft/route.ts#L29), [publish/route.ts:27\u201351](app/api/publish/route.ts#L27), [firestore.rules:5](firestore.rules#L5), and [storage.rules:5](storage.rules#L5).\n\nSource-only review; deployed configuration and enforcement were not verified.",
+      "commands": [
+        "/bin/bash -lc '/home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"authorization legacy local editing API cookies origin loopback Firebase tokens hosted draft publish email verification hosted writes\" --budget 1500 --graph graphify-out/graph.json'",
+        "/bin/bash -lc \"rg -n 'authorize|requireAuth|sameOrigin|loopback|isLocal|VERCEL|email_verified|cookies\\\\(|publishUser' lib app/api\"",
+        "/bin/bash -lc 'nl -ba lib/auth.ts; nl -ba lib/firebase-server.ts; nl -ba app/api/content/route.ts; nl -ba app/api/auth/login/route.ts; nl -ba app/api/draft/route.ts; nl -ba app/api/publish/route.ts'",
+        "/bin/bash -lc \"rg -n 'localMutationOrigin|editingEnabled|email|authenticateAccount' app/api/auth lib/accounts.ts lib/content.ts; nl -ba app/api/auth/login/route.ts | sed -n '7,12p'; nl -ba app/api/dev/route.ts | sed -n '1,30p'; nl -ba app/api/studio/route.ts | sed -n '1,28p'; nl -ba app/api/upload/route.ts | sed -n '1,24p'; nl -ba lib/firebase-client.ts | sed -n '24,44p'; nl -ba lib/image-upload-routes.ts | sed -n '18,35p'; nl -ba app/api/draft/image/route.ts | sed -n '1,27p'; rg --files | rg '(rules|middleware|draft.*upload)'\"",
+        "/bin/bash -lc \"nl -ba app/api/auth/register/route.ts | sed -n '4,13p'; nl -ba lib/accounts.ts | sed -n '36,46p'; nl -ba app/api/studio/route.ts | sed -n '1,16p'; nl -ba app/api/upload/route.ts | sed -n '6,11p'; nl -ba lib/firebase-client.ts | sed -n '17,25p'; nl -ba firestore.rules; nl -ba storage.rules; rg -n 'writeContent|writeFile|editingEnabled' lib/content.ts; nl -ba lib/image-upload-routes.ts | sed -n '49,56p;71,78p'\""
+      ]
+    },
+    {
+      "task": "uploads",
+      "arm": "baseline",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 68.9,
+      "usage": [
+        {
+          "input_tokens": 107735,
+          "cached_input_tokens": 78848,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1494,
+          "reasoning_output_tokens": 12
+        }
+      ],
+      "command_calls": 4,
+      "tokens": 109229,
+      "uncached_tokens": 30381,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use ordinary efficient rg/file discovery and targeted source reads. No knowledge graph is available.\nTask: Trace direct and chunked image upload behavior for published and private draft images. Explain size limits, storage namespaces, reservations/admission, chunk replay protection, cleanup, and private image reads. Cite the relevant source files and line numbers.",
+      "answer": "Both upload modes share policy-driven handlers; draft mode changes the storage namespace and asset collection.\n\n- **Selection and limits.** The client uses `/api/publish/image` or, when given a draft UID, `/api/draft/image`. Files \u22648 MiB use direct POST; larger files use chunk-session POST, sequential PUTs, then PATCH. Maximum image size is **500 MiB** (UI messages say \u201cMB\u201d). Server chunk-session creation accepts integer sizes from 1 byte through that maximum. Direct/chunk body readers enforce both declared and actual byte limits. ([client:33\u201346](lib/firebase-client.ts#L33), [constants:7\u201313](lib/portfolio-snapshot.ts#L7), [session creation:73\u201379](lib/image-upload-routes.ts#L73), [body reader:103\u2013109](lib/publishing-images.ts#L103))\n\n- **Authentication and namespaces.** Uploads require a bearer Firebase ID token, checked for revocation, and verified email. Published objects reside at `portfolios/{uid}/{id}`, with records in `publishers/{uid}/assets/{id}`; private objects add `draft/`, and records use `draftAssets`. Temporary chunks occupy `{storageRoot}chunks/{id}/{part}`. ([authentication:18\u201325](lib/firebase-server.ts#L18), [policy:15\u201322](lib/image-upload-routes.ts#L15), [chunk paths:69\u201370](lib/image-upload-routes.ts#L69))\n\n- **Direct uploads.** The server recognizes PNG/JPEG/WebP signatures, hashes bytes with SHA-256 for the ID, and reserves storage. An already-ready record skips writing. Otherwise, object creation uses `ifGenerationMatch: 0`; a 412 is tolerated before finalization. Failure deletes the object and releases its reservation. These are signature checks, not full image decoding. ([direct handler:25\u201347](lib/image-upload-routes.ts#L25), [signature detection:30\u201331](lib/publishing-images.ts#L30))\n\n- **Reservations and admission.** Transactional reservations share account/global counters across both namespaces: **1 GiB/account, 10 GiB/service, 200 uploads/account/day, 1,000/service/day**. New records charge declared bytes; ready duplicates bypass quota increments. Reservations expire after 24 hours. Separate global admission leases permit **four requests and 32 MiB** concurrently: direct requests reserve 8 MiB, PUTs their expected size. Leases expire after six minutes and are removed in `finally`. Chunk creation and PATCH assembly do not use this admission wrapper. ([reservations:54\u201376](lib/publishing-images.ts#L54), [admission:6\u201327](lib/publishing-images.ts#L6), [constants:9\u201313](lib/portfolio-snapshot.ts#L9), [handlers:73\u2013124](lib/image-upload-routes.ts#L73))\n\n- **Chunks and replay protection.** Sessions use random 64-hex IDs. Transactions reject unavailable, ready, expiring, expired, or currently-writing sessions; validate part bounds; and reject previously recorded parts with 409. A six-minute write lease serializes operations. PUT requires exact part length, checks part-zero\u2019s signature, saves, then marks completion. PATCH checks every completion flag and object size, streams parts in order, deletes chunks, and finalizes. **Limitation:** object storage and completion marking are separate operations, so this is not unconditional exactly-once protection across failures or lease expiry. ([ID generation:33](lib/publishing-images.ts#L33), [sessions/PUT:52\u2013100](lib/image-upload-routes.ts#L52), [PATCH:103\u2013124](lib/image-upload-routes.ts#L103))\n\n- **Cleanup.** Client failure attempts DELETE, but errors are swallowed and cancellation reuses the abort signal. DELETE allows expired sessions and removes chunks/output before releasing bytes; daily counts remain charged. Each reservation opportunistically reaps up to 20 expired uploads in its namespace, skipping ready/actively-writing records. PATCH failure merely clears the write lease. Account deletion removes both namespaces. ([client:35\u201346](lib/firebase-client.ts#L35), [DELETE:127\u2013137](lib/image-upload-routes.ts#L127), [reaping:35\u201350](lib/publishing-images.ts#L35), [release:79\u201387](lib/publishing-images.ts#L79), [account:30\u201346](app/api/account/route.ts#L30))\n\n- **Private reads.** Finalization gives published objects download tokens/URLs; drafts receive neither. Draft GET authenticates without requiring verified email, scopes lookup to the caller\u2019s ready `draftAssets` record, and streams with `private, no-store`. Storage rules deny direct SDK reads/writes. Deployed enforcement was not verified. ([finalization:90\u2013100](lib/publishing-images.ts#L90), [GET:11\u201320](app/api/draft/image/route.ts#L11), [rules:1\u20137](storage.rules#L1))",
+      "commands": [
+        "/bin/bash -lc \"rg -n 'chunk|reservation' app lib src --glob '*.{ts,tsx}'\"",
+        "/bin/bash -lc \"rg -n 'imageUpload|image-upload|reserveImage|private.*image|image.*private|cleanup.*Image' app lib; nl -ba lib/publishing-images.ts; nl -ba lib/image-upload-routes.ts; nl -ba lib/firebase-client.ts | sed -n '1,110p'\"",
+        "/bin/bash -lc \"nl -ba app/api/draft/image/route.ts; nl -ba app/api/draft/image/chunks/route.ts; nl -ba app/api/publish/image/route.ts; nl -ba app/api/publish/image/chunks/route.ts; rg -n 'MAX_.*(BYTES|UPLOAD|REQUEST)|IMAGE_CHUNK' lib/portfolio-snapshot.ts; nl -ba lib/firebase-server.ts | sed -n '1,85p'; rg -n 'draft/image|draftAssets|releaseImageReservation|deleteFiles' lib app --glob '*.{ts,tsx}'; rg --files | rg 'storage.rules|firestore.rules'\"",
+        "/bin/bash -lc \"nl -ba storage.rules; nl -ba lib/account-draft-client.ts | sed -n '22,43p'; nl -ba app/api/account/route.ts | sed -n '25,66p'; rg -n 'ready|assets|url' app/api/publish/route.ts\""
+      ]
+    },
+    {
+      "task": "uploads",
+      "arm": "graph",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 78.7,
+      "usage": [
+        {
+          "input_tokens": 118946,
+          "cached_input_tokens": 94080,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1584,
+          "reasoning_output_tokens": 28
+        }
+      ],
+      "command_calls": 4,
+      "tokens": 120530,
+      "uncached_tokens": 26450,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use the prebuilt Graphify graph first when it helps discovery. Run /home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"<focused question or symbols>\" --budget 1500 --graph graphify-out/graph.json. Query results are an index, not proof of implementation. Follow up only with relevant source excerpts. A direct source read is preferable for an already-known narrow lookup. Never read graph.json or GRAPH_REPORT.md directly. No reindexing or whole-corpus checks.\nTask: Trace direct and chunked image upload behavior for published and private draft images. Explain size limits, storage namespaces, reservations/admission, chunk replay protection, cleanup, and private image reads. Cite the relevant source files and line numbers.",
+      "answer": "Both scopes use shared upload handlers, with separate asset records and object paths.\n\n- **Routing and authentication.** The client selects `/api/draft/image` when given `draftUid`, otherwise `/api/publish/image`. Files \u22648 MiB use direct POST; larger files use chunk-session POST, sequential PUTs, then PATCH. Upload authentication requires a Firebase Bearer token, revocation checking, and verified email. [lib/firebase-client.ts:33\u201346](lib/firebase-client.ts#L33), [lib/firebase-server.ts:18\u201325](lib/firebase-server.ts#L18)\n\n- **Limits and validation.** Maximum image size is **500 MiB**, despite \u201c500 MB\u201d messages; chunks are **8 MiB**. Chunk initialization accepts integer sizes from 1 byte through that maximum. Direct uploads enforce 8 MiB against both `Content-Length` and actual streamed bytes. PNG/JPEG/WebP validation checks signatures, not full image decoding. [lib/portfolio-snapshot.ts:7\u201313](lib/portfolio-snapshot.ts#L7), [lib/image-upload-routes.ts:73\u201379](lib/image-upload-routes.ts#L73), [lib/publishing-images.ts:30\u201331,103\u2013109](lib/publishing-images.ts#L103)\n\n- **Namespaces and visibility.** Published-upload records live under `publishers/{uid}/assets`; private records use `draftAssets`. Objects are `portfolios/{uid}/{id}` versus `portfolios/{uid}/draft/{id}`, with temporary parts under each root\u2019s `chunks/{id}/{part}`. Finalization gives published objects a Firebase download token and records their URL; drafts receive neither token metadata nor a URL. Both set `private, no-store`. Publishing separately resolves only the owner\u2019s ready `assets` records into the public snapshot. [lib/image-upload-routes.ts:15\u201322,69\u201370](lib/image-upload-routes.ts#L15), [lib/publishing-images.ts:90\u2013100](lib/publishing-images.ts#L90), [app/api/publish/route.ts:28\u201338](app/api/publish/route.ts#L28)\n\n- **Direct uploads.** The ID is SHA-256 of the bytes. A ready reservation deduplicates the request. Otherwise, saving uses `ifGenerationMatch: 0`; an existing-object 412 is tolerated, then finalization marks the asset ready. Failure during saving/finalization deletes the object and releases its reservation. [lib/image-upload-routes.ts:25\u201347](lib/image-upload-routes.ts#L25)\n\n- **Reservations and admission.** Transactions enforce shared account storage of **1 GiB**, service storage of **10 GiB**, and daily limits of **200/account** and **1,000/service**. Existing ready assets bypass new charges; existing incomplete records avoid another storage charge but increment upload counts. Reservations expire after 24 hours. Separately, global admission allows four requests and 32 MiB of reserved buffering, using six-minute leases. Direct requests reserve 8 MiB; chunk PUTs reserve their expected size. PATCH assembly does not use admission. Leases release in `finally`, with expiry as fallback. [lib/publishing-images.ts:6\u201327,54\u201376](lib/publishing-images.ts#L6), [lib/portfolio-snapshot.ts:9\u201313](lib/portfolio-snapshot.ts#L9), [lib/image-upload-routes.ts:29,89\u201395,103\u2013124](lib/image-upload-routes.ts#L89)\n\n- **Chunk replay and completion.** Random 64-hex IDs identify sessions. Transactions reject unavailable, ready, expiring, expired, or currently-writing sessions; enforce part bounds; reject recorded duplicate parts with 409; and acquire a six-minute writing lock. PUT requires exact byte length and validates part zero\u2019s signature. PATCH checks every recorded part and stored size, rechecks the signature, streams parts in order, deletes parts, then finalizes. This protects recorded replays; it is not proof of exactly-once behavior across storage/Firestore failures. [lib/image-upload-routes.ts:52\u2013124](lib/image-upload-routes.ts#L52), [lib/publishing-images.ts:33](lib/publishing-images.ts#L33)\n\n- **Cleanup and private reads.** Client failures attempt DELETE; server DELETE permits expired sessions and removes parts/output before refunding storage, not daily counts. New reservations opportunistically reap up to 20 expired incomplete records, skipping active writers and ready assets. Private GET authenticates without requiring verified email, checks the caller\u2019s ready draft record, and streams their object with `private, no-store`. [lib/firebase-client.ts:46](lib/firebase-client.ts#L46), [lib/image-upload-routes.ts:127\u2013137](lib/image-upload-routes.ts#L127), [lib/publishing-images.ts:35\u201350,79\u201387](lib/publishing-images.ts#L35), [app/api/draft/image/route.ts:11\u201320](app/api/draft/image/route.ts#L11)\n\nStatic source trace only; runtime failure recovery was not tested.",
+      "commands": [
+        "/bin/bash -lc '/home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"direct chunked image upload published private draft reservations admission replay cleanup private image reads\" --budget 1500 --graph graphify-out/graph.json'",
+        "/bin/bash -lc \"nl -ba lib/image-upload-routes.ts | sed -n '1,260p'; nl -ba lib/publishing-images.ts | sed -n '1,250p' \"",
+        "/bin/bash -lc \"rg -n 'MAX_.*(BYTES|UPLOAD)|IMAGE_CHUNK|draft/image|publish/image|chunks|async.*[Ii]mage' lib/portfolio-snapshot.ts lib/cloud-draft.ts app/api/draft/image app/api/publish/image lib/*upload*; nl -ba app/api/draft/image/route.ts; nl -ba app/api/publish/image/route.ts; nl -ba app/api/draft/image/chunks/route.ts; nl -ba app/api/publish/image/chunks/route.ts; nl -ba lib/firebase-server.ts | sed -n '18,38p'; rg -n 'IMAGE_CHUNK_BYTES|/api/publish/image|/api/draft/image' lib components; rg -n 'allow|match' storage.rules\"",
+        "/bin/bash -lc \"nl -ba lib/firebase-client.ts | sed -n '25,55p'; nl -ba lib/account-draft-client.ts | sed -n '20,45p'; rg -n 'deleteFiles|releaseImageReservation|draftAssets|collection\\\\(\\\"assets\\\"\\\\)' app/api/publish/route.ts app/api/draft/route.ts lib/account*; nl -ba app/api/publish/route.ts | sed -n '25,78p' \""
+      ]
+    },
+    {
+      "task": "documentation",
+      "arm": "baseline",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 107.5,
+      "usage": [
+        {
+          "input_tokens": 232644,
+          "cached_input_tokens": 190208,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2153,
+          "reasoning_output_tokens": 46
+        }
+      ],
+      "command_calls": 7,
+      "tokens": 234797,
+      "uncached_tokens": 44589,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use ordinary efficient rg/file discovery and targeted source reads. No knowledge graph is available.\nTask: Does the original portfolio specification accurately describe the current storage and account architecture? Identify the later documented changes and their matching implementation, distinguishing current capabilities from historical verification limitations. Cite documentation and source files with line numbers.",
+      "answer": "**No. The original specification describes the legacy foundation, not the full current architecture.** It calls for `/content` JSON as the sole data source, `/public/images` uploads, one owner authenticated by an environment-variable password, and Vercel deployment ([spec, lines 16\u201319](docs/PORTFOLIO-SPEC.md#L16)). Later requests explicitly superseded those assumptions.\n\n- **September 8: local multi-account portfolios.** The amended scope requires signup, sign-in, onboarding, and separate portfolios ([change request, lines 3\u20137](docs/CHANGE-REQUEST.md#L3)). Implementation stores account records in `.studio/accounts.json`, generates salted scrypt password hashes, and assigns account IDs ([accounts.ts, lines 8\u201333](lib/accounts.ts#L8)). Content resides under `content/portfolios/<account-id>` with JSON writes ([content.ts, lines 9\u201319](lib/content.ts#L9)). Registration requires the local admin token and sets an account-specific session cookie ([registration route, lines 5\u201312](app/api/auth/register/route.ts#L5)). This is no longer the specification\u2019s single shared password.\n\n- **September 10: browser drafts plus explicit Firebase publication.** The documented amendment introduces browser-local editing, backups, publishing, and shareable online portfolios ([initial findings, lines 3\u201315](docs/LOCAL-PUBLISH-INITIAL.md#L3)). Draft persistence actually uses IndexedDB ([browser-draft.ts, lines 17\u201338](lib/browser-draft.ts#L17)). Hosted signup/sign-in, verification email, and password-reset requests call Firebase Auth ([HostedAccountForm.tsx, lines 53\u201366](components/HostedAccountForm.tsx#L53)). Server publishing verifies bearer tokens and requires verified email; publications are read from Firestore ([firebase-server.ts, lines 16\u201332](lib/firebase-server.ts#L16)). Images are written to account-scoped Cloud Storage objects ([image-upload-routes.ts, lines 21\u201336](lib/image-upload-routes.ts#L21)). Publication transactions enforce ownership and revision checks ([publish route, lines 40\u201352](app/api/publish/route.ts#L40)); `/p/<handle>` renders dynamically ([published page, lines 5\u201317](app/p/[handle]/[[...page]]/page.tsx#L5)).\n\n- **Later extensions: private account autosave, address changes, deletion.** Documentation now distinguishes guest device drafts from signed-in cloud drafts ([hosting guide, lines 47\u201355](docs/FIREBASE-HOSTING.md#L47)). The session code calls `saveAccountDraft` and reports success after acknowledgement ([session hook, lines 124\u2013134](components/useBrowserStudioSession.ts#L124)). `/api/draft` accepts authenticated, unverified users and transactionally stores versioned drafts under `publishers/<uid>/drafts/current`, rejecting stale revisions ([draft route, lines 19\u201340](app/api/draft/route.ts#L19)). Documented address moves ([hosting guide, line 5](docs/FIREBASE-HOSTING.md#L5)) transactionally create the destination and delete the prior publication ([publish route, lines 70\u201386](app/api/publish/route.ts#L70)). Documented account deletion ([README, lines 123\u2013125](README.md#L123)) removes publications, account Storage objects, publisher subcollections, and Auth identity ([account route, lines 37\u201346](app/api/account/route.ts#L37)).\n\n**The legacy architecture still coexists.** Documentation preserves local accounts and `/u/` snapshots without password migration ([hosting guide, line 7](docs/FIREBASE-HOSTING.md#L7)). `/u/` remains explicitly static ([legacy page, lines 4\u20137](app/u/[handle]/[[...page]]/page.tsx#L4)); local editing is disabled on Vercel, configured hosted deployments, and Cloud Run ([auth.ts, line 9](lib/auth.ts#L9)).\n\n**Verification limits are historical evidence, not missing capabilities.** September 8 reported no hosted account service and no real Vercel test ([review, lines 72\u201373](docs/CRITIC-2026-09-08.md#L72)). September 13 subsequently recorded a successful Firebase rollout, live read checks, and emulator publish/restore tests\u2014but explicitly did not verify owner email delivery or real-account publish/restore ([deployment evidence, lines 26\u201334](docs/DEPLOYMENT-2026-09-13.md#L26)). September 14 also left full-size image stress and completed-deletion/lost-response retry unestablished ([evidence, lines 10\u201313](docs/FIXES-2026-09-14-EVIDENCE.md#L10)). These are recorded claims; this read-only review did not independently verify today\u2019s deployment.",
+      "commands": [
+        "/bin/bash -lc \"rg --files -g '\"'!package-lock.json'\"' -g '\"'!node_modules'\"' -g '\"'!*.svg'\"' -g '\"'!*.png'\"' -g '\"'!*.jpg'\"' -g '\"'!*.jpeg'\"' -g '\"'!*.webp'\"' -g '\"'!*.ico'\"' -g '\"'!*.woff*'\"' -g '\"'!*.pdf'\"' -g '\"'!*.lock'\"'\"",
+        "/bin/bash -lc \"rg -n 'stor|account|JSON|local|Firebase|Firestore|Vercel|verif|limit|publish|IndexedDB' docs/PORTFOLIO-SPEC.md README.md docs/CHANGE-REQUEST.md docs/CLEANUP-FIREBASE.md docs/FIREBASE-HOSTING.md docs/DEPLOYMENT-2026-09-13.md\"",
+        "/bin/bash -lc \"rg -n 'account|stor|verif|Firebase|IndexedDB|single|password' docs/CHANGE-REQUEST.md docs/REVIEW-2026-09-09.md docs/FIREBASE-HOSTING.md docs/URL-DRAFT-2026-09-15-INITIAL.md docs/FIXES-2026-09-14-EVIDENCE.md lib/accounts.ts lib/auth.ts lib/content.ts lib/firebase-server.ts lib/cloud-draft.ts lib/account-publication.ts lib/browser-draft.ts\"",
+        "/bin/bash -lc \"nl -ba lib/accounts.ts | sed -n '1,40p'\nnl -ba lib/auth.ts | sed -n '7,48p'\nnl -ba app/api/auth/register/route.ts | sed -n '1,55p'\nnl -ba app/api/draft/route.ts | sed -n '1,125p'\nnl -ba app/api/publish/route.ts | sed -n '1,125p'\"",
+        "/bin/bash -lc \"nl -ba lib/browser-draft.ts | sed -n '10,42p'\nnl -ba lib/content.ts | sed -n '6,20p;40,60p'\nnl -ba 'app/p/[handle]/[[...page]]/page.tsx' | sed -n '1,42p'\nnl -ba app/api/account/route.ts | sed -n '12,100p'\nrg -n 'createUser|signInWith|sendPassword|sendEmail|publishingBucket|storageRoot|file.save|private|downloadTokens' components/HostedAccountForm.tsx lib/firebase-server.ts lib/image-upload-routes.ts\nrg -n 'not|unable|unverified|Firebase|Vercel|account|storage' docs/CRITIC-2026-09-08.md docs/CRITIC-DEPLOYMENT-2026-09-13.md docs/LOCAL-PUBLISH-INITIAL.md | head -45\"",
+        "/bin/bash -lc \"rg -n 'createUser|signInWith|sendPassword|sendEmail' components/HostedAccountForm.tsx\nnl -ba lib/firebase-server.ts | sed -n '16,35p'\nnl -ba app/api/account/route.ts | sed -n '37,62p'\nrg -n 'storageRoot|\\\\.save\\\\(|downloadTokens' lib/image-upload-routes.ts\nrg -n 'force-static|generateStaticParams' 'app/u/[handle]/[[...page]]/page.tsx' app/page.tsx\nrg -n 'setTimeout|saveCloud|pushCloud|800|300|guest|account-' components/useBrowserStudioSession.ts\nnl -ba docs/LOCAL-PUBLISH-INITIAL.md | sed -n '1,20p'\"",
+        "/bin/bash -lc \"rg -n 'storageRoot|\\\\.save\\\\(|createWriteStream|firebaseStorageDownloadTokens' lib/image-upload-routes.ts\nrg -n 'force-static|generateStaticParams' 'app/u/[handle]/[[...page]]/page.tsx' app/page.tsx\nnl -ba components/useBrowserStudioSession.ts | sed -n '120,137p'\nnl -ba lib/account-publication.ts | sed -n '6,21p'\""
+      ]
+    },
+    {
+      "task": "documentation",
+      "arm": "graph",
+      "model": "gpt-6-astra",
+      "reasoning": "medium",
+      "exit": 0,
+      "elapsed_seconds": 120.3,
+      "usage": [
+        {
+          "input_tokens": 230969,
+          "cached_input_tokens": 177536,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2187,
+          "reasoning_output_tokens": 100
+        }
+      ],
+      "command_calls": 7,
+      "tokens": 233156,
+      "uncached_tokens": 55620,
+      "prompt": "You are answering a read-only codebase research task in an isolated copy. Do not edit files, run tests/builds, browse the web, spawn other agents, or read outside this corpus except the provided graph query executable. Optimize token usage with targeted searches and short source excerpts. Do not read the entire codebase or any entire graph/report. Read enough actual source to substantiate behavior; do not infer guarantees from names alone. Answer in at most 650 words with precise source citations and mark uncertainty. Stop when the question is supported.\nRetrieval method: use the prebuilt Graphify graph first when it helps discovery. Run /home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"<focused question or symbols>\" --budget 1500 --graph graphify-out/graph.json. Query results are an index, not proof of implementation. Follow up only with relevant source excerpts. A direct source read is preferable for an already-known narrow lookup. Never read graph.json or GRAPH_REPORT.md directly. No reindexing or whole-corpus checks.\nTask: Does the original portfolio specification accurately describe the current storage and account architecture? Identify the later documented changes and their matching implementation, distinguishing current capabilities from historical verification limitations. Cite documentation and source files with line numbers.",
+      "answer": "**No. The original specification describes the initial architecture, not the complete current system.** It specifies local JSON as the sole source of truth, images in `public/images`, one environment-password owner, and public updates only after redeployment ([specification, lines 7\u201319](docs/PORTFOLIO-SPEC.md#L7)). Later documentation explicitly identifies these assumptions as superseded ([cleanup inventory, lines 132\u2013137](docs/CLEANUP-INVENTORY.md#L132)).\n\nThe documented changes match these implementation paths:\n\n- **September 8: separate local accounts and portfolios.** The amendment replaces single-owner authentication with signup, immediate onboarding, and initially empty portfolios ([change request, lines 3\u20137](docs/CHANGE-REQUEST.md#L3)). Implementation stores accounts in `.studio/accounts.json`, generates salted scrypt password hashes, and authenticates against those hashes ([accounts.ts, lines 7\u201340](lib/accounts.ts#L7)). Content resides under `content/portfolios/<account-id>`; initialization creates empty profile collections and projects unless importing existing content ([content.ts, lines 9\u201327](lib/content.ts#L9)). Thus, flat-file storage survives, but the original account model does not.\n\n- **September 10: browser drafts and explicit Firebase publication.** The amended direction adds IndexedDB, portable backups, and authenticated online snapshots ([initial findings, lines 3\u201315](docs/LOCAL-PUBLISH-INITIAL.md#L3)). Actual draft reads/writes use an IndexedDB object store ([browser-draft.ts, lines 17\u201341](lib/browser-draft.ts#L17)). Hosted signup/sign-in calls Firebase Authentication ([HostedAccountForm.tsx, lines 53\u201358](components/HostedAccountForm.tsx#L53)); server APIs verify Firebase bearer tokens, with verified email required by default ([firebase-server.ts, lines 18\u201325](lib/firebase-server.ts#L18)). Publishing transactionally writes `publishedPortfolios/<handle>` ([publish route, lines 40\u201356](app/api/publish/route.ts#L40)); `/p/<handle>` dynamically reads that publication, so publishing does not require rebuilding ([public route, lines 5\u201315](app/p/[handle]/[[...page]]/page.tsx#L5)).\n\n- **September 14: private account autosave.** Documentation extends device drafts with private cloud drafts, including unfinished work; text saves do not require email verification, while image uploads do ([hosting documentation, lines 45\u201351](docs/FIREBASE-HOSTING.md#L45)). Implementation authenticates draft saves with `publishUser(request, false)`, stores them beneath the authenticated UID, and transactionally rejects stale revisions with HTTP 409 ([draft route, lines 17\u201340](app/api/draft/route.ts#L17)). Image upload code requires verified authentication and saves bytes to account-scoped Storage paths, including a separate `draft/` namespace ([image-upload-routes.ts, lines 21\u201336](lib/image-upload-routes.ts#L21)).\n\n- **September 15: enforce one website per account and support address changes.** Investigation documented a duplicate-publication bug and missing URL-edit capability ([findings, lines 9\u201316](docs/URL-DRAFT-2026-09-15-INITIAL.md#L9)). Current publication checks query ownership by UID; address changes transactionally create the destination and delete the old document ([publish route, lines 40\u201348](app/api/publish/route.ts#L40), [lines 70\u201386](app/api/publish/route.ts#L70)).\n\nThe legacy architecture remains supported: `/u/<handle>` uses build-time static parameters, while hosted `/admin` redirects to `/studio` ([legacy public route, lines 4\u20138](app/u/[handle]/[[...page]]/page.tsx#L4); [admin layout, line 7](app/admin/layout.tsx#L7)). Local and Firebase credentials are not automatically migrated ([hosting documentation, line 7](docs/FIREBASE-HOSTING.md#L7)).\n\n**Verification is time-bounded.** September 10 explicitly excluded deployment; September 13 later records a successful Firebase rollout, live read-only checks, and emulator publication/restore tests\u2014but not owner email delivery or real-account publish/restore ([deployment evidence, lines 26\u201334](docs/DEPLOYMENT-2026-09-13.md#L26)). Later reports retain production-verification gaps and a teardown problem preventing a clean integrated-check exit ([critic report, lines 27\u201331](CRITIC-REPORT.md#L27)). These limit verification claims; they do not establish missing implementation. This research performed no runtime or live verification.",
+      "commands": [
+        "/bin/bash -lc '/home/tjaquiro/Desktop/Tyler-John-Projects/PortfolioWebsite/.qa/graphify-trial/venv/bin/graphify query \"original portfolio specification storage account architecture later changes persistence authentication\" --budget 1500 --graph graphify-out/graph.json'",
+        "/bin/bash -lc \"rg -n 'single|password|local|JSON|static|Vercel|Firebase|account|verif|2026|storage|publish|IndexedDB' docs/PORTFOLIO-SPEC.md docs/CHANGE-REQUEST.md docs/CLEANUP-INVENTORY.md README.md\"",
+        "/bin/bash -lc \"rg -n '\"'^|.'\"' docs/PORTFOLIO-SPEC.md docs/CHANGE-REQUEST.md docs/LOCAL-PUBLISH-INITIAL.md docs/FIREBASE-HOSTING.md docs/DEPLOYMENT-2026-09-13.md | head -n 210\"",
+        "/bin/bash -lc \"rg -n 'autosave|verif|test|deploy|Firestore|Storage|September' docs/FIREBASE-HOSTING.md; rg -n 'scrypt|accounts.json|createAccount|write|portfolio|password' lib/accounts.ts; rg -n 'indexedDB|DB_NAME|put\\\\(|guest' lib/browser-draft.ts; rg -n 'export|verify|collection|bucket|transaction|email_verified' lib/firebase-server.ts app/api/draft/route.ts app/api/publish/route.ts; rg -n 'force-|getPublished|read|snapshot' 'app/p/[handle]/[[...page]]/page.tsx' 'app/u/[handle]/[[...page]]/page.tsx'; rg -n 'signInWith|createUserWith|sendEmail' components/HostedAccountForm.tsx\"",
+        "/bin/bash -lc \"nl -ba lib/accounts.ts | sed -n '7,41p'; nl -ba lib/content.ts | sed -n '1,85p'; nl -ba lib/browser-draft.ts | sed -n '14,46p'; nl -ba app/api/draft/route.ts | sed -n '8,48p'; nl -ba app/api/publish/route.ts | sed -n '18,57p'; nl -ba lib/firebase-server.ts | sed -n '9,33p'; nl -ba docs/FIREBASE-HOSTING.md | sed -n '43,55p'; nl -ba docs/CLEANUP-INVENTORY.md | sed -n '130,140p'\"",
+        "/bin/bash -lc \"nl -ba app/api/draft/route.ts | sed -n '27,42p'; nl -ba components/useBrowserStudioSession.ts | sed -n '1,25p'; rg -n 'guest|uid|writeDraft|saveAccountDraft|800|300|15000' components/useBrowserStudioSession.ts; rg -n 'bucket|save\\\\(|file\\\\(|publishUser|draft/' lib/image-upload-routes.ts; nl -ba app/admin/layout.tsx | sed -n '1,25p'; rg -n 'hosted|VERCEL|writes|isHosted' lib/*guard* lib/auth.ts; nl -ba docs/URL-DRAFT-2026-09-15-INITIAL.md | sed -n '1,24p'; rg -n 'not run|not verif|Java|emulator|unavailable|deploy' docs/LOCAL-PUBLISH* CRITIC-REPORT.md | head -n 22\"",
+        "/bin/bash -lc \"nl -ba docs/URL-DRAFT-2026-09-15-INITIAL.md | sed -n '1,16p'; nl -ba app/admin/layout.tsx | sed -n '1,17p'; rg -n 'publishUser|bucket|\\\\.save\\\\(|portfolios/' lib/image-upload-routes.ts | head -n 12; nl -ba components/useBrowserStudioSession.ts | sed -n '103,124p'; nl -ba app/api/publish/route.ts | sed -n '70,90p'; nl -ba CRITIC-REPORT.md | sed -n '20,32p'\""
+      ]
+    }
+  ],
+  "baseline_tokens": 795895,
+  "graph_tokens": 838204,
+  "savings_percent": -5.315902223283222,
+  "initial_index_tokens_lower_bound": 226449,
+  "maintenance_usage": {
+    "input_tokens": 60763,
+    "cached_input_tokens": 36224,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1180,
+    "reasoning_output_tokens": 289
+  },
+  "maintenance_tokens": 61943,
+  "graph_plus_one_maintenance_tokens": 900147,
+  "savings_with_one_update_per_five_tasks_percent": -13.098712769900553,
+  "break_even_tasks_no_updates": null,
+  "break_even_tasks_one_update_per_five": null,
+  "index": {
+    "documentation_files": 27,
+    "semantic_nodes": 62,
+    "nodes": 836,
+    "edges": 1952,
+    "usage": [
+      {
+        "input_tokens": 105889,
+        "cached_input_tokens": 45568,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5832,
+        "reasoning_output_tokens": 83
+      },
+      {
+        "input_tokens": 108514,
+        "cached_input_tokens": 72064,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6214,
+        "reasoning_output_tokens": 100
+      }
+    ]
+  },
+  "budget_checks": [
+    {
+      "query": "architecture routes storage public private",
+      "exit": 0,
+      "tokens_o200k_base": 1273,
+      "characters": 5259,
+      "requested_budget": 1500
+    },
+    {
+      "query": "useBrowserStudioSession persist syncAccount",
+      "exit": 0,
+      "tokens_o200k_base": 1267,
+      "characters": 5079,
+      "requested_budget": 1500
+    },
+    {
+      "query": "publishUser editingEnabled sameOrigin",
+      "exit": 0,
+      "tokens_o200k_base": 1414,
+      "characters": 5110,
+      "requested_budget": 1500
+    },
+    {
+      "query": "createChunkedImageUploadHandlers reserveImage",
+      "exit": 0,
+      "tokens_o200k_base": 1353,
+      "characters": 5159,
+      "requested_budget": 1500
+    },
+    {
+      "query": "portfolio specification browser Firebase",
+      "exit": 0,
+      "tokens_o200k_base": 1361,
+      "characters": 5256,
+      "requested_budget": 1500
+    }
+  ],
+  "incremental_checks": {
+    "checks": [
+      "changed-file replacement and unrelated AST/document preservation",
+      "addition",
+      "rename via prune plus addition",
+      "deletion",
+      "unrelated relationships preserved and no dangling edges"
+    ],
+    "passed": true,
+    "scope": "Graphify extract/build_merge primitive fixtures; not a complete incremental integration or caller reconciliation test"
+  },
+  "quality_rubric": {
+    "architecture": [
+      "six requested surfaces and actual route paths",
+      "local JSON versus IndexedDB versus Firestore",
+      "static legacy public build versus dynamic published snapshot",
+      "saving is distinct from explicit publication",
+      "implementation citations"
+    ],
+    "draft_persistence": [
+      "guest/account selection and explicit migration",
+      "IndexedDB autosave and cloud sync",
+      "local expected-timestamp conflict detection",
+      "cloud transaction revision conflict and recovery choice",
+      "storage failure in-memory backup behavior"
+    ],
+    "authentication": [
+      "local HMAC cookie versus Firebase revoked-token verification",
+      "legacy same-origin distinction from loopback-only registration/dev tools",
+      "verified-email exceptions for drafts and reads versus uploads/publish",
+      "local editor hosted-write disable versus hosted Firebase writes",
+      "implementation citations"
+    ],
+    "uploads": [
+      "8 MiB direct/chunk size and 500 MiB maximum",
+      "published versus draft collection and object namespace",
+      "transactional reservations and shared admission limits",
+      "part replay protection and expiry/cleanup",
+      "authenticated private draft-image reads"
+    ],
+    "documentation": [
+      "original filesystem/single-owner design is historical",
+      "later multiaccount and browser studio changes",
+      "Firebase account draft persistence versus explicit publication",
+      "specific documentation matched to source",
+      "historical tests/deployment limitations not current runtime proof"
+    ]
+  },
+  "limits": [
+    "One run per task per arm; model/provider variation not statistically characterized.",
+    "Interrupted upload attempt lacks final usage; its cost is unknown and excluded, which favors Graphify.",
+    "Evaluator orchestration and prior lost /tmp trial are excluded from initial cost; initial cost is a lower bound.",
+    "CLI retrieval was tested; no MCP configuration or MCP-specific tool metadata overhead was introduced.",
+    "Proxy o200k_base only measures query-output bounds; actual CLI usage determines comparison."
+  ],
+  "quality_review": {
+    "method": "Source-grounded self-review, identical five-item rubric per task; not a blind independent evaluation",
+    "result": "No material correctness or source-grounding loss found in the five completed pairs",
+    "coverage": {
+      "architecture": {
+        "baseline_items_satisfied": 5,
+        "graph_items_satisfied": 5,
+        "total_items": 5
+      },
+      "draft_persistence": {
+        "baseline_items_satisfied": 5,
+        "graph_items_satisfied": 5,
+        "total_items": 5
+      },
+      "authentication": {
+        "baseline_items_satisfied": 5,
+        "graph_items_satisfied": 5,
+        "total_items": 5
+      },
+      "uploads": {
+        "baseline_items_satisfied": 5,
+        "graph_items_satisfied": 5,
+        "total_items": 5
+      },
+      "documentation": {
+        "baseline_items_satisfied": 5,
+        "graph_items_satisfied": 5,
+        "total_items": 5
+      }
+    },
+    "limitations": [
+      "Source-level review only; no application runtime or deployed-service verification.",
+      "These scores assess requested research coverage, not portfolio visual quality."
+    ]
+  },
+  "baseline_uncached_tokens": 174711,
+  "graph_uncached_tokens": 162108,
+  "uncached_savings_percent": 7.213627075570513,
+  "source_files_unchanged": true,
+  "acceptance": {
+    "aggregate_30_percent_savings": false,
+    "no_task_over_10_percent_more": false,
+    "source_quality_no_material_loss_observed": true,
+    "indexing_recovered_within_20_tasks": false,
+    "enabled": false
+  }
+}
