@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 
-test("service homepage, real-count states, redirects, and signup entry", async ({ page, request }) => {
+test("LAND-001 service homepage, real-count states, redirects, and signup entry", async ({ page, request }) => {
   const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
   await page.route("**/api/public-stats", route => route.fulfill({ json: { publishedCreators: 0 } }));
   await page.goto("/");
@@ -33,7 +33,7 @@ test("service homepage, real-count states, redirects, and signup entry", async (
   expect(errors).toEqual([]);
 });
 
-test("landing and unavailable auth remain accessible at all widths", async ({ page }) => {
+test("LAND-002 landing and unavailable auth remain accessible at all widths", async ({ page }) => {
   fs.mkdirSync(".qa/screenshots", { recursive: true });
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [375, 768, 1440]) {

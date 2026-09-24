@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 import path from "node:path";
@@ -18,7 +19,7 @@ async function login(page: Page) {
 test.beforeEach(() => {
   for (const [name, data] of Object.entries({ "profile.json": originalProfile, "projects.json": originalProjects, "studio.json": { step: 0, completed: false, projectDraft: null } })) fs.writeFileSync(path.join(fixture, name), JSON.stringify(data));
 });
-test("authentication protects every editor and API; invalid requests never write", async ({ page, request }) => {
+test("ADMIN-001 authentication protects every editor and API; invalid requests never write", async ({ page, request }) => {
   for (const route of ["/admin", "/admin/dashboard", "/admin/onboarding", "/admin/projects/new", "/admin/projects/project-01", "/admin/preview"]) {
     const response = await request.get(route, { maxRedirects: 0 });
     expect(response.status()).toBe(307); expect(response.headers().location).toContain("/admin/login");
@@ -47,7 +48,7 @@ test("authentication protects every editor and API; invalid requests never write
   await expect(page).toHaveURL(/\/admin\/login/);
   expect((await page.request.get("/api/content")).status()).toBe(401);
 });
-test("onboarding saves, survives reload, reports failures, skips, and finishes", async ({ page }) => {
+test("ADMIN-002 onboarding saves, survives reload, reports failures, skips, and finishes", async ({ page }) => {
   await login(page);
   await expect(page.getByLabel("Your name")).toHaveValue(originalProfile.name);
   await page.getByLabel("Your name").fill("Alex Morgan");
@@ -94,7 +95,7 @@ test("onboarding saves, survives reload, reports failures, skips, and finishes",
   await page.reload();
   await expect(page.getByLabel("Your name")).toHaveValue("Recovery Draft");
 });
-test("dashboard profile CRUD and project create/edit/delete work; production stays frozen", async ({ page }) => {
+test("ADMIN-003 dashboard profile CRUD and project create/edit/delete work; production stays frozen", async ({ page }) => {
   await login(page); await page.goto("/admin/dashboard");
   await page.getByRole("button", { name: "Education", exact: true }).click();
   await page.getByRole("button", { name: "Add education" }).click();
@@ -149,7 +150,7 @@ test("dashboard profile CRUD and project create/edit/delete work; production sta
   await expect(article).toHaveCount(0);
   expect(read("projects.json")).toHaveLength(originalProjects.length);
 });
-test("responsive pages, navigation, image loading, and accessibility", async ({ page }) => {
+test("ADMIN-004 responsive pages, navigation, image loading, and accessibility", async ({ page }) => {
   const errors: string[] = []; page.on("pageerror", e => errors.push(e.message)); page.on("console", msg => { if (/hydration|hydrated|server rendered/i.test(msg.text())) errors.push(msg.text()); });
   fs.mkdirSync(".qa/screenshots", { recursive: true });
   await login(page);
@@ -172,7 +173,7 @@ test("responsive pages, navigation, image loading, and accessibility", async ({ 
   expect(errors).toEqual([]);
 });
 
-test("recovery drafts cannot overwrite newer saved profile content", async ({ page }) => {
+test("ADMIN-005 recovery drafts cannot overwrite newer saved profile content", async ({ page }) => {
   await login(page);
   await page.getByLabel("Your name").fill("Name A");
   await expect.poll(() => read("profile.json").name).toBe("Name A");
@@ -199,7 +200,7 @@ test("recovery drafts cannot overwrite newer saved profile content", async ({ pa
   await expect(page.getByRole("banner")).toContainText("Immediate Preview");
 });
 
-test("image picker rejects bad paths, uploads files, and enforces gallery capacity", async ({ page }) => {
+test("ADMIN-006 image picker rejects bad paths, uploads files, and enforces gallery capacity", async ({ page }) => {
   await login(page); await page.goto("/admin/projects/new");
   await page.getByRole("button", { name: "02 Images" }).click();
   await page.getByLabel("New supporting image", { exact: true }).fill("abc");

@@ -8,9 +8,10 @@
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test",
-    "check": "npm run lint && npm run typecheck && npm run test:e2e",
-    "test:firebase": "playwright test --config playwright.firebase.config.ts"
+    "test:e2e": "node scripts/qa-suite.mjs local",
+    "check": "node scripts/qa-baseline.mjs",
+    "test:firebase": "node scripts/qa-suite.mjs firebase",
+    "test:harness": "node --test scripts/qa/results.test.mjs scripts/qa/processes.test.mjs"
   },
   "dependencies": {
     "firebase": "^12.19.0",

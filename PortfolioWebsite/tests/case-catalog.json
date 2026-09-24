@@ -1,0 +1,578 @@
+[
+  {
+    "id": "ACCT-001",
+    "suite": "local",
+    "file": "tests/accounts-and-media.spec.ts",
+    "title": "accounts start empty, onboard immediately, sign in, and isolate content",
+    "expected": "New accounts contain no inherited projects; session resumes onboarding; another account cannot read/delete their content.",
+    "prerequisites": "D",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ACCT-002",
+    "suite": "local",
+    "file": "tests/accounts-and-media.spec.ts",
+    "title": "software, education descriptions, exact crop, photo caption, and responsive crop dialog",
+    "expected": "Saved tools and education render in preview; uploaded crop is exactly 50 by 40 pixels; caption persists; crop dialog fits mobile.",
+    "prerequisites": "D",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ACCT-003",
+    "suite": "local",
+    "file": "tests/accounts-and-media.spec.ts",
+    "title": "dev showcase is opt-in and reset clears accounts, projects, and sessions",
+    "expected": "Only an authorized local owner can open showcase/reset; reset clears disposable accounts, content and invalidates sessions.",
+    "prerequisites": "D",
+    "status": "Automated, required"
+  },
+  {
+    "id": "BOUND-001",
+    "suite": "local",
+    "file": "tests/baseline-boundaries.spec.ts",
+    "title": "real dates preserve leap years, historical display and timezone-independent values",
+    "expected": "Valid leap dates normalize consistently; impossible dates fail; historical partial dates and Present remain readable.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "BOUND-002",
+    "suite": "local",
+    "file": "tests/baseline-boundaries.spec.ts",
+    "title": "project and profile boundaries reject unsafe paths, links, duplicates and invalid ranges",
+    "expected": "Six unique images and 100-character names pass; excess, duplicates, unsafe URLs/paths and reversed dates fail without mutation.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "BOUND-003",
+    "suite": "local",
+    "file": "tests/baseline-boundaries.spec.ts",
+    "title": "publication limits, unique identities and image caption mapping preserve their contracts",
+    "expected": "3?40-character valid handles and 20 unique projects pass; excess, duplicate identity and multiple featured projects fail; mapping preserves captions and source.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "BOUND-004",
+    "suite": "local",
+    "file": "tests/baseline-boundaries.spec.ts",
+    "title": "backups reject corruption and missing images while stripping account ownership",
+    "expected": "Backups remain importable, strip owner/publication identity, and reject malformed JSON, unsupported versions, unsafe links and missing images.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ROUTE-001",
+    "suite": "local",
+    "file": "tests/baseline-routes.spec.ts",
+    "title": "missing routes and missing portfolios show an accessible recovery path",
+    "expected": "Unknown routes return 404, explain recovery and link home; automated accessibility checks pass.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ROUTE-002",
+    "suite": "local",
+    "file": "tests/baseline-routes.spec.ts",
+    "title": "forged and expired sessions fail while valid sessions use protected cookies",
+    "expected": "Forged/expired tokens return 401 or login redirect; valid login uses HttpOnly, SameSite=Strict, root-scoped cookie.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ROUTE-003",
+    "suite": "local",
+    "file": "tests/baseline-routes.spec.ts",
+    "title": "rejected setup updates preserve all saved content",
+    "expected": "Invalid step, completion, fields, image counts and foreign origins fail; profile, projects and studio bytes are unchanged.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ROUTE-004",
+    "suite": "local",
+    "file": "tests/baseline-routes.spec.ts",
+    "title": "private preview has a usable empty state and accessible responsive saved content",
+    "expected": "Empty preview offers recovery; saved biography appears privately and passes accessibility/overflow checks at all required widths; keyboard About navigation works.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "LOCAL-001",
+    "suite": "local",
+    "file": "tests/browser-studio.spec.ts",
+    "title": "a stale tab cannot overwrite a newer device draft",
+    "expected": "Stale-tab save warns instead of overwriting a newer device version.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "LOCAL-002",
+    "suite": "local",
+    "file": "tests/browser-studio.spec.ts",
+    "title": "device draft persists offline, crops locally, previews, and backs up without server writes",
+    "expected": "Offline changes survive reload, crops appear in preview and downloaded backups; no server mutation is made.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "LOCAL-003",
+    "suite": "local",
+    "file": "tests/browser-studio.spec.ts",
+    "title": "backup imports preserve unfinished work, reject unsafe data, and studio fits all widths",
+    "expected": "Incomplete backups restore, unsafe imports fail, project save/discard and all nine sections remain usable at narrow and wide widths.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "EXPORT-001",
+    "suite": "local",
+    "file": "tests/export-portfolio.spec.ts",
+    "title": "export accepts a supported image above the obsolete 5 MB limit and produces an importable backup",
+    "expected": "A valid image above 5 MiB exports and reimports successfully.",
+    "prerequisites": "E",
+    "status": "Automated, required"
+  },
+  {
+    "id": "EXPORT-002",
+    "suite": "local",
+    "file": "tests/export-portfolio.spec.ts",
+    "title": "export rejects files above 500 MiB and libraries that cannot fit the 768 MiB importer guard before reading them",
+    "expected": "Oversized files/libraries are rejected before reading their contents; exporter fails with useful guidance.",
+    "prerequisites": "E",
+    "status": "Automated, required"
+  },
+  {
+    "id": "AUTH-001",
+    "suite": "firebase",
+    "file": "tests/firebase/account-lifecycle.spec.ts",
+    "title": "landing signup starts blank, verifies, publishes, counts creators, and resumes the correct draft",
+    "expected": "Signup starts blank, preserves guest draft, requires verification to publish, increments real creator count once and resumes the account draft.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "AUTH-002",
+    "suite": "firebase",
+    "file": "tests/firebase/account-lifecycle.spec.ts",
+    "title": "hosted auth screenshots, keyboard access, duplicate signup, and verification-email recovery",
+    "expected": "Auth pages pass accessibility/keyboard/layout checks; duplicate email and failed verification-email sending provide recoverable errors.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "AUTH-003",
+    "suite": "firebase",
+    "file": "tests/firebase/account-lifecycle.spec.ts",
+    "title": "cancelled account replacement preserves both drafts and restore asks only once",
+    "expected": "Cancelling draft replacement preserves both versions; restore confirms exactly once.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "AUTH-004",
+    "suite": "firebase",
+    "file": "tests/firebase/account-lifecycle.spec.ts",
+    "title": "account deletion confirms identity, removes all hosted data and this device draft, and isolates others",
+    "expected": "Wrong password/cancel preserve data; confirmed deletion removes own Auth/Firestore/Storage/device data; retry works and other accounts remain intact.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "CLOUD-001",
+    "suite": "firebase",
+    "file": "tests/firebase/draft-recovery.spec.ts",
+    "title": "account drafts open when the obsolete active-draft localStorage key throws",
+    "expected": "Unavailable obsolete storage key cannot prevent opening the account draft.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "CLOUD-002",
+    "suite": "firebase",
+    "file": "tests/firebase/draft-recovery.spec.ts",
+    "title": "account autosave resumes unpublished work and images on a new browser and after local storage is cleared",
+    "expected": "Autosaved unpublished text/images resume on another browser and after clearing local storage.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "CLOUD-003",
+    "suite": "firebase",
+    "file": "tests/firebase/draft-recovery.spec.ts",
+    "title": "offline edits retry and divergent devices preserve both versions with an explicit choice",
+    "expected": "Offline writes retry; divergent devices require a choice and preserve both versions.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "CLOUD-004",
+    "suite": "firebase",
+    "file": "tests/firebase/draft-recovery.spec.ts",
+    "title": "published-only accounts recover automatically and failed lookups never create a blank cloud draft",
+    "expected": "Published-only accounts recover; failed cloud lookup never replaces real data with a blank draft.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "CLOUD-005",
+    "suite": "firebase",
+    "file": "tests/firebase/draft-recovery.spec.ts",
+    "title": "legacy device edits migrate and image failure leaves restore untouched",
+    "expected": "Legacy edits migrate; failed image retrieval leaves the previous draft unchanged.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "CLOUD-006",
+    "suite": "firebase",
+    "file": "tests/firebase/draft-recovery.spec.ts",
+    "title": "a replacement production server reads existing cloud drafts without seeding or resetting them",
+    "expected": "A replacement production process reads the existing draft and revision without reseeding.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "CLOUD-007",
+    "suite": "firebase",
+    "file": "tests/firebase/draft-recovery.spec.ts",
+    "title": "opening an old account draft does not silently adopt a newer publication revision",
+    "expected": "Older private content keeps its own publication revision and never silently adopts newer published content.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "MEDIA-001",
+    "suite": "firebase",
+    "file": "tests/firebase/images-and-drafts.spec.ts",
+    "title": "chunked images cross the old limit, preserve bytes, and enforce ownership and 500 MB boundary",
+    "expected": "500 MiB admission boundary is enforced; 9 MiB chunk upload preserves bytes; wrong owner, duplicate chunks and obsolete direct-upload limit fail.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "MEDIA-002",
+    "suite": "firebase",
+    "file": "tests/firebase/images-and-drafts.spec.ts",
+    "title": "global image quotas and admission leases bound cross-account resource use",
+    "expected": "Service storage/daily/admission quotas reject excess requests and reclaim abandoned reservations.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "MEDIA-003",
+    "suite": "firebase",
+    "file": "tests/firebase/images-and-drafts.spec.ts",
+    "title": "an upload started before deletion cannot recreate the account's image library",
+    "expected": "An upload overlapping account deletion cannot recreate deleted image records.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "MEDIA-004",
+    "suite": "firebase",
+    "file": "tests/firebase/images-and-drafts.spec.ts",
+    "title": "drafts save incomplete content while cloud images require verification and remain private",
+    "expected": "Incomplete text drafts save without verification; cloud images need verification and private images are owner-only.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "MEDIA-005",
+    "suite": "firebase",
+    "file": "tests/firebase/images-and-drafts.spec.ts",
+    "title": "restore repairs missing and foreign mappings using UID and rejects ambiguous or dangling records",
+    "expected": "Restore repairs unambiguous ownership mappings; foreign/ambiguous/dangling assets are rejected.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "SERVER-001",
+    "suite": "firebase",
+    "file": "tests/firebase/publication-server.spec.ts",
+    "title": "URL ownership regression: missing indexes, atomic rename, retries, and released names",
+    "expected": "Rename and retry preserve URL ownership; missing indexes recover and released names become available.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "SERVER-002",
+    "suite": "firebase",
+    "file": "tests/firebase/publication-server.spec.ts",
+    "title": "URL races and deletion retries never take another account's reused name",
+    "expected": "Concurrent claims and deletion retries never take another account?s reused URL.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "SERVER-003",
+    "suite": "firebase",
+    "file": "tests/firebase/publication-server.spec.ts",
+    "title": "simultaneous first publishes keep one website per account",
+    "expected": "Simultaneous first publications yield one website per account.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "SERVER-004",
+    "suite": "firebase",
+    "file": "tests/firebase/publication-server.spec.ts",
+    "title": "partial account deletion cleanup is UID-scoped after another account claims its name",
+    "expected": "Partial cleanup stays scoped to the deleting UID after a different account reuses its URL.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "SERVER-005",
+    "suite": "firebase",
+    "file": "tests/firebase/publication-server.spec.ts",
+    "title": "publication requirements reject missing biography and projects on the server",
+    "expected": "Server rejects publication without required biography or projects.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "PUBLISH-001",
+    "suite": "firebase",
+    "file": "tests/firebase/publishing-studio.spec.ts",
+    "title": "draft indicators, actionable publishing errors, automatic project commit, and URL editor",
+    "expected": "Draft status and actionable errors track edits; publishing commits the open valid project; URL-only rename preserves private content.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "PUBLISH-002",
+    "suite": "firebase",
+    "file": "tests/firebase/publishing-studio.spec.ts",
+    "title": "publishing enforces identity, verification, address ownership, revision checks, and database rules",
+    "expected": "Identity, verification, handle ownership, optimistic revision and database rules prevent unauthorized publishing.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "PUBLISH-003",
+    "suite": "firebase",
+    "file": "tests/firebase/publishing-studio.spec.ts",
+    "title": "create locally, publish images, update the same link, restore on another device, and isolate accounts",
+    "expected": "Images publish and load publicly; private edits remain private until update; same link updates; another device restores without crossing accounts.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "HOME-001",
+    "suite": "local",
+    "file": "tests/homepage-and-dates.spec.ts",
+    "title": "biography and homepage content persist, preview together, and can be removed",
+    "expected": "Biography, tagline and banner save and render in preview; removals persist.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "HOME-002",
+    "suite": "local",
+    "file": "tests/homepage-and-dates.spec.ts",
+    "title": "shared calendars validate dates, default to today, preserve legacy records, and format every view",
+    "expected": "Calendar controls choose real dates, use today for new entries, retain historical records and format dates consistently.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "HOME-003",
+    "suite": "local",
+    "file": "tests/homepage-and-dates.spec.ts",
+    "title": "featured selection replaces, removes, survives edits and deletion; responsive editing and public evidence",
+    "expected": "Only one project is featured; replacement, deselection, edit and deletion preserve the intended featured state and responsive layouts.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "LAND-001",
+    "suite": "local",
+    "file": "tests/landing.spec.ts",
+    "title": "service homepage, real-count states, redirects, and signup entry",
+    "expected": "Landing links enter signup; creator counts display zero/singular/plural/unavailable honestly; legacy root routes redirect.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "LAND-002",
+    "suite": "local",
+    "file": "tests/landing.spec.ts",
+    "title": "landing and unavailable auth remain accessible at all widths",
+    "expected": "Landing and unavailable-auth screens pass accessibility, image loading, overflow, reduced-motion and keyboard skip-link checks at all widths.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ADMIN-001",
+    "suite": "local",
+    "file": "tests/portfolio.spec.ts",
+    "title": "authentication protects every editor and API; invalid requests never write",
+    "expected": "All private editors/APIs reject anonymous access; invalid payloads/origins do not write; logout removes access.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ADMIN-002",
+    "suite": "local",
+    "file": "tests/portfolio.spec.ts",
+    "title": "onboarding saves, survives reload, reports failures, skips, and finishes",
+    "expected": "Wizard autosaves each step, survives reload, allows skipping, finishes to dashboard and retains recovery data after a save failure.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ADMIN-003",
+    "suite": "local",
+    "file": "tests/portfolio.spec.ts",
+    "title": "dashboard profile CRUD and project create/edit/delete work; production stays frozen",
+    "expected": "Education/experience and project CRUD persist; cancelled deletion preserves projects; preview updates while the built public snapshot stays frozen.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ADMIN-004",
+    "suite": "local",
+    "file": "tests/portfolio.spec.ts",
+    "title": "responsive pages, navigation, image loading, and accessibility",
+    "expected": "Public and admin pages have working navigation/images, no overflow, no runtime errors and no automated accessibility violations at required widths.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ADMIN-005",
+    "suite": "local",
+    "file": "tests/portfolio.spec.ts",
+    "title": "recovery drafts cannot overwrite newer saved profile content",
+    "expected": "Old recovery data never overwrites newer saved content; immediate preview flushes valid edits.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ADMIN-006",
+    "suite": "local",
+    "file": "tests/portfolio.spec.ts",
+    "title": "image picker rejects bad paths, uploads files, and enforces gallery capacity",
+    "expected": "Bad image paths fail; valid crop uploads; gallery caps at six and removing an image reopens a slot.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "RECOVER-001",
+    "suite": "local",
+    "file": "tests/post-launch.spec.ts",
+    "title": "blocked storage shows recovery guidance instead of crashing studio and preview",
+    "expected": "Blocked browser storage shows actionable recovery guidance in editor/preview without crashing.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "RECOVER-002",
+    "suite": "local",
+    "file": "tests/post-launch.spec.ts",
+    "title": "projects precede the complete biography and mobile studio keeps the first field in view",
+    "expected": "Projects precede the complete biography; the first studio field remains visible on mobile.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "VALID-001",
+    "suite": "local",
+    "file": "tests/publication-validation.spec.ts",
+    "title": "publishing issues include all mandatory blanks while empty optional fields stay valid",
+    "expected": "Required publication blanks all produce issues; empty optional fields remain valid.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "VALID-002",
+    "suite": "local",
+    "file": "tests/publication-validation.spec.ts",
+    "title": "optional supplied formats and date ranges remain validated; open editor replaces its saved project",
+    "expected": "Supplied optional values/ranges are validated and the open editor replaces its matching saved project.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "VALID-003",
+    "suite": "local",
+    "file": "tests/publication-validation.spec.ts",
+    "title": "private feedback survives backups/cloud validation and old backups default to untouched",
+    "expected": "Feedback metadata survives backup/cloud validation; old backups default to untouched feedback.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "VALID-004",
+    "suite": "local",
+    "file": "tests/publication-validation.spec.ts",
+    "title": "URL-only revision reconciliation preserves private edits without adopting newer public content",
+    "expected": "URL revision reconciliation changes publication metadata without replacing private content.",
+    "prerequisites": "U",
+    "status": "Automated, required"
+  },
+  {
+    "id": "STUDIO-001",
+    "suite": "local",
+    "file": "tests/requested-fixes.spec.ts",
+    "title": "preview and project errors clear on edits and every navigation path",
+    "expected": "Correcting fields or changing sections clears transient validation errors on every navigation path.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "STUDIO-002",
+    "suite": "local",
+    "file": "tests/requested-fixes.spec.ts",
+    "title": "all studio sections and populated controls fit narrow phones through desktop",
+    "expected": "Populated controls and all nine sections fit 320?1920px; preview and key sections pass accessibility checks.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "STUDIO-003",
+    "suite": "local",
+    "file": "tests/requested-fixes.spec.ts",
+    "title": "an image above 5 MB opens the cropper and oversized source gets the 500 MB message",
+    "expected": "Images above 5 MiB open cropping; files above 500 MiB receive the current limit message.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  },
+  {
+    "id": "API-001",
+    "suite": "firebase",
+    "file": "tests/firebase/baseline-api.spec.ts",
+    "title": "hosted private endpoints reject anonymous requests without creating records",
+    "expected": "Every supported private cloud method rejects anonymous access with 401 and creates no publisher or publication records.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "API-002",
+    "suite": "firebase",
+    "file": "tests/firebase/baseline-api.spec.ts",
+    "title": "invalid cloud updates preserve the previous draft and its revision",
+    "expected": "Invalid format/revision/content/JSON fails with 400; stale saves fail with 409; the saved draft and revision remain identical.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "API-003",
+    "suite": "firebase",
+    "file": "tests/firebase/baseline-api.spec.ts",
+    "title": "hosted configuration is public-only and legacy file editing stays disabled",
+    "expected": "Config exposes only browser Firebase fields, uses no-store and demo project; hosted local-file editing is disabled; unpublished URLs recover through 404.",
+    "prerequisites": "F",
+    "status": "Automated, required"
+  },
+  {
+    "id": "ROUTE-005",
+    "suite": "local",
+    "file": "tests/baseline-routes.spec.ts",
+    "title": "original fonts load locally with third-party network access blocked",
+    "expected": "All seven original font styles load from the local site with third-party requests blocked; no external request is attempted.",
+    "prerequisites": "L",
+    "status": "Automated, required"
+  }
+]

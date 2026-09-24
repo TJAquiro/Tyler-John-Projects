@@ -18,7 +18,13 @@ Firebase App Hosting, Authentication, Firestore, and Storage support publishing.
 
 Your earlier local editor and content remain available at `/admin` on this computer. Export the existing root portfolio with `node scripts/export-portfolio.mjs`, or pass a local account ID to export that account, then import the resulting backup at `/studio`. This copies content/images and never moves credentials or changes the original files. Existing ambiguous dates may need completing before publication.
 
-Run `npm run check` for local regressions and `npm run test:firebase` for the isolated Firebase emulator suite (Java 21+ required).
+Run `npm run check` for the complete acceptance baseline: harness checks, lint, TypeScript, isolated production builds, local Chromium regressions, and the Firebase emulator suite (Java 21+ required). Use `npm run test:e2e` and `npm run test:firebase` for individual suites, or append `-- --grep CASE-ID` to diagnose one case. Do not run suites concurrently: they share disposable fixture locations.
+
+The [test-case catalog](docs/TEST-CASES.md) maps the website requirements to stable automated case IDs and separate manual/external checks. Each complete run writes `.qa/baseline/latest.json`, pointing to an immutable run directory with `summary.json`, `CRITIC-HANDOFF.md`, fresh screenshots, suite HTML/JSON reports, failure traces, and build/server logs. The gate exits nonzero for missing, skipped, retried, failed or unfinished required cases, missing screenshot evidence, failed process cleanup, or changed owner files. It never deploys or contacts production Firebase for mutations. Local servers use `.qa` data and Firebase uses the `demo-portfolio` emulators.
+
+The original DM Sans, DM Mono, and Playfair Display fonts are served from `public/fonts`, with their SIL Open Font Licenses and source manifest included. Rendering no longer depends on Google Fonts being reachable.
+
+The critic reads that handoff to establish basic functionality and code acceptability, then independently judges how well the task was completed. Automation does not assign visual-quality scores. Exactly one final critic pass follows implementation checks and screenshot inspection. Occupied QA ports are reported instead of reused or killed; a stale `.qa/baseline/running.lock` may be removed only after verifying the prior run stopped.
 
 The sections below document the preserved **legacy local editor**. Its repository-deployment publishing instructions do not apply to the new browser studio.
 

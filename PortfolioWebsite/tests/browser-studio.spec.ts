@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 
-test("a stale tab cannot overwrite a newer device draft", async ({ page, context }) => {
+test("LOCAL-001 a stale tab cannot overwrite a newer device draft", async ({ page, context }) => {
   await page.goto("/studio");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("First version");
   await expect(page.getByText("Saved on this device", { exact: true })).toBeVisible();
@@ -19,7 +19,7 @@ test("a stale tab cannot overwrite a newer device draft", async ({ page, context
   await other.close();
 });
 
-test("device draft persists offline, crops locally, previews, and backs up without server writes", async ({ page, context }) => {
+test("LOCAL-002 device draft persists offline, crops locally, previews, and backs up without server writes", async ({ page, context }) => {
   const writes: string[] = [];
   page.on("request", request => { if (request.url().includes("/api/") && request.method() !== "GET") writes.push(request.url()); });
   await page.goto("/studio");
@@ -51,7 +51,7 @@ test("device draft persists offline, crops locally, previews, and backs up witho
   expect(writes).toEqual([]);
 });
 
-test("backup imports preserve unfinished work, reject unsafe data, and studio fits all widths", async ({ page }) => {
+test("LOCAL-003 backup imports preserve unfinished work, reject unsafe data, and studio fits all widths", async ({ page }) => {
   await page.goto("/studio");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Taylor Studio");
   const d = page.waitForEvent("download"); if (!(await page.getByRole("button", { name: "Download draft backup" }).isVisible())) await page.getByText("Draft backups & storage", { exact: true }).click(); await page.getByRole("button", { name: "Download draft backup" }).click();

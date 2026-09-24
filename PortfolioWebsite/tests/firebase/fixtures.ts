@@ -1,4 +1,6 @@
-import { test as base, expect, type APIRequestContext, type Page } from "@playwright/test";
+import { type APIRequestContext, type Page } from "@playwright/test";
+import { test as base, expect } from "../fixtures";
+import { getStorage } from "firebase-admin/storage";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
@@ -14,8 +16,9 @@ export const db = getFirestore(app);
 
 export const test = base.extend<{ firebaseIsolation: void }>({
   firebaseIsolation: [async ({ request }, use) => {
-    await request.delete("http://127.0.0.1:9099/emulator/v1/projects/demo-portfolio/accounts");
-    await request.delete("http://127.0.0.1:8080/emulator/v1/projects/demo-portfolio/databases/(default)/documents");
+    expect((await request.delete("http://127.0.0.1:9099/emulator/v1/projects/demo-portfolio/accounts")).ok()).toBe(true);
+    expect((await request.delete("http://127.0.0.1:8080/emulator/v1/projects/demo-portfolio/databases/(default)/documents")).ok()).toBe(true);
+    await getStorage(app).bucket("demo-portfolio.firebasestorage.app").deleteFiles({ force: true });
     await use();
   }, { auto: true }],
 });

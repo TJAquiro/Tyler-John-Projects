@@ -6,7 +6,7 @@ import { account, blank, db, expect, fixturePNG, loginStudio, publishRequest, te
 
 test.describe.configure({ mode: "serial" });
 test.describe("publishing studio workflow", () => {
-test("draft indicators, actionable publishing errors, automatic project commit, and URL editor", async ({ page, request, browser }) => {
+test("PUBLISH-001 draft indicators, actionable publishing errors, automatic project commit, and URL editor", async ({ page, request, browser }) => {
   const owner = await account(request, "feedback@example.com");
   await loginStudio(page, "feedback@example.com");
   const nav = page.getByRole("navigation", { name: "Portfolio setup" });
@@ -90,7 +90,7 @@ test("draft indicators, actionable publishing errors, automatic project commit, 
   }
   await publicContext.close();
 });
-test("publishing enforces identity, verification, address ownership, revision checks, and database rules", async ({ request }) => {
+test("PUBLISH-002 publishing enforces identity, verification, address ownership, revision checks, and database rules", async ({ request }) => {
   const first = await account(request, "first@example.com"), second = await account(request, "second@example.com"), unverified = await account(request, "unverified@example.com", false);
   const body = { handle: "shared-address", snapshot: blank("First Owner"), revision: 0, assets: {} };
   expect((await publishRequest(request, { data: body })).status()).toBe(401);
@@ -127,7 +127,7 @@ test("publishing enforces identity, verification, address ownership, revision ch
   expect((await request.post("/api/auth/register", { data: { name: "No hosted files", email: "legacy@example.com", password: "qa-password-only", handle: "legacy" } })).status()).toBe(403);
 });
 
-test("create locally, publish images, update the same link, restore on another device, and isolate accounts", async ({ page, request, browser }) => {
+test("PUBLISH-003 create locally, publish images, update the same link, restore on another device, and isolate accounts", async ({ page, request, browser }) => {
   const owner = await account(request, "designer@example.com");
   await page.goto("/studio"); await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Jamie Rivers");
   await page.getByRole("button", { name: "Biography", exact: false }).click(); await page.getByLabel("Biography", { exact: true }).fill("Thoughtful digital experiences.");
@@ -144,7 +144,8 @@ test("create locally, publish images, update the same link, restore on another d
   await page.getByLabel("Portfolio address", { exact: true }).fill("jamie-rivers");
   await page.getByRole("button", { name: "Publish portfolio", exact: true }).click();
   await expect(page.getByRole("link", { name: /\/p\/jamie-rivers/ })).toBeVisible();
-  const publicPage = await browser.newPage();
+  const publicContext = await browser.newContext();
+  const publicPage = await publicContext.newPage();
   await publicPage.goto("http://127.0.0.1:3102/p/jamie-rivers");
   await expect(publicPage.getByText("Thoughtful digital experiences.")).toBeVisible();
   await publicPage.getByRole("link", { name: /A Useful Study/ }).click();
@@ -161,13 +162,18 @@ test("create locally, publish images, update the same link, restore on another d
   fs.mkdirSync(".qa/screenshots", { recursive: true });
   for (const width of [375,768,1440]) {
     await page.setViewportSize({ width, height: 960 }); await publicPage.setViewportSize({ width, height: 960 });
+    await publicPage.evaluate(() => document.fonts.ready);
+    expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await publicPage.locator("img").evaluateAll(images => images.forEach(img => img.setAttribute("loading", "eager")));
+    await expect.poll(() => publicPage.locator("img").evaluateAll(images => images.every(img => (img as HTMLImageElement).complete && (img as HTMLImageElement).naturalWidth > 0))).toBe(true);
+    expect((await new AxeBuilder({ page: publicPage }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect((await new AxeBuilder({ page }).withTags(["wcag2a","wcag2aa","wcag21aa"]).analyze()).violations).toEqual([]);
     await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
     await page.screenshot({ path: `.qa/screenshots/firebase-published-${width}.png`, fullPage: true });
     await publicPage.screenshot({ path: `.qa/screenshots/firebase-public-${width}.png`, fullPage: true });
   }
-  await publicPage.close();
+  await publicContext.close();
   const secondDevice = await browser.newContext(); const restored = await secondDevice.newPage(); restored.on("dialog", dialog => dialog.accept());
   await restored.goto("http://127.0.0.1:3102/studio"); await restored.getByRole("button", { name: "09 Publish", exact: true }).click();
   await restored.getByRole("textbox", { name: "Email address", exact: true }).fill("designer@example.com"); await restored.getByLabel("Password", { exact: true }).fill("qa-password-only"); await restored.getByRole("button", { name: "Sign in to publish" }).click();

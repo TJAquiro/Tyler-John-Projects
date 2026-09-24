@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { scryptSync } from "node:crypto";
+import { resetFixtures } from "./qa/isolation.mjs";
+resetFixtures(["content", "accounts", "uploads"]);
 const content = path.resolve(".qa/content"), accounts = path.resolve(".qa/accounts");
 const id = "11111111-1111-4111-8111-111111111111";
 fs.mkdirSync(path.join(content, "portfolios", id), { recursive: true }); fs.mkdirSync(accounts, { recursive: true });

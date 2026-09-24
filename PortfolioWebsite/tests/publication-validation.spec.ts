@@ -6,7 +6,7 @@ import { draftContent, validateDraftContent } from "../lib/cloud-draft";
 
 const project = { id: "project", title: "Case study", slug: "case-study", date: "2026-01-01", description: "A useful project", thumbnail: "/images/project.png", images: ["/images/project.png"], technologies: [], link: "" };
 
-test("publishing issues include all mandatory blanks while empty optional fields stay valid", () => {
+test("VALID-001 publishing issues include all mandatory blanks while empty optional fields stay valid", () => {
   const draft = emptyDraft();
   expect(publicationIssues(draft).map(i => i.key)).toEqual(["profile:Your name", "profile:Biography", "projects:Add project"]);
   draft.profile.name = "Designer"; draft.profile.biography = "My practice"; draft.projects = [project];
@@ -19,7 +19,7 @@ test("publishing issues include all mandatory blanks while empty optional fields
   expect(publicationIssues(draft).map(i => i.key)).toEqual(["Project title", "Project date", "Project description", "URL slug", "Thumbnail", "Supporting images"].map(label => "project.project:" + label));
 });
 
-test("optional supplied formats and date ranges remain validated; open editor replaces its saved project", () => {
+test("VALID-002 optional supplied formats and date ranges remain validated; open editor replaces its saved project", () => {
   const draft = emptyDraft(); draft.profile.name = "Name"; draft.profile.biography = "Bio";
   draft.profile.education = [{ institution: "School", degree: "", field: "", startYear: "2026-02-01", endYear: "2026-01-01" }];
   draft.projects = [{ ...project, link: "javascript:alert(1)" }];
@@ -29,7 +29,7 @@ test("optional supplied formats and date ranges remain validated; open editor re
   expect(projectsWithEditor([], updated)).toEqual([updated]);
 });
 
-test("private feedback survives backups/cloud validation and old backups default to untouched", () => {
+test("VALID-003 private feedback survives backups/cloud validation and old backups default to untouched", () => {
   const draft = emptyDraft();
   draft.feedback = { touched: ["profile:Biography"], attempted: true };
   expect(parseBackup(JSON.stringify(draft)).feedback).toEqual(draft.feedback);
@@ -39,7 +39,7 @@ test("private feedback survives backups/cloud validation and old backups default
   expect(() => parseBackup(JSON.stringify({ ...draft, feedback: { touched: [12], attempted: true } }))).toThrow("feedback metadata");
 });
 
-test("URL-only revision reconciliation preserves private edits without adopting newer public content", () => {
+test("VALID-004 URL-only revision reconciliation preserves private edits without adopting newer public content", () => {
   const base = { handle: "old-url", revision: 2, publishedAt: "2026-01-01" };
   const current = { ...emptyDraft(), handle: "new-url", revision: 4, contentRevision: 2, assets: {}, publishedAt: "2026-01-01" };
   expect(publicationBase(base, current)).toEqual({ handle: "new-url", revision: 4, publishedAt: "2026-01-01" });

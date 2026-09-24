@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 import path from "node:path";
@@ -17,7 +18,7 @@ async function login(page: Page) {
 async function saveProfile(page: Page) {
   await page.getByRole("button", { name: "Save profile", exact: true }).click(); await expect(page.locator(".form-actions [role=status]")).toContainText("Saved to your portfolio");
 }
-test("biography and homepage content persist, preview together, and can be removed", async ({ page }) => {
+test("HOME-001 biography and homepage content persist, preview together, and can be removed", async ({ page }) => {
   const errors: string[] = []; page.on("pageerror", e => errors.push(e.message)); page.on("console", m => { if (/hydration|hydrated/i.test(m.text())) errors.push(m.text()); });
   await login(page);
   await page.getByRole("button", { name: "Biography", exact: true }).click();
@@ -40,7 +41,7 @@ test("biography and homepage content persist, preview together, and can be remov
   await page.goto("/admin/preview"); await expect(page.getByRole("img", { name: /Homepage banner/ })).toHaveCount(0); await expect(page.getByRole("heading", { level: 1 })).toHaveText(profile.name);
   expect(errors).toEqual([]);
 });
-test("shared calendars validate dates, default to today, preserve legacy records, and format every view", async ({ page }) => {
+test("HOME-002 shared calendars validate dates, default to today, preserve legacy records, and format every view", async ({ page }) => {
   await login(page);
   // Existing ambiguous owner-style dates can survive unrelated edits, but new invalid dates cannot.
   const legacy = { ...profile, jobs: [{ company: "Legacy studio", position: "Designer", description: "", startDate: "march 1", endDate: "Present" }] };
@@ -76,7 +77,7 @@ test("shared calendars validate dates, default to today, preserve legacy records
   await page.goto("/admin/preview?view=%2Fprojects%2Fcalendar-study"); await expect(page.getByText("Case study / Feb 29, 2024")).toBeVisible();
   await page.goto("/admin/preview?view=%2Fabout"); await expect(page.getByText("Jan 12, 2026 — Present", { exact: true })).toHaveCount(2);
 });
-test("featured selection replaces, removes, survives edits and deletion; responsive editing and public evidence", async ({ page }) => {
+test("HOME-003 featured selection replaces, removes, survives edits and deletion; responsive editing and public evidence", async ({ page }) => {
   test.setTimeout(180000); await login(page);
   const article = (title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title, exact: true }) });
   await article(projects[1].title).getByRole("button", { name: "Set as featured project" }).click();

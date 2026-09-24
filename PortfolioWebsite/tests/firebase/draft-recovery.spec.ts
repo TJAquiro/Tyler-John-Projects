@@ -5,7 +5,7 @@ import { account, blank, db, draftBody, expect, fixturePNG, fixtureProject, logi
 
 test.describe.configure({ mode: "serial" });
 test.describe("cloud draft recovery and conflicts", () => {
-test("account drafts open when the obsolete active-draft localStorage key throws", async ({ page, request }) => {
+test("CLOUD-001 account drafts open when the obsolete active-draft localStorage key throws", async ({ page, request }) => {
   const owner = await account(request, "storage-pointer-failure@example.com");
   expect((await request.put("/api/draft", { headers: owner.headers, data: draftBody("Pointer-free account draft") })).status()).toBe(200);
   await page.addInitScript(() => {
@@ -30,7 +30,7 @@ test("account drafts open when the obsolete active-draft localStorage key throws
   await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
 });
 
-test("account autosave resumes unpublished work and images on a new browser and after local storage is cleared", async ({ page, request, browser }) => {
+test("CLOUD-002 account autosave resumes unpublished work and images on a new browser and after local storage is cleared", async ({ page, request, browser }) => {
   const owner = await account(request, "autosave@example.com");
   await loginStudio(page, "autosave@example.com");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Returning Designer");
@@ -65,7 +65,7 @@ test("account autosave resumes unpublished work and images on a new browser and 
   await secondContext.close();
 });
 
-test("offline edits retry and divergent devices preserve both versions with an explicit choice", async ({ page, request, browser }) => {
+test("CLOUD-003 offline edits retry and divergent devices preserve both versions with an explicit choice", async ({ page, request, browser }) => {
   const owner = await account(request, "conflicts@example.com");
   expect((await request.put("/api/draft", { headers: owner.headers, data: draftBody("Starting draft") })).status()).toBe(200);
   await loginStudio(page, "conflicts@example.com");
@@ -98,7 +98,7 @@ test("offline edits retry and divergent devices preserve both versions with an e
   await context.close();
 });
 
-test("published-only accounts recover automatically and failed lookups never create a blank cloud draft", async ({ page, request }) => {
+test("CLOUD-004 published-only accounts recover automatically and failed lookups never create a blank cloud draft", async ({ page, request }) => {
   const owner = await account(request, "published-only@example.com");
   expect((await publishRequest(request, { headers: owner.headers, data: { handle:"published-only", snapshot:blank("Existing published work"), assets:{}, revision:0 } })).status()).toBe(200);
   await page.route("**/api/draft", route => route.fulfill({ status:503, json:{error:"Account lookup temporarily unavailable. Retry."} }));
@@ -115,7 +115,7 @@ test("published-only accounts recover automatically and failed lookups never cre
   expect((await db.collection("publishedPortfolios").doc("published-only").get()).data()?.profile.name).toBe("Existing published work");
 });
 
-test("legacy device edits migrate and image failure leaves restore untouched", async ({ page, request }) => {
+test("CLOUD-005 legacy device edits migrate and image failure leaves restore untouched", async ({ page, request }) => {
   const owner = await account(request, "migration@example.com");
   await page.goto("/studio");
   await page.evaluate(async uid => {
@@ -144,7 +144,7 @@ test("legacy device edits migrate and image failure leaves restore untouched", a
   expect((await (await request.get("/api/draft",{headers:owner.headers})).json()).draft.content.profile.name).toBe("Legacy device work");
 });
 
-test("a replacement production server reads existing cloud drafts without seeding or resetting them", async ({ request }) => {
+test("CLOUD-006 a replacement production server reads existing cloud drafts without seeding or resetting them", async ({ request }) => {
   const owner = await account(request,"restart@example.com");
   expect((await request.put("/api/draft",{headers:owner.headers,data:draftBody("Survives application replacement")})).status()).toBe(200);
   const env = { ...process.env, PORTFOLIO_CONTENT_DIR:path.resolve(".qa/firebase-content"), PORTFOLIO_ACCOUNT_DIR:path.resolve(".qa/firebase-accounts"), PORTFOLIO_BUILD_DIR:".next-qa-firebase", PORTFOLIO_DISABLE_LOCAL_EDITOR:"1", PORTFOLIO_FIREBASE_EMULATORS:"1", FIREBASE_PROJECT_ID:"demo-portfolio", FIREBASE_STORAGE_BUCKET:"demo-portfolio.firebasestorage.app", FIREBASE_WEB_API_KEY:"demo-test-key", FIREBASE_WEB_APP_ID:"demo-test-app", FIREBASE_AUTH_DOMAIN:"localhost" };
@@ -156,7 +156,7 @@ test("a replacement production server reads existing cloud drafts without seedin
   } finally { child.kill("SIGTERM"); await new Promise<void>(resolve=>{if(child.exitCode!==null)resolve();else child.once("exit",()=>resolve());}); }
 });
 
-test("opening an old account draft does not silently adopt a newer publication revision", async ({ page, request }) => {
+test("CLOUD-007 opening an old account draft does not silently adopt a newer publication revision", async ({ page, request }) => {
   const owner=await account(request,"publication-revision@example.com");
   const first=await publishRequest(request,{headers:owner.headers,data:{handle:"publication-revision",snapshot:blank("First public version"),assets:{},revision:0}});
   const publication=await first.json();

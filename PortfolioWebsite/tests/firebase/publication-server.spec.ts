@@ -2,7 +2,7 @@ import { account, blank, db, expect, fixturePNG, fixtureProject, publishRequest,
 
 test.describe.configure({ mode: "serial" });
 test.describe("publication ownership and server validation", () => {
-test("URL ownership regression: missing indexes, atomic rename, retries, and released names", async ({ request }) => {
+test("SERVER-001 URL ownership regression: missing indexes, atomic rename, retries, and released names", async ({ request }) => {
   const owner = await account(request, "url-owner@example.com"), other = await account(request, "url-other@example.com");
   const publish = (handle: string, user = owner, revision = 0) => publishRequest(request, { headers: user.headers, data: { handle, snapshot: blank(handle), assets: {}, revision } });
   expect((await publish("url-original")).status()).toBe(200);
@@ -32,7 +32,7 @@ test("URL ownership regression: missing indexes, atomic rename, retries, and rel
   expect((await publish("url-renamed", owner, 3)).status()).toBe(409);
 });
 
-test("URL races and deletion retries never take another account's reused name", async ({ request }) => {
+test("SERVER-002 URL races and deletion retries never take another account's reused name", async ({ request }) => {
   const owner = await account(request, "reuse@example.com"), other = await account(request, "rival@example.com");
   const publish = (handle: string, user = owner, revision = 0) => publishRequest(request, { headers: user.headers, data: { handle, snapshot: blank(user.uid), assets: {}, revision } });
   await publish("race-original"); await publish("race-rival", other);
@@ -59,7 +59,7 @@ test("URL races and deletion retries never take another account's reused name", 
   expect((await request.get("/api/publish", { headers: recreated.headers })).status()).toBe(200);
 });
 
-test("simultaneous first publishes keep one website per account", async ({ request }) => {
+test("SERVER-003 simultaneous first publishes keep one website per account", async ({ request }) => {
   const owner = await account(request, "same-owner-race@example.com");
   const uploaded = await request.post("/api/publish/image", { headers: owner.headers, data: fixturePNG });
   expect(uploaded.status()).toBe(200);
@@ -73,7 +73,7 @@ test("simultaneous first publishes keep one website per account", async ({ reque
   expect((await db.collection("publishedPortfolios").where("uid", "==", owner.uid).get()).size).toBe(1);
 });
 
-test("partial account deletion cleanup is UID-scoped after another account claims its name", async ({ request }) => {
+test("SERVER-004 partial account deletion cleanup is UID-scoped after another account claims its name", async ({ request }) => {
   const owner = await account(request, "partial-delete@example.com"), other = await account(request, "claim-partial@example.com");
   const data = { handle: "partial-reuse", snapshot: blank("Original"), assets: {}, revision: 0 };
   expect((await publishRequest(request, { headers: owner.headers, data })).status()).toBe(200);
@@ -89,7 +89,7 @@ test("partial account deletion cleanup is UID-scoped after another account claim
   expect((await db.collection("publishedPortfolios").doc(data.handle).get()).data()?.uid).toBe(other.uid);
 });
 
-test("publication requirements reject missing biography and projects on the server", async ({ request }) => {
+test("SERVER-005 publication requirements reject missing biography and projects on the server", async ({ request }) => {
   const owner = await account(request, "requirements@example.com");
   const body = { handle: "requirements", snapshot: blank("Required name"), revision: 0, assets: {} };
   const empty = await request.post("/api/publish", { headers: owner.headers, data: body });

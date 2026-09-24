@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
-test("blocked storage shows recovery guidance instead of crashing studio and preview", async ({ page }) => {
+test("RECOVER-001 blocked storage shows recovery guidance instead of crashing studio and preview", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.addInitScript(() => {
@@ -24,7 +24,7 @@ test("blocked storage shows recovery guidance instead of crashing studio and pre
   expect(errors).toEqual([]);
 });
 
-test("projects precede the complete biography and mobile studio keeps the first field in view", async ({ page }) => {
+test("RECOVER-002 projects precede the complete biography and mobile studio keeps the first field in view", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 960 });
   await page.goto("/u/qa-portfolio");
   const work = page.getByRole("region", { name: "Projects", exact: true });

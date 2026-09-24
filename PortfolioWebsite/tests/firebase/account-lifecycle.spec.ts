@@ -5,7 +5,7 @@ import { account, addCompleteProject, app, auth, blank, db, expect, publishReque
 
 test.describe.configure({ mode: "serial" });
 test.describe("hosted authentication and account lifecycle", () => {
-test("landing signup starts blank, verifies, publishes, counts creators, and resumes the correct draft", async ({ page, request }) => {
+test("AUTH-001 landing signup starts blank, verifies, publishes, counts creators, and resumes the correct draft", async ({ page, request }) => {
   await page.goto("/studio");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Guest draft to preserve");
   await expect(page.getByText("Saved on this device", { exact: true })).toBeVisible();
@@ -65,7 +65,7 @@ test("landing signup starts blank, verifies, publishes, counts creators, and res
   }
 });
 
-test("hosted auth screenshots, keyboard access, duplicate signup, and verification-email recovery", async ({ page }) => {
+test("AUTH-002 hosted auth screenshots, keyboard access, duplicate signup, and verification-email recovery", async ({ page }) => {
   fs.mkdirSync(".qa/screenshots", { recursive: true });
   for (const width of [375, 768, 1440]) {
     await page.setViewportSize({ width, height: 960 });
@@ -88,7 +88,7 @@ test("hosted auth screenshots, keyboard access, duplicate signup, and verificati
   await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveValue("");
 });
 
-test("cancelled account replacement preserves both drafts and restore asks only once", async ({ page, request }) => {
+test("AUTH-003 cancelled account replacement preserves both drafts and restore asks only once", async ({ page, request }) => {
   await account(request, "cancel@example.com");
   await page.goto("/studio");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("Account original");
@@ -137,7 +137,7 @@ test("cancelled account replacement preserves both drafts and restore asks only 
   await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toHaveValue("Guest replacement");
 });
 
-test("account deletion confirms identity, removes all hosted data and this device draft, and isolates others", async ({ page, request }) => {
+test("AUTH-004 account deletion confirms identity, removes all hosted data and this device draft, and isolates others", async ({ page, request }) => {
   const owner = await account(request, "delete-me@example.com"), other = await account(request, "keep-me@example.com");
   const body = { handle: "delete-me", snapshot: blank("Delete Me"), assets: {}, revision: 0 };
   expect((await publishRequest(request, { headers: owner.headers, data: body })).status()).toBe(200);

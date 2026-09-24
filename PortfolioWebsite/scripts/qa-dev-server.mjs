@@ -1,4 +1,6 @@
 import fs from "node:fs"; import path from "node:path"; import { spawn } from "node:child_process";
+import { resetFixtures } from "./qa/isolation.mjs";
+resetFixtures(["dev-content", "dev-accounts"]);
 const content=path.resolve(".qa/dev-content"), accounts=path.resolve(".qa/dev-accounts");
 fs.mkdirSync(content,{recursive:true});fs.mkdirSync(accounts,{recursive:true});
 fs.writeFileSync(path.join(content,"profile.json"),JSON.stringify({name:"",biography:"",headshotImage:"",education:[],tools:[],jobs:[]}));

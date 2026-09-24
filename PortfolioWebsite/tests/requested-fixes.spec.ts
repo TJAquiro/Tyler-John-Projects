@@ -1,8 +1,8 @@
-﻿import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 
-test("preview and project errors clear on edits and every navigation path", async ({ page }) => {
+test("STUDIO-001 preview and project errors clear on edits and every navigation path", async ({ page }) => {
   await page.goto("/studio");
   const preview = page.getByRole("button", { name: "Preview portfolio" });
   const error = page.getByRole("main").getByRole("alert").filter({ hasText: "Add your name" });
@@ -21,7 +21,7 @@ test("preview and project errors clear on edits and every navigation path", asyn
   await page.getByRole("button", { name: "Details", exact: true }).click(); await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
 });
 
-test("all studio sections and populated controls fit narrow phones through desktop", async ({ page }) => {
+test("STUDIO-002 all studio sections and populated controls fit narrow phones through desktop", async ({ page }) => {
   fs.mkdirSync(".qa/screenshots", { recursive: true });
   await page.goto("/studio");
   await page.getByRole("textbox", { name: "Your name", exact: true }).fill("A".repeat(100));
@@ -68,7 +68,7 @@ test("all studio sections and populated controls fit narrow phones through deskt
   }
 });
 
-test("an image above 5 MB opens the cropper and oversized source gets the 500 MB message", async ({ page }) => {
+test("STUDIO-003 an image above 5 MB opens the cropper and oversized source gets the 500 MB message", async ({ page }) => {
   await page.goto("/studio"); await page.getByRole("button", { name: "02 Headshot" }).click();
   const png = await page.evaluate(() => { const c = document.createElement("canvas"); c.width = 120; c.height = 80; const ctx=c.getContext("2d")!; ctx.fillStyle="#4e654f"; ctx.fillRect(0,0,120,80); return c.toDataURL("image/png").split(",")[1]; });
   await page.getByLabel("Upload headshot").setInputFiles({ name: "large.png", mimeType: "image/png", buffer: Buffer.concat([Buffer.from(png,"base64"), Buffer.alloc(6 * 1024 * 1024)]) });

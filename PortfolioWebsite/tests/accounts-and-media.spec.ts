@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
@@ -27,7 +28,7 @@ async function register(page: Page, suffix: string) {
   await page.getByRole("button", { name: "Create account & start setup" }).click();
   await expect(page).toHaveURL(/\/admin\/onboarding/);
 }
-test("accounts start empty, onboard immediately, sign in, and isolate content", async ({ page, browser }) => {
+test("ACCT-001 accounts start empty, onboard immediately, sign in, and isolate content", async ({ page, browser }) => {
   const errors: string[] = [];
   page.on("console", msg => { if (/hydration|hydrated|server rendered/i.test(msg.text())) errors.push(msg.text()); });
   await register(page, "new-account");
@@ -54,7 +55,7 @@ test("accounts start empty, onboard immediately, sign in, and isolate content", 
   expect((await (await page.request.get("/api/content")).json()).profile.name).toBe("Test Designer");
   expect(errors).toEqual([]);
 });
-test("software, education descriptions, exact crop, photo caption, and responsive crop dialog", async ({ page }) => {
+test("ACCT-002 software, education descriptions, exact crop, photo caption, and responsive crop dialog", async ({ page }) => {
   test.setTimeout(180000);
   const hydration: string[] = []; page.on("console", msg => { if (/hydration|hydrated|server rendered/i.test(msg.text())) hydration.push(msg.text()); });
   await register(page, "feature-account"); await page.goto("/admin/dashboard");
@@ -101,7 +102,7 @@ test("software, education descriptions, exact crop, photo caption, and responsiv
   expect(hydration).toEqual([]);
   if (/^\/images\/[a-f0-9-]+\.webp$/.test(src)) fs.unlinkSync(path.join(".qa/uploads", path.basename(src)));
 });
-test("dev showcase is opt-in and reset clears accounts, projects, and sessions", async ({ page, request }) => {
+test("ACCT-003 dev showcase is opt-in and reset clears accounts, projects, and sessions", async ({ page, request }) => {
   const existingAccounts = JSON.parse(fs.readFileSync(".qa/dev-accounts/accounts.json", "utf8")) as Array<{ email: string; role?: string }>;
   if (existingAccounts.length === 0) {
     await register(page, "dev-owner");

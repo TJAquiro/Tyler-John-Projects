@@ -5,7 +5,7 @@ import { account, app, blank, db, draftBody, expect, fixturePNG, publishRequest,
 
 test.describe.configure({ mode: "serial" });
 test.describe("image uploads and draft API", () => {
-test("chunked images cross the old limit, preserve bytes, and enforce ownership and 500 MB boundary", async ({ request }) => {
+test("MEDIA-001 chunked images cross the old limit, preserve bytes, and enforce ownership and 500 MB boundary", async ({ request }) => {
   const owner=await account(request,"large-image@example.com"), other=await account(request,"other-image@example.com");
   const cap=500*1024*1024;
   const boundary=await request.post("/api/publish/image/chunks",{headers:owner.headers,data:{size:cap}}); expect(boundary.status()).toBe(200);
@@ -31,7 +31,7 @@ test("chunked images cross the old limit, preserve bytes, and enforce ownership 
   expect((await request.delete("/api/account",{headers:{...unverified.headers,"X-Confirm-Delete":"delete-account"}})).status()).toBe(200);
 });
 
-test("global image quotas and admission leases bound cross-account resource use", async ({ request }) => {
+test("MEDIA-002 global image quotas and admission leases bound cross-account resource use", async ({ request }) => {
   const owner = await account(request, "global-limits@example.com");
   const quota = db.collection("serviceState").doc("imageQuota");
   await quota.set({ storageBytes: MAX_SERVICE_STORAGE_BYTES - 4, uploadDay: new Date().toISOString().slice(0, 10), uploads: 0 });
@@ -47,7 +47,7 @@ test("global image quotas and admission leases bound cross-account resource use"
   expect((await request.post("/api/publish/image", { headers: owner.headers, data: fixturePNG })).status()).toBe(200);
 });
 
-test("an upload started before deletion cannot recreate the account's image library", async ({ request }) => {
+test("MEDIA-003 an upload started before deletion cannot recreate the account's image library", async ({ request }) => {
   const owner=await account(request,"upload-delete-race@example.com");
   let finishBody!: () => void;
   const response = new Promise<number>((resolve,reject)=>{
@@ -63,7 +63,7 @@ test("an upload started before deletion cannot recreate the account's image libr
   expect((await getStorage(app).bucket("demo-portfolio.firebasestorage.app").getFiles({prefix:`portfolios/${owner.uid}/`}))[0]).toHaveLength(0);
 });
 
-test("drafts save incomplete content while cloud images require verification and remain private", async ({ request }) => {
+test("MEDIA-004 drafts save incomplete content while cloud images require verification and remain private", async ({ request }) => {
   const owner = await account(request, "draft-owner@example.com"), other = await account(request, "draft-other@example.com"), unverified = await account(request, "draft-unverified@example.com", false);
   expect((await request.put("/api/draft", { data: draftBody() })).status()).toBe(401);
   expect((await request.put("/api/draft", { headers: unverified.headers, data: draftBody("Unverified text") })).status()).toBe(200);
@@ -105,7 +105,7 @@ test("drafts save incomplete content while cloud images require verification and
   expect((await request.put("/api/draft", { headers: owner.headers, data: { ...body, revision: 1 } })).status()).toBe(401);
 });
 
-test("restore repairs missing and foreign mappings using UID and rejects ambiguous or dangling records", async ({ request }) => {
+test("MEDIA-005 restore repairs missing and foreign mappings using UID and rejects ambiguous or dangling records", async ({ request }) => {
   const owner = await account(request, "restore-owner@example.com"), other = await account(request, "restore-other@example.com");
   for (const [user, handle] of [[owner, "restore-owner"], [other, "restore-other"]] as const) expect((await publishRequest(request, { headers: user.headers, data: { handle, snapshot: blank(handle), assets: {}, revision: 0 } })).status()).toBe(200);
   const ownerRef = db.collection("publishers").doc(owner.uid);

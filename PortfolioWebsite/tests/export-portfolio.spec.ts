@@ -17,7 +17,7 @@ function fixture(profile = emptyProfile) {
   return root;
 }
 
-test("export accepts a supported image above the obsolete 5 MB limit and produces an importable backup", () => {
+test("EXPORT-001 export accepts a supported image above the obsolete 5 MB limit and produces an importable backup", () => {
   const src = "/images/large.webp", root = fixture({ ...emptyProfile, headshotImage: src });
   try {
     const original = Buffer.alloc(5 * 1024 * 1024 + 1, 0x61);
@@ -32,7 +32,7 @@ test("export accepts a supported image above the obsolete 5 MB limit and produce
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
-test("export rejects files above 500 MiB and libraries that cannot fit the 768 MiB importer guard before reading them", () => {
+test("EXPORT-002 export rejects files above 500 MiB and libraries that cannot fit the 768 MiB importer guard before reading them", () => {
   const tooLarge = "/images/too-large.webp", root = fixture({ ...emptyProfile, headshotImage: tooLarge });
   try {
     fs.closeSync(fs.openSync(path.join(root, "public", tooLarge), "w"));
