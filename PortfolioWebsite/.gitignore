@@ -6,8 +6,8 @@ out
 .DS_Store
 .local-backups/
 .qa/
-.next-qa/
-.next-qa-dev/
+.next-qa
+.next-qa-dev
 test-results/
 playwright-report/
 *.tsbuildinfo
@@ -17,4 +17,4 @@ playwright-report/
 *service-account*.json
 .studio/
 
-.next-qa-firebase/
+.next-qa-firebase

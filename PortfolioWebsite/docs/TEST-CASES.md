@@ -7,6 +7,7 @@ This catalog defines the minimum functional/code baseline handed to the critic. 
 - Install locked dependencies with `npm ci`, Chromium with `npx playwright install chromium`, and Java 21+ (PATH or `.qa/java/<jdk>/bin/java`). Node 22+ is required.
 - Run `npm run check` for harness policy tests, ESLint, TypeScript, isolated production builds and both complete Chromium suites. It exits nonzero for failures, skips, retries, missing catalog cases/evidence, unfinished runs or failed cleanup.
 - Use `npm run test:e2e -- --grep ROUTE-002` or `npm run test:firebase -- --grep API-002` for diagnosis. These filtered runs are not the complete acceptance gate. `npm run test:harness` checks the result policy independently.
+- Harness regressions also verify cleanup of ordinary and nested detached servers, including runner timeouts, while preserving unrelated servers. These Node tests run before the 64 catalogued application cases; they are not substitutes for those cases.
 - Read `.qa/baseline/latest.json`, then that run's `CRITIC-HANDOFF.md` and `summary.json`. The summary includes executed cases, attempts, skips/errors, attachment paths and fresh screenshots. Suite HTML reports, build/server logs and traces stay in the same run directory.
 - The complete gate runs serially and exclusively. Do not run two suites/gates against the shared fixtures. Occupied ports are reported, never reused or killed. Required test-server ports: 3100?3103; emulator ports: 8080, 9099, 9199, 4400, 4500, 9150.
 

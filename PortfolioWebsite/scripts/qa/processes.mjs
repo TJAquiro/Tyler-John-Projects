@@ -6,18 +6,23 @@ import net from "node:net";
 // Only terminate a process tree created by this harness, never a port owner.
 export function stopTree(child) {
   if (!child?.pid) return;
+  const records = new Map();
+  if (child.qaRegistry && fs.existsSync(child.qaRegistry)) {
+    for (const line of fs.readFileSync(child.qaRegistry, "utf8").split("\n").filter(Boolean)) {
+      try { const row = JSON.parse(line); records.set(row.pid, row); } catch { /* Ignore an in-progress final append; port verification fails closed. */ }
+    }
+  }
+  const seen = new Set([child.pid]);
+  const descendants = parent => [...records.values()].filter(row => row.parent === parent && !seen.has(row.pid)).flatMap(row => { seen.add(row.pid); return [...descendants(row.pid), row]; });
+  for (const row of descendants(child.pid)) if (row.active) {
+    // Nested harness runners start their own POSIX process groups. Killing only
+    // the outer group leaves those servers alive after a timeout/interruption.
+    if (process.platform !== "win32") {
+      try { process.kill(-row.pid, "SIGKILL"); continue; } catch (error) { if (error.code !== "ESRCH") throw error; }
+    }
+    try { process.kill(row.pid, "SIGKILL"); } catch (error) { if (error.code !== "ESRCH") throw error; }
+  }
   if (process.platform === "win32") {
-    const records = new Map();
-    if (child.qaRegistry && fs.existsSync(child.qaRegistry)) {
-      for (const line of fs.readFileSync(child.qaRegistry, "utf8").split("\n").filter(Boolean)) {
-        try { const row = JSON.parse(line); records.set(row.pid, row); } catch { /* Ignore an in-progress final append; port verification fails closed. */ }
-      }
-    }
-    const seen = new Set([child.pid]);
-    const descendants = parent => [...records.values()].filter(row => row.parent === parent && !seen.has(row.pid)).flatMap(row => { seen.add(row.pid); return [...descendants(row.pid), row]; });
-    for (const row of descendants(child.pid)) if (row.active) {
-      try { process.kill(row.pid, "SIGKILL"); } catch (error) { if (error.code !== "ESRCH") throw error; }
-    }
     if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
   } else {
     try { process.kill(-child.pid, "SIGKILL"); } catch (error) { if (error.code !== "ESRCH") throw error; }
